@@ -148,3 +148,54 @@ def test_한계_문장_부호_없는_자막(extractor):
         claim.ingredient == "홍삼" and "당뇨" in claim.claimed_effect
         for claim in result.claims
     )
+
+
+# ─────────────────────────────────────────────────────────────
+# 긴 글 처리 — 실제 블로그 본문에서 드러난 문제들
+# ─────────────────────────────────────────────────────────────
+
+LONG_PREFIX = "요즘 건강에 관심이 많아졌습니다. " * 40  # 성분 이야기가 없는 구간
+
+
+def test_긴_글에서_성분_언급_주변만_본다(extractor):
+    """4천 자 글에서 성분과 무관한 구간까지 훑으면 엉뚱한 짝이 생긴다."""
+    text = LONG_PREFIX + "그래서 홍삼이 면역력 증진에 도움을 준다고 합니다. " + LONG_PREFIX
+    result = extractor.extract(text)
+
+    assert len(result.claims) == 1
+    assert result.claims[0].ingredient == "홍삼"
+    assert "면역력" in result.claims[0].claimed_effect
+
+
+def test_성분을_못_찾은_긴_글은_전체를_본다(extractor):
+    """성분명 사전이 좁아 못 찾은 경우다. 글을 통째로 버리면 질병 표현도 놓친다."""
+    text = LONG_PREFIX + "이 즙을 드시면 당뇨가 낫습니다. " + LONG_PREFIX
+    result = extractor.extract(text)
+
+    assert result.disease_cure_expression is True
+
+
+def test_질병_표현은_성분_효능_문장에서만_인정한다(extractor):
+    """4천 자 홍삼 가이드 글에 '완치'가 한 번 나온 것만으로 주의하세요가 됐다."""
+    text = (
+        "홍삼은 면역력 증진에 도움을 줄 수 있습니다. "
+        "건강정보를 볼 때 완치라는 표현은 조심해서 봐야 합니다."
+    )
+    result = extractor.extract(text)
+
+    assert result.disease_cure_expression is False
+
+
+def test_성분과_질병이_같은_문장이면_질병_표현으로_본다(extractor):
+    result = extractor.extract("홍삼을 드시면 당뇨가 완치됩니다")
+    assert result.disease_cure_expression is True
+
+
+def test_치료제라는_명사는_질병_치료_표현이_아니다(extractor):
+    """실제 글의 '마이크로바이옴 치료제'가 걸려 식품 글이 주의하세요가 됐다."""
+    text = "프로바이오틱스가 마이크로바이옴 치료제로 등급이 올라간 사례가 있습니다."
+    assert extractor.extract(text).disease_cure_expression is False
+
+
+def test_병을_치료한다는_서술은_잡는다(extractor):
+    assert extractor.extract("홍삼이 당뇨를 치료한다").disease_cure_expression is True

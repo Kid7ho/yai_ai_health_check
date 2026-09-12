@@ -135,7 +135,7 @@ def test_health_에_규칙표_버전이_나온다():
     app = create_app(worker_count=0)
     with TestClient(app) as client:
         body = client.get("/health").json()
-    assert body["rules_version"] == "v0.1"
+    assert body["rules_version"] == "v0.2"
 
 
 # ─────────────────────────────────────────────────────────────

@@ -116,22 +116,30 @@ class RuleBasedClaimExtractor:
         patterns = self._patterns
         text = text or ""
 
-        disease_cure = _contains_any(text, patterns.disease_cure)
-
-        # 의약품을 대체하라는 표현은 자막 어디에 한 번만 나와도 거절한다.
+        # 의약품을 대체하라는 표현은 어디에 한 번만 나와도 거절한다.
         # 가장 위험한 유형이므로 문맥을 따지지 않는다.
         out_of_scope = _contains_any(text, patterns.out_of_scope_immediate)
 
+        # 긴 글에서는 성분이 언급된 문장 주변만 본다. 4천 자 블로그 글에서
+        # 성분과 아무 관계 없는 문장까지 훑으면 엉뚱한 짝이 생기고, 곁가지
+        # 문장 하나 때문에 글 전체 판정이 뒤집힌다.
+        sentences = _focus(text, patterns.ingredient_lookup)
+
         claims: list[Claim] = []
         seen: set[tuple[str, str]] = set()
+        disease_cure = False
 
-        for sentence, offset in _sentences(text):
+        for sentence, offset in sentences:
             sentence_claims = self._claims_in_sentence(sentence, offset)
 
-            # 의료 이야기에 흔히 나오는 단어는 문장 단위로 본다. 자막 전체에서
-            # 찾으면 긴 영상은 거의 항상 범위 밖이 된다. 실제 8천 자 홍삼
-            # 자막에서 "병원에 가", "처방"이 곁가지로 나와 식품 영상이 통째로
-            # 거절됐다. 주장이 실린 문장에 섞였을 때만 거절한다.
+            # 질병 치료 표현도 문장 단위로 본다. 글 전체에서 찾으면 4천 자
+            # 홍삼 가이드 글에 '완치'가 한 번 나온 것만으로 '주의하세요'가
+            # 됐다. 성분이나 효능 대상이 같은 문장에 있을 때만 인정한다.
+            if _contains_any(sentence, patterns.disease_cure) and self._is_about_effect(sentence):
+                disease_cure = True
+
+            # 의료 이야기에 흔히 나오는 단어는 주장이 실린 문장에 섞였을
+            # 때만 거절한다.
             if sentence_claims and _contains_any(sentence, patterns.out_of_scope_contextual):
                 out_of_scope = True
 
@@ -141,14 +149,25 @@ class RuleBasedClaimExtractor:
                     seen.add(key)
                     claims.append(claim)
 
-        in_scope = not out_of_scope
-
         return ClaimSet(
             claims=tuple(claims),
-            in_scope=in_scope,
+            in_scope=not out_of_scope,
             disease_cure_expression=disease_cure,
             extraction_failed=not claims,
         )
+
+    def _is_about_effect(self, sentence: str) -> bool:
+        """이 문장이 성분이나 효능 대상을 말하고 있는가.
+
+        질병 치료 표현이 성분·효능 이야기와 같은 문장에 있어야 주장으로 본다.
+        "완치라는 말은 조심해야 합니다" 같은 일반론을 주장으로 읽지 않기 위한
+        조건이다. 대명사로 성분을 지칭하는 "이 즙 드시면 당뇨가 낫습니다"는
+        효능 대상(당뇨)이 잡혀서 그대로 걸린다.
+        """
+        patterns = self._patterns
+        if _find_ingredients(sentence, patterns.ingredient_lookup):
+            return True
+        return bool(_find_first_each(sentence, patterns.effect_targets))
 
     def _claims_in_sentence(self, sentence: str, offset: int) -> list[Claim]:
         patterns = self._patterns
@@ -221,6 +240,44 @@ def _sentences(text: str) -> list[tuple[str, int]]:
             result.append((chunk, start if start >= 0 else position))
         position += len(chunk) + 1
     return result
+
+
+# 이보다 긴 글은 성분 언급 주변만 본다. 자막과 기사 모두 이 길이를 넘는다.
+_FOCUS_MIN_LENGTH = 1500
+# 성분이 언급된 문장의 앞뒤로 몇 문장까지 함께 볼지.
+_FOCUS_WINDOW = 1
+
+
+def _focus(text: str, lookup: dict[str, str]) -> list[tuple[str, int]]:
+    """볼 문장을 고른다.
+
+    짧은 글은 전부 본다. 긴 글은 성분이 언급된 문장과 그 앞뒤 한 문장만
+    본다. 성분 이야기가 없는 구간에서 주장을 만들 수는 없고, 그 구간의
+    곁가지 표현이 판정을 바꾸는 것이 실제 문제였다.
+
+    성분을 한 번도 찾지 못하면 전체를 돌려준다. 성분명 사전이 좁아서
+    못 찾은 경우인데, 그때 글을 통째로 버리면 질병 표현도 놓친다.
+    """
+    sentences = _sentences(text)
+    if len(text) <= _FOCUS_MIN_LENGTH or len(sentences) <= 3:
+        return sentences
+
+    hits = [
+        index
+        for index, (sentence, _) in enumerate(sentences)
+        if _find_ingredients(sentence, lookup)
+    ]
+    if not hits:
+        return sentences
+
+    keep: set[int] = set()
+    for index in hits:
+        for offset in range(-_FOCUS_WINDOW, _FOCUS_WINDOW + 1):
+            neighbor = index + offset
+            if 0 <= neighbor < len(sentences):
+                keep.add(neighbor)
+
+    return [sentences[index] for index in sorted(keep)]
 
 
 def _contains_any(text: str, needles: tuple[str, ...]) -> bool:
@@ -339,6 +396,16 @@ def _effect_text(
 #      "블루베리가 당뇨를 완치시킨다는 말은 근거가 없습니다"
 #      현재 구현은 이 문장에서도 질병 치료 표현을 잡아 WARNING으로 보낸다.
 #      오정보를 반박하는 영상이 오정보로 판정된다.
+#
+#      실제 블로그 5건을 돌려 확인한 결과, 남은 오판은 전부 이 유형이었다.
+#      "홍삼이 만병통치약은 아니며", "그건 과장입니다", "암이 낫는다는 얘기가
+#      절대 아니에요" 같은 문장이 WARNING을 유발했다. 책임 있게 쓴 글이
+#      오정보로 판정되는 셈이다.
+#
+#      고치려면 부정 표현(아니며, 아닙니다, 과장, 거짓, 근거 없)을 감지해
+#      질병 표현을 무효화해야 한다. 다만 "이거 아니면 안 됩니다" 같은 문장에서
+#      진짜 주장을 놓칠 위험이 함께 생긴다. 커버리지와 오판의 균형점이므로
+#      의료 자문의 판단이 필요하다.
 #   5. 문장 부호가 없는 자막
 #      전체가 한 문장이 되어 멀리 떨어진 성분과 효능이 짝지어진다
 #
