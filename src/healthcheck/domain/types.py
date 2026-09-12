@@ -111,6 +111,9 @@ class ClaimSet:
     in_scope: bool
     # 질병 치료·완치 표현이 하나라도 있는가. 규칙 R-020, R-021의 입력이다.
     disease_cure_expression: bool
+    # 식품 표시·광고법이 금지하는 광고 표현이 있는가. 규칙 R-031의 입력이다.
+    # 식약처 적발 기록 조회가 아니라 표현 매칭 결과다. 둘을 구분해 둔다.
+    prohibited_ad_expression: bool = False
     # 규칙 기반 추출이 주장을 하나도 못 뽑았으면 True. UNKNOWN으로 이어진다.
     extraction_failed: bool = False
 
@@ -182,11 +185,21 @@ class VerdictInput:
     in_scope: bool
     transcript_quality: TranscriptQuality
     disease_cure_expression: bool
+    # 식약처 부당광고 적발 이력에 해당하는가. 전용 API를 확보하지 못해
+    # 현재는 항상 False다. R-020과 R-030은 그래서 발동하지 않는다.
     ad_violation_hit: bool
     recognition: Recognition
     functionality_match: MatchLevel
     supporting_papers: int
     refuting_papers: int
+    # 법령이 금지하는 광고 표현을 쓰고 있는가. 우리가 표현으로 판단한 값이며
+    # 적발 기록 조회와는 다르다.
+    #
+    # 기본값을 둔 이유는 골든 케이스 호환이다. 팀이 손으로 적은 판정입력에
+    # 새 항목이 없어도 테스트가 깨지지 않아야 한다. 기본값 False는 "위반
+    # 표현 없음"이므로, 값을 빠뜨리면 이 규칙이 발동하지 않을 뿐 잘못된
+    # 경고가 생기지는 않는다.
+    prohibited_ad_expression: bool = False
 
 
 @dataclass(frozen=True, slots=True)

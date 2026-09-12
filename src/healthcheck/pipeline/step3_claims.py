@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 RULES_DIR = Path(__file__).resolve().parents[3] / "rules"
 DEFAULT_PATTERNS_PATH = RULES_DIR / "claim_patterns.yaml"
 DEFAULT_ALIASES_PATH = RULES_DIR / "ingredient_aliases.yaml"
+DEFAULT_AD_PATH = RULES_DIR / "ad_violation_patterns.yaml"
 
 # 문장 경계. 자막에는 마침표가 아예 없는 경우가 많아서 줄바꿈도 경계로 본다.
 _SENTENCE_SPLIT = re.compile(r"[.!?。\n]+")
@@ -47,6 +48,8 @@ class _Patterns:
     disease_cure: tuple[str, ...]
     # 이 표현이 있는 문장은 주장으로 읽지 않는다. 오정보를 바로잡는 문장이다.
     negation: tuple[str, ...]
+    # 법령이 금지하는 광고 표현. 적발 기록 조회가 아니라 표현 매칭이다.
+    prohibited_ad: tuple[str, ...]
     effect_by_intensity: tuple[tuple[Intensity, tuple[str, ...]], ...]
     # 자막 어디에 한 번만 나와도 거절하는 표현
     out_of_scope_immediate: tuple[str, ...]
@@ -61,6 +64,7 @@ class _Patterns:
 def load_patterns(
     patterns_path: Path | str = DEFAULT_PATTERNS_PATH,
     aliases_path: Path | str = DEFAULT_ALIASES_PATH,
+    ad_path: Path | str = DEFAULT_AD_PATH,
 ) -> _Patterns:
     """규칙 파일을 읽는다. 판정 규칙표와 같은 이유로 코드에 넣지 않는다."""
     raw = yaml.safe_load(Path(patterns_path).read_text(encoding="utf-8")) or {}
@@ -87,6 +91,12 @@ def load_patterns(
     for group in (raw.get("효능_대상") or {}).values():
         targets.extend(group or ())
 
+    ad_raw = yaml.safe_load(Path(ad_path).read_text(encoding="utf-8")) or {}
+    prohibited_ad: list[str] = []
+    for key, group in ad_raw.items():
+        if key != "version" and isinstance(group, list):
+            prohibited_ad.extend(group or ())
+
     lookup: dict[str, str] = {}
     for standard, variants in (aliases.get("성분") or {}).items():
         lookup[standard] = standard
@@ -96,6 +106,7 @@ def load_patterns(
     return _Patterns(
         disease_cure=disease_cure,
         negation=tuple(raw.get("부정_표현") or ()),
+        prohibited_ad=tuple(prohibited_ad),
         effect_by_intensity=tuple(by_intensity),
         out_of_scope_immediate=immediate,
         out_of_scope_contextual=contextual,
@@ -134,6 +145,7 @@ class RuleBasedClaimExtractor:
         claims: list[Claim] = []
         seen: set[tuple[str, str]] = set()
         disease_cure = False
+        prohibited_ad = False
 
         for sentence, offset in sentences:
             # 오정보를 바로잡는 문장은 주장으로 읽지 않는다. 이 처리가 없으면
@@ -151,6 +163,11 @@ class RuleBasedClaimExtractor:
             if _contains_any(sentence, patterns.disease_cure) and self._is_about_effect(sentence):
                 disease_cure = True
 
+            # 법령이 금지하는 광고 표현. 부정문은 위에서 이미 건너뛰었으므로
+            # "부작용이 없다는 말은 거짓"과 같은 문장은 여기 오지 않는다.
+            if _contains_any(sentence, patterns.prohibited_ad):
+                prohibited_ad = True
+
             # 의료 이야기에 흔히 나오는 단어는 주장이 실린 문장에 섞였을
             # 때만 거절한다.
             if sentence_claims and _contains_any(sentence, patterns.out_of_scope_contextual):
@@ -166,6 +183,7 @@ class RuleBasedClaimExtractor:
             claims=tuple(claims),
             in_scope=not out_of_scope,
             disease_cure_expression=disease_cure,
+            prohibited_ad_expression=prohibited_ad,
             extraction_failed=not claims,
         )
 

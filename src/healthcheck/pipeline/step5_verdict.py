@@ -347,6 +347,7 @@ def build_verdict_input(
         transcript_quality=quality,
         disease_cure_expression=claims.disease_cure_expression,
         ad_violation_hit=ad_violation_hit,
+        prohibited_ad_expression=claims.prohibited_ad_expression,
         recognition=recognition,
         functionality_match=functionality_match,
         supporting_papers=supporting,

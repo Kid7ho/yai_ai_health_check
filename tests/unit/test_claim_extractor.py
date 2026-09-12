@@ -219,3 +219,46 @@ def test_치료제라는_명사는_질병_치료_표현이_아니다(extractor):
 
 def test_병을_치료한다는_서술은_잡는다(extractor):
     assert extractor.extract("홍삼이 당뇨를 치료한다").disease_cure_expression is True
+
+
+# ─────────────────────────────────────────────────────────────
+# 부당광고 표현 검사
+#
+# 식약처 적발 기록 조회가 아니다. 전용 오픈API를 찾지 못해서, 법령이 금지하는
+# 표현 유형에 해당하는지 문장에서 확인하는 방식으로 대체했다.
+# ─────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "홍삼은 부작용이 전혀 없어서 누구나 드실 수 있습니다",
+        "이 제품은 식약처 공식 인증을 받았습니다",
+        "저는 이걸로 나았습니다",
+        "천연 항생제라고 불리는 마늘입니다",
+        "하루 만에 효과를 느끼실 수 있습니다",
+        "약보다 효과가 좋습니다",
+    ],
+)
+def test_법으로_금지된_광고_표현을_찾아낸다(extractor, text):
+    assert extractor.extract(text).prohibited_ad_expression is True
+
+
+def test_부정문_안의_금지_표현은_세지_않는다(extractor):
+    """오정보를 바로잡는 글이 부당광고로 판정되면 안 된다."""
+    assert (
+        extractor.extract("부작용이 전혀 없다는 말은 거짓입니다").prohibited_ad_expression
+        is False
+    )
+
+
+def test_정상적인_기능성_표현은_금지_표현이_아니다(extractor):
+    text = "홍삼이 면역력 증진에 도움을 줄 수 있다고 알려져 있습니다"
+    assert extractor.extract(text).prohibited_ad_expression is False
+
+
+def test_금지_표현은_질병_치료_표현과_별개로_기록한다(extractor):
+    """규칙 R-021과 R-031이 각각 다른 값을 본다."""
+    result = extractor.extract("홍삼은 부작용이 전혀 없습니다")
+    assert result.prohibited_ad_expression is True
+    assert result.disease_cure_expression is False

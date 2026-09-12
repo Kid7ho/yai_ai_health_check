@@ -38,7 +38,7 @@
 | Fake 구현체 4종 | 완료. 키 없이 전체 파이프라인이 돌아간다 |
 | Liner 학술 검색 실제 호출 | 완료. 실제 논문으로 검증 |
 | 식약처 오픈API 실제 호출 | 완료. I-0040 개별인정형 조회 |
-| 식약처 부당광고 데이터 | 없음. 전용 API를 특정하지 못함 |
+| 식약처 부당광고 적발 기록 | 없음. 전용 API가 없어 표현 매칭으로 대체 |
 | 유튜브 자막 추출 실제 구현 | 완료. 실제 한국어 영상으로 검증 |
 | 저장소 계층 (SQLite) | 완료. 보존 기간 정리 포함 |
 | 카카오 콜백 실제 전송기 | 완료. 채널 승인 후 실제 주소로 검증 필요 |
@@ -90,8 +90,8 @@ uv run pytest tests/golden                    # 규칙 엔진 회귀 검증 (네
 회귀 검증한다. `measure_golden.py`는 원문에서 시작해 ③ 구조화와 ④ 검증까지 전
 구간을 재므로 외부 API를 쓴다.
 
-현재 20건 기준 정확도는 15건이다. 틀린 5건은 원인이 둘로 모이며 둘 다 의료 자문의
-검수가 필요한 규칙 문제다. 자세한 내용은 [CLAUDE.md](CLAUDE.md)의 미해결 전제를 보라.
+현재 23건 모두 일치한다. 다만 기대 라벨이 개발자 판단이며 의료 자문의 검수를
+받지 않았다. 검수 후 값이 바뀌면 그것이 정답이고 숫자도 다시 재야 한다.
 
 ## 고시형 원료 목록 교체
 
@@ -143,6 +143,7 @@ python scripts/check_transcripts.py samples/videos.txt --json 결과.json --inte
 | `rules/ingredient_aliases.yaml` | 성분명 정규화 사전, 영문 검색어 |
 | `rules/notified_ingredients.yaml` | 고시형 기능성원료 목록 ⚠ 검수 전 초안 |
 | `rules/response_guard.yaml` | 응답에 쓰면 안 되는 진단·처방 표현 |
+| `rules/ad_violation_patterns.yaml` | 법으로 금지된 광고 표현 ⚠ 법률 검토 필요 |
 | `rules/stance_patterns.yaml` | 논문 찬반 판정 표현, 제외할 문헌 |
 
 수정 의견은 규칙 ID(`R-0xx`)를 적어 주면 된다. 판정 로그에는 사용된 규칙 버전과

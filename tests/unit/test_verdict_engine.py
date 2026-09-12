@@ -33,6 +33,7 @@ def vi(**overrides) -> VerdictInput:
         transcript_quality="ok",
         disease_cure_expression=False,
         ad_violation_hit=False,
+        prohibited_ad_expression=False,
         recognition="NOT_RECOGNIZED",
         functionality_match="NOT_APPLICABLE",
         supporting_papers=0,
@@ -210,7 +211,7 @@ def test_어디에도_맞지_않으면_알_수_없어요():
 
 def test_판정_결과에_역추적_정보가_담긴다():
     verdict = load_ruleset().evaluate(vi(in_scope=False))
-    assert verdict.rules_version == "v0.5"
+    assert verdict.rules_version == "v0.6"
     assert verdict.rule_id
     assert verdict.reasons and all(verdict.reasons)
     assert verdict.inputs is not None
@@ -438,3 +439,31 @@ def test_외부_조회_실패를_낙관적으로_채우지_않는다():
     assert built.functionality_match == "NOT_APPLICABLE"
     assert built.supporting_papers == 0
     assert load_ruleset().evaluate(built).label is Label.UNKNOWN
+
+
+def test_법으로_금지된_광고_표현은_주의로_간다():
+    """식약처 적발 기록 조회가 아니라 표현 매칭 결과로 판정한다."""
+    verdict = load_ruleset().evaluate(
+        vi(
+            prohibited_ad_expression=True,
+            recognition="INDIVIDUAL",
+            functionality_match="EXACT",
+            supporting_papers=10,
+        )
+    )
+    assert verdict.label is Label.WARNING
+    assert verdict.rule_id == "R-031"
+
+
+def test_적발_이력_규칙은_여전히_데이터가_없어_발동하지_않는다():
+    """ad_violation_hit은 전용 API를 확보할 때까지 항상 False다.
+
+    규칙 R-020과 R-030 자체는 살아 있다. 데이터가 들어오면 바로 동작한다.
+    """
+    ruleset = load_ruleset()
+
+    assert ruleset.evaluate(vi(ad_violation_hit=True)).rule_id == "R-030"
+    assert (
+        ruleset.evaluate(vi(ad_violation_hit=True, disease_cure_expression=True)).rule_id
+        == "R-020"
+    )

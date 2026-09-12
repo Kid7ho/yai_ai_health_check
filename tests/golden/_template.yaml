@@ -11,7 +11,8 @@
     in_scope: true                        # 음식·식품·건강기능식품 내용인가
     transcript_quality: ok                # none | low | ok
     disease_cure_expression: false        # 완치·치료·낫는다 표현이 있는가
-    ad_violation_hit: false               # 부당광고 적발 이력에 해당하는가
+    ad_violation_hit: false               # 부당광고 적발 이력에 해당하는가 (현재 데이터 없음)
+    prohibited_ad_expression: false       # 법으로 금지된 광고 표현을 쓰는가
     recognition: UNKNOWN                  # INDIVIDUAL | NOTIFIED | NOT_RECOGNIZED | UNKNOWN
     functionality_match: NOT_APPLICABLE   # EXACT | PARTIAL | MISMATCH | NOT_APPLICABLE
     supporting_papers: 0
