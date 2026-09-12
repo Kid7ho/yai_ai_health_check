@@ -31,9 +31,14 @@
 | 도메인 타입, 모듈 간 인터페이스 | 완료 |
 | 판정 규칙 엔진 + 규칙표 v0 | 완료. 외부 API 없이 테스트로 완전 검증 |
 | 골든 테스트셋 형식과 러너 | 완료. 예시 5건 |
-| 카카오 스킬 서버 골격 | 미착수 |
-| 주장 구조화(③), 이중 검증(④) | 인터페이스만 |
+| 카카오 스킬 서버 골격 | 완료. 즉시 ack → 워커 → 콜백 |
+| 입력 수신(①), 응답 생성(⑥) | 완료 |
+| 주장 구조화(③) | 규칙 기반 구현 완료. 한계 5건은 xfail로 기록 |
+| 이중 검증(④) | 조회 병렬 실행과 실패 처리 완료. 실제 호출은 Fake |
+| Fake 구현체 4종 | 완료. 키 없이 전체 파이프라인이 돌아간다 |
 | 외부 API 실제 호출 | 만들지 않음. 키 승인 대기 중 |
+
+테스트 105건 통과, 5건은 규칙 기반 추출의 알려진 한계를 기록한 xfail이다.
 
 ## 실행
 
@@ -41,7 +46,14 @@
 uv sync --extra dev     # uv가 없으면: python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
 uv run pytest           # 전체 테스트
 uv run pytest tests/golden -v    # 골든셋만
+uv run uvicorn healthcheck.api.app:app --reload    # 스킬 서버 (Fake 어댑터)
 ```
+
+컨테이너로 띄울 때는 `docker build -t healthcheck . && docker run -p 8000:8000 healthcheck`.
+
+스킬 서버는 `POST /skill`에서 카카오 요청을 받고 `GET /health`로 규칙표 버전과
+대기 중인 작업 수를 돌려준다. 키가 없으면 Fake 어댑터가 붙으므로 지금 바로 띄워
+동작을 볼 수 있다.
 
 ## 규칙표 검수 (의료 자문의용)
 
