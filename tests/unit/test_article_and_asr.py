@@ -211,3 +211,81 @@ async def test_본문을_못_읽은_기사는_판정_보류다():
 
 def test_기사_Fake도_같은_인터페이스를_만족한다():
     assert hasattr(FakeArticleExtractor(), "fetch")
+
+
+# ── 사이트별 주소 정규화 ─────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://blog.naver.com/anarche69/224382558879",
+        "https://m.blog.naver.com/anarche69/224382558879",
+        "https://blog.naver.com/PostView.naver?blogId=anarche69&logNo=224382558879&redirect=Dlog",
+    ],
+)
+def test_네이버_블로그는_본문_주소로_바꾼다(url):
+    """겉 페이지는 본문을 iframe으로 따로 불러온다. 실제로 0자가 나왔다."""
+    from healthcheck.adapters.web.article import normalize_url
+
+    assert normalize_url(url) == "https://m.blog.naver.com/anarche69/224382558879"
+
+
+@pytest.mark.parametrize(
+    "url", ["https://uibaki.tistory.com/41", "https://ko.wikipedia.org/wiki/홍삼"]
+)
+def test_다른_사이트_주소는_건드리지_않는다(url):
+    from healthcheck.adapters.web.article import normalize_url
+
+    assert normalize_url(url) == url
+
+
+async def test_사이트_안내문은_본문에서_뺀다():
+    """네이버 PostView 본문 앞에 붙는 저작권 안내문이 주장으로 읽히면 안 된다."""
+    html = """<html><body><article>
+    <p>- 저작권 침해가 우려되는 컨텐츠가 포함되어 있어 글보내기 기능을 제한합니다.</p>
+    <p>홍삼은 면역력 증진에 도움을 줄 수 있다고 알려져 있습니다. 식품의약품안전처가
+    인정한 기능성 원료이며 여러 연구에서 면역 지표 개선이 보고되었습니다.</p>
+    </article></body></html>"""
+    extractor = extractor_with(lambda request: httpx.Response(200, html=html))
+
+    content = await extractor.fetch("https://m.blog.naver.com/x/1")
+
+    assert "저작권 침해" not in content.text
+    assert "면역력 증진" in content.text
+
+
+# ── 범위 밖 판별이 정상 식품 글을 거절하지 않는다 ────────────
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "홍삼은 면역력에 도움을 줄 수 있습니다. 처방약과 함께 드실 때는 의사와 상담하세요.",
+        "홍삼이 면역력에 좋습니다. 항암제 치료 중이라면 전문가와 상의하는 것이 좋습니다.",
+    ],
+)
+def test_약을_함께_조심하라는_글은_범위_안이다(text):
+    """실제 블로그 글에서 이런 문장 때문에 식품 글이 통째로 거절됐다.
+
+    약 이름이 나왔다는 이유로 거절하면, 오히려 책임 있게 쓴 글을 판정하지
+    못한다. 대체를 권하는 어구만 즉시 거절한다.
+    """
+    from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
+
+    assert RuleBasedClaimExtractor().extract(text).in_scope is True
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "당뇨약 끊고 이 즙만 드세요",
+        "홍삼 드시면 인슐린 안 맞아도 됩니다",
+        "수술 대신 이걸 드세요",
+        "병원 갈 필요 없습니다",
+    ],
+)
+def test_의약품_대체를_권하면_거절한다(text):
+    from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
+
+    assert RuleBasedClaimExtractor().extract(text).in_scope is False

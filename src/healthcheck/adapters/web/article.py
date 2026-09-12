@@ -23,8 +23,9 @@ from __future__ import annotations
 import hashlib
 import ipaddress
 import logging
+import re
 import socket
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import httpx
 import trafilatura
@@ -44,6 +45,49 @@ _USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 )
+
+
+# 네이버 블로그는 본문을 iframe 안에서 따로 불러온다. 겉 페이지를 긁으면
+# 빈 껍데기만 나온다. 실제로 확인했을 때 0자였다. 모바일 주소는 본문을 바로
+# 담고 있어서 그쪽으로 바꿔 요청한다. PostView 주소도 본문이 나오지만
+# "저작권 침해가 우려되는 컨텐츠" 같은 안내문이 앞에 붙는다.
+_NAVER_POST_RE = re.compile(
+    r"^(?:m\.)?blog\.naver\.com/(?P<blog>[A-Za-z0-9_\-]+)/(?P<log>\d+)"
+)
+_NAVER_HOSTS = ("blog.naver.com", "m.blog.naver.com")
+
+# 본문에 섞여 나오는 안내문. 주장이 아니므로 버린다.
+_BOILERPLATE = (
+    "저작권 침해가 우려되는",
+    "이 글은 네이버 블로그에서",
+)
+
+
+def normalize_url(url: str) -> str:
+    """사이트별로 본문이 실제로 담긴 주소로 바꾼다.
+
+    지금은 네이버 블로그만 다룬다. 어르신이 받는 링크에서 비중이 크고,
+    겉 페이지를 그대로 긁으면 본문이 한 글자도 나오지 않기 때문이다.
+    """
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower()
+
+    if host not in _NAVER_HOSTS:
+        return url
+
+    target = f"{host}{parsed.path}"
+    match = _NAVER_POST_RE.match(target)
+    if match:
+        return f"https://m.blog.naver.com/{match.group('blog')}/{match.group('log')}"
+
+    # blog.naver.com/PostView.naver?blogId=...&logNo=... 형태
+    query = parse_qs(parsed.query)
+    blog = (query.get("blogId") or [""])[0]
+    log = (query.get("logNo") or [""])[0]
+    if blog and log.isdigit():
+        return f"https://m.blog.naver.com/{blog}/{log}"
+
+    return url
 
 
 class ArticleFetchError(RuntimeError):
@@ -85,6 +129,16 @@ def assert_safe_url(url: str) -> None:
             raise UnsafeUrlError(f"내부망 주소로는 요청하지 않습니다: {host}")
 
 
+def _drop_boilerplate(text: str) -> str:
+    """사이트 안내문을 버린다. 주장으로 읽히면 엉뚱한 판정이 나온다."""
+    lines = [
+        line
+        for line in text.splitlines()
+        if not any(marker in line for marker in _BOILERPLATE)
+    ]
+    return "\n".join(lines).strip()
+
+
 class TrafilaturaArticleExtractor:
     def __init__(
         self,
@@ -102,11 +156,15 @@ class TrafilaturaArticleExtractor:
         self.call_count = 0
 
     async def fetch(self, url: str) -> ExtractedContent:
+        target = normalize_url(url)
+        if target != url:
+            logger.info("본문 주소로 바꿔 요청한다: %s", target)
+
         if self._check_url:
-            assert_safe_url(url)
+            assert_safe_url(target)
 
         self.call_count += 1
-        html = await self._download(url)
+        html = await self._download(target)
 
         text = trafilatura.extract(
             html,
@@ -114,7 +172,7 @@ class TrafilaturaArticleExtractor:
             include_tables=False,
             favor_precision=True,  # 본문이 아닌 블록을 버리는 쪽을 택한다
         )
-        text = (text or "").strip()
+        text = _drop_boilerplate(text or "")
 
         if len(text) < MIN_TEXT_LENGTH:
             logger.info("본문 추출 실패 또는 너무 짧다 url=%s 길이=%d", url, len(text))
