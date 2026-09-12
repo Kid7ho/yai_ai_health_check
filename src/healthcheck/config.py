@@ -55,6 +55,13 @@ class Settings:
     # 기사·블로그 링크에서 본문을 뽑을지.
     article_enabled: bool = True
 
+    # 스킬 엔드포인트 인증. 공개 주소로 노출하면 최소 하나는 켜야 한다.
+    # 인증이 없으면 주소를 아는 누구나 파이프라인을 호출한다.
+    skill_auth_header: str = "X-Skill-Token"
+    skill_auth_token: str | None = field(default=None, repr=False)
+    # 엔드포인트 경로. 헤더를 지정할 수 없을 때 추측하기 어려운 값으로 바꾼다.
+    skill_path: str = "/skill"
+
     # 저장소. 판정 기록과 목표 지표가 여기 쌓인다.
     database_path: str = "healthcheck.db"
     # 개인정보 보존 기간(일). README의 저장 데이터 표와 같은 값이다.
@@ -70,6 +77,10 @@ class Settings:
         return bool(self.mfds_api_key)
 
     @property
+    def has_skill_token(self) -> bool:
+        return bool(self.skill_auth_token)
+
+    @property
     def has_youtube_proxy(self) -> bool:
         return bool(self.youtube_proxy_url or (self.webshare_username and self.webshare_password))
 
@@ -81,6 +92,8 @@ class Settings:
             "mfds_api_key": "설정됨" if self.has_mfds_key else "없음",
             "rules_path": str(self.rules_path),
             "youtube_proxy": "설정됨" if self.has_youtube_proxy else "없음",
+            "skill_auth_token": "설정됨" if self.has_skill_token else "없음",
+            "skill_path": self.skill_path,
         }
 
 
@@ -132,10 +145,21 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         asr_model_size=(os.environ.get("ASR_MODEL_SIZE") or "small").strip(),
         asr_max_seconds=int(os.environ.get("ASR_MAX_SECONDS") or 300),
         article_enabled=_flag(os.environ.get("ARTICLE_ENABLED"), True),
+        skill_auth_header=(os.environ.get("SKILL_AUTH_HEADER") or "X-Skill-Token").strip(),
+        skill_auth_token=_clean(os.environ.get("SKILL_AUTH_TOKEN")),
+        skill_path=_normalize_path(os.environ.get("SKILL_PATH")),
         database_path=(os.environ.get("DATABASE_PATH") or "healthcheck.db").strip(),
         text_retention_days=int(os.environ.get("TEXT_RETENTION_DAYS") or 90),
         user_key_retention_days=int(os.environ.get("USER_KEY_RETENTION_DAYS") or 30),
     )
+
+
+def _normalize_path(value: str | None) -> str:
+    """경로는 항상 슬래시로 시작하게 맞춘다. 설정 실수로 라우팅이 깨지지 않게 한다."""
+    path = (value or "/skill").strip()
+    if not path.startswith("/"):
+        path = "/" + path
+    return path.rstrip("/") or "/skill"
 
 
 def _flag(value: str | None, default: bool) -> bool:

@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 from healthcheck.adapters.fake.academic import FakeAcademicSearchClient
 from healthcheck.adapters.liner.academic import LinerAcademicSearchClient
@@ -27,6 +27,7 @@ from healthcheck.adapters.fake.mfds import FakeMfdsDataSource
 from healthcheck.adapters.fake.transcript import FakeTranscriptExtractor
 from healthcheck.adapters.inprocess_queue import InProcessJobQueue
 from healthcheck.api import debug, skill
+from healthcheck.api.auth import SkillAuth, warn_if_unprotected
 from healthcheck.config import Settings, load_settings
 from healthcheck.api.worker import start_workers
 from healthcheck.pipeline.orchestrator import Orchestrator
@@ -151,7 +152,19 @@ def create_app(
     *,
     worker_count: int = 2,
     repository: CheckRepository | None = None,
+    auth: SkillAuth | None = None,
+    skill_path: str | None = None,
 ) -> FastAPI:
+    settings = load_settings()
+    auth = (
+        auth
+        if auth is not None
+        else SkillAuth(
+            header_name=settings.skill_auth_header, token=settings.skill_auth_token
+        )
+    )
+    skill_path = skill_path or settings.skill_path
+
     orchestrator = orchestrator or build_orchestrator()
     callback_sender = callback_sender or RecordingCallbackSender()
     # 기본값을 메모리로 둔다. 테스트가 실수로 실제 DB 파일을 만들지 않게 한다.
@@ -182,17 +195,17 @@ def create_app(
 
     app = FastAPI(title="건강정보 확인", lifespan=lifespan)
     app.state.services = skill.SkillServices(
-        orchestrator=orchestrator, queue=queue, repository=repository
+        orchestrator=orchestrator, queue=queue, repository=repository, auth=auth
     )
+    app.state.auth = auth
     app.state.repository = repository
     app.state.queue = queue
     app.state.callback_sender = callback_sender
-    app.include_router(skill.router)
+    app.include_router(skill.build_router(skill_path))
+    warn_if_unprotected(auth, skill_path, settings.debug_ui)
 
-    # 디버그 채팅 화면. 개발용이며 DEBUG_UI=0으로 끈다.
-    # live와 fake 두 조립을 함께 올려 두고 화면에서 고를 수 있게 한다.
-    # 실제 API를 쓰지 않고 규칙만 시험할 때 토큰을 아낄 수 있다.
-    settings = load_settings()
+    # 디버그 채팅 화면. 개발용이며 DEBUG_UI=0으로 끈다. live와 fake 두 조립을
+    # 함께 올려 두고 화면에서 고를 수 있게 한다. 규칙만 시험할 때 토큰을 아낀다.
     if settings.debug_ui:
         app.state.debug_orchestrators = {
             "live": orchestrator,
@@ -202,8 +215,12 @@ def create_app(
         logger.info("디버그 화면: http://127.0.0.1:8000/debug")
 
     @app.get("/metrics")
-    async def metrics() -> dict:
-        """사업 목표 지표. 개인을 식별하는 값은 담지 않는다."""
+    async def metrics(request: Request) -> dict:
+        """사업 목표 지표. 개인을 식별하는 값은 담지 않는다.
+
+        집계값뿐이지만 서비스 이용량이 드러나므로 스킬 토큰과 같은 보호를 둔다.
+        """
+        auth.verify(request)
         values = await repository.metrics()
         return {
             "누적_확인_건수": values.total_checks,

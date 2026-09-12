@@ -14,10 +14,12 @@ from __future__ import annotations
 
 import logging
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from fastapi import APIRouter, Request
+
+from healthcheck.api.auth import SkillAuth
 
 from healthcheck.adapters.inprocess_queue import QueueFull
 from healthcheck.pipeline import step1_input
@@ -29,7 +31,15 @@ from healthcheck.storage.record import build_record
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+def build_router(path: str = "/skill") -> APIRouter:
+    """스킬 라우터를 만든다.
+
+    경로를 설정으로 받는 이유는, 오픈빌더가 임의 헤더를 지원하지 않을 때
+    추측하기 어려운 경로로 대신 보호할 수 있게 하려는 것이다.
+    """
+    router = APIRouter()
+    router.add_api_route(path, skill, methods=["POST"])
+    return router
 
 _BUSY_TEXT = "지금 확인 요청이 많아요.\n잠시 뒤에 다시 보내 주세요."
 _NO_CALLBACK_TEXT = (
@@ -44,12 +54,16 @@ class SkillServices:
     orchestrator: Orchestrator
     queue: JobQueue
     repository: CheckRepository | None = None
+    auth: SkillAuth = field(default_factory=SkillAuth)
 
 
-@router.post("/skill")
 async def skill(request: Request) -> dict:
     """스킬 요청 하나를 받는다. 5초 안에 반드시 돌려준다."""
     services: SkillServices = request.app.state.services
+
+    # 인증부터 확인한다. 토큰이 설정되어 있지 않으면 통과한다.
+    services.auth.verify(request)
+
     body = await request.json()
 
     utterance = _dig(body, "userRequest", "utterance") or ""
