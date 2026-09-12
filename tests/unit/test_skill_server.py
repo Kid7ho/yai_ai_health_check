@@ -320,3 +320,47 @@ def test_캐시가_맞으면_스킬_엔드포인트가_동기로_답한다():
     assert body["template"]["outputs"][0]["textCard"]["title"] == "믿을 만해요"
     assert DISCLAIMER in texts_of(body)
     assert app.state.queue.size == 0
+
+
+# ─────────────────────────────────────────────────────────────
+# 불필요한 외부 조회 차단 — Liner 토큰 비용
+# ─────────────────────────────────────────────────────────────
+
+
+async def test_자막_신뢰도가_낮으면_학술_검색을_하지_않는다():
+    """R-010이 판정을 보류할 입력에 토큰을 쓰지 않는다."""
+    orchestrator = build_fake_orchestrator()
+    academic = orchestrator.academic
+
+    result = await orchestrator.run(step1_input.classify("https://youtu.be/lowconf0001"))
+
+    assert result.verdict.rule_id == "R-010"
+    assert academic.calls == []
+
+
+async def test_범위_밖_입력에는_학술_검색을_하지_않는다():
+    orchestrator = build_fake_orchestrator()
+    academic = orchestrator.academic
+
+    result = await orchestrator.run(step1_input.classify("https://youtu.be/outofscope1"))
+
+    assert result.verdict.rule_id == "R-001"
+    assert academic.calls == []
+
+
+async def test_주장을_못_뽑으면_학술_검색을_하지_않는다():
+    orchestrator = build_fake_orchestrator()
+    academic = orchestrator.academic
+
+    await orchestrator.run(step1_input.classify("https://youtu.be/nosuchvideo"))
+
+    assert academic.calls == []
+
+
+async def test_정상_입력에는_학술_검색을_한다():
+    orchestrator = build_fake_orchestrator()
+    academic = orchestrator.academic
+
+    await orchestrator.run(step1_input.classify(GINSENG_URL))
+
+    assert len(academic.calls) == 1

@@ -13,12 +13,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from healthcheck.adapters.fake.academic import FakeAcademicSearchClient
+from healthcheck.adapters.liner.academic import LinerAcademicSearchClient
 from healthcheck.adapters.fake.cache import InMemoryExtractionCache, InMemoryVerdictCache
 from healthcheck.adapters.fake.callback import RecordingCallbackSender
 from healthcheck.adapters.fake.mfds import FakeMfdsDataSource
 from healthcheck.adapters.fake.transcript import FakeTranscriptExtractor
 from healthcheck.adapters.inprocess_queue import InProcessJobQueue
 from healthcheck.api import skill
+from healthcheck.config import Settings, load_settings
 from healthcheck.api.worker import start_workers
 from healthcheck.pipeline.orchestrator import Orchestrator
 from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
@@ -40,13 +42,49 @@ def build_fake_orchestrator() -> Orchestrator:
     )
 
 
+def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
+    """설정에 따라 실제 어댑터와 Fake를 골라 꽂는다.
+
+    어댑터를 하나씩 독립적으로 바꾼다. Liner 키는 있고 식약처 키는 아직
+    없는 지금 상황에서, 학술 검증만 실제로 돌리고 식약처는 Fake로 두는
+    조합이 가능해야 한다.
+    """
+    settings = settings or load_settings()
+    live = settings.adapter_mode == "live"
+
+    if live and settings.has_liner_key:
+        academic = LinerAcademicSearchClient(settings.liner_api_key)
+        logger.info("학술 검증: Liner 실제 호출")
+    else:
+        academic = FakeAcademicSearchClient()
+        if live:
+            logger.warning("ADAPTER_MODE=live이지만 LINER_API_KEY가 없어 Fake를 씁니다")
+
+    # TODO(확인필요): 식약처 오픈API 인증키가 아직 없다. 키가 나오면
+    # MfdsDataSource 실제 구현을 만들어 여기에 꽂는다.
+    if live and settings.has_mfds_key:
+        logger.warning("식약처 실제 구현이 아직 없어 Fake를 씁니다")
+    mfds = FakeMfdsDataSource()
+
+    # 자막 추출기도 실제 구현이 없다. 자막 확보 방식을 정한 뒤 만든다.
+    return Orchestrator(
+        transcript=FakeTranscriptExtractor(),
+        academic=academic,
+        mfds=mfds,
+        claim_extractor=RuleBasedClaimExtractor(),
+        ruleset=load_ruleset(settings.rules_path),
+        verdict_cache=InMemoryVerdictCache(),
+        extraction_cache=InMemoryExtractionCache(),
+    )
+
+
 def create_app(
     orchestrator: Orchestrator | None = None,
     callback_sender=None,
     *,
     worker_count: int = 2,
 ) -> FastAPI:
-    orchestrator = orchestrator or build_fake_orchestrator()
+    orchestrator = orchestrator or build_orchestrator()
     callback_sender = callback_sender or RecordingCallbackSender()
     queue = InProcessJobQueue()
 

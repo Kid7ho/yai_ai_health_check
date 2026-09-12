@@ -22,7 +22,11 @@ from healthcheck.domain.types import (
 from healthcheck.pipeline import step1_input
 from healthcheck.pipeline.step3_claims import ClaimExtractor
 from healthcheck.pipeline.step4_verify import verify
-from healthcheck.pipeline.step5_verdict import RuleSet, build_verdict_input
+from healthcheck.pipeline.step5_verdict import (
+    RuleSet,
+    _transcript_quality,
+    build_verdict_input,
+)
 from healthcheck.ports.academic import AcademicSearchClient
 from healthcheck.ports.cache import ExtractionCache, VerdictCache
 from healthcheck.ports.mfds import MfdsDataSource
@@ -66,9 +70,7 @@ class Orchestrator:
         academic = None
         mfds = None
 
-        # 범위 밖이면 외부 조회를 하지 않는다. 판정은 R-001에서 끝나므로
-        # 조회해도 쓰이지 않고 Liner 토큰만 쓴다.
-        if claims.in_scope and claims.claims:
+        if self._needs_verification(claims, content):
             primary = claims.claims[0]
             academic, mfds = await verify(primary, academic=self.academic, mfds=self.mfds)
 
@@ -96,6 +98,24 @@ class Orchestrator:
             step1_input.cache_key(share_input), result, rules_version=self.ruleset.version
         )
         return result
+
+    def _needs_verification(self, claims: ClaimSet, content: ExtractedContent) -> bool:
+        """④ 이중 검증을 돌릴 필요가 있는가.
+
+        판정이 이미 정해진 입력에는 외부 조회를 하지 않는다. 조회해도 쓰이지
+        않고 Liner 토큰과 응답 시간만 쓴다. 산학협력으로 토큰 비용을
+        지원받는 구조이므로 낭비를 줄이는 것이 설계 목표에 들어간다.
+
+        건너뛰는 경우 셋.
+          · 주장을 하나도 뽑지 못했다 (조회할 성분이 없다)
+          · 범위 밖이다 (R-001이 거절한다)
+          · 자막이 없거나 신뢰도가 낮다 (R-010이 판정을 보류한다)
+        """
+        if not claims.claims or not claims.in_scope:
+            return False
+
+        quality = _transcript_quality(content, self.ruleset.thresholds)
+        return quality == "ok"
 
     async def _content_of(self, share_input: ShareInput) -> ExtractedContent:
         """② 내용 추출."""

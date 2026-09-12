@@ -45,3 +45,47 @@ version: v0
   마늘:
     - 흑마늘
     - 마늘 추출물
+
+# ────────────────────────────────────────────────────────────────────
+# 영문 검색어
+# 학술 논문은 대부분 영어로 쓰여 있습니다. 한국어 성분명으로 학술 검색을
+# 하면 결과가 거의 나오지 않으므로, 검색에 쓸 영문 표기를 따로 둡니다.
+# 여기에 없는 성분은 한국어 표기로 검색합니다.
+# TODO(확인필요): 성분 사전을 넓힐 때 영문 표기도 함께 채워야 합니다.
+# ────────────────────────────────────────────────────────────────────
+영문명:
+  홍삼: Korean red ginseng
+  프로바이오틱스: probiotics
+  블루베리: blueberry anthocyanin
+  오메가3: omega-3 fatty acids
+  밀크씨슬: milk thistle silymarin
+  루테인: lutein
+  강황: curcumin
+  마늘: garlic
+
+# ────────────────────────────────────────────────────────────────────
+# 효능 대상의 영문 표기
+# 성분명과 함께 검색어를 만듭니다. 예: "Korean red ginseng immune function"
+# ────────────────────────────────────────────────────────────────────
+효능_대상_영문:
+  당뇨: diabetes
+  고혈압: hypertension
+  암: cancer
+  치매: dementia
+  관절염: arthritis
+  골다공증: osteoporosis
+  뇌졸중: stroke
+  심장병: heart disease
+  간염: hepatitis
+  백내장: cataract
+  면역력: immune function
+  혈당: blood glucose
+  혈압: blood pressure
+  콜레스테롤: cholesterol
+  혈액순환: blood circulation
+  기억력: memory
+  관절: joint health
+  눈: eye health
+  간: liver health
+  장: gut health
+  피로: fatigue
