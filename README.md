@@ -74,6 +74,23 @@ uv run uvicorn healthcheck.api.app:app --reload    # 스킬 서버 (Fake 어댑�
 대기 중인 작업 수를 돌려준다. 키가 없으면 Fake 어댑터가 붙으므로 지금 바로 띄워
 동작을 볼 수 있다.
 
+## 골든셋 측정
+
+이 프로젝트의 품질 기준은 스펙 구현 여부가 아니라 골든셋 통과 여부다.
+
+```bash
+python scripts/measure_golden.py              # 실제 API로 전 구간 측정
+python scripts/measure_golden.py --mode fake  # 토큰 안 씀
+uv run pytest tests/golden                    # 규칙 엔진 회귀 검증 (네트워크 없음)
+```
+
+두 가지를 구분한다. `tests/golden`은 `판정입력`이 적힌 케이스만 돌려 규칙 엔진을
+회귀 검증한다. `measure_golden.py`는 원문에서 시작해 ③ 구조화와 ④ 검증까지 전
+구간을 재므로 외부 API를 쓴다.
+
+현재 20건 기준 정확도는 15건이다. 틀린 5건은 원인이 둘로 모이며 둘 다 의료 자문의
+검수가 필요한 규칙 문제다. 자세한 내용은 [CLAUDE.md](CLAUDE.md)의 미해결 전제를 보라.
+
 ## 자막 확보 현황 검증
 
 어르신이 받는 영상에 자막이 실제로 얼마나 있는지 재는 스크립트다. 이번 MVP는

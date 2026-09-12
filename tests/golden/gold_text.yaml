@@ -1,0 +1,84 @@
+# 원문에서 판정까지 전 구간을 재는 케이스들.
+#
+# gold_basic.yaml은 판정입력을 손으로 적어 규칙 엔진만 검증한다. 이 파일은
+# 판정입력을 적지 않는다. 원문을 파이프라인에 넣어 ③ 구조화와 ④ 검증을
+# 거친 결과를 기대 라벨과 비교하는 것이 목적이다.
+#
+# ⚠ 기대 라벨은 개발자 판단이며 의료 자문의 검수를 받지 않았다.
+#   검수 후 값이 바뀌면 그것이 정답이다.
+#
+# 측정 방법
+#   python scripts/measure_golden.py            # 실제 API 사용
+#   python scripts/measure_golden.py --mode fake
+
+- id: gold-101
+  input: "홍삼은 면역력 증진에 도움을 줄 수 있지만 질병을 치료하지는 않습니다"
+  expected: TRUSTWORTHY
+  reason: 국가가 인정한 기능성 문구와 일치하고, 치료를 부정하는 책임 있는 문장이다.
+
+- id: gold-102
+  input: "루테인이 눈 건강에 도움을 줄 수 있습니다"
+  expected: TRUSTWORTHY
+  reason: 고시형 기능성 원료이고 주장 효능이 인정 문구와 같다.
+
+- id: gold-103
+  input: "루테인을 먹으면 치매도 예방된다고 합니다"
+  expected: WARNING
+  reason: 인정 원료라는 사실을 근거로 인정되지 않은 효능을 말한다. 오인 위험이 크다.
+
+- id: gold-104
+  input: "프로바이오틱스가 장 건강에 도움을 줄 수 있습니다"
+  expected: TRUSTWORTHY
+  reason: 고시형 인정 문구와 일치한다.
+
+- id: gold-105
+  input: "유산균이 아토피를 완치시킨다는 이야기가 있습니다"
+  expected: WARNING
+  reason: 질병 완치 표현이다. 인정 원료라도 예외가 아니다.
+
+- id: gold-106
+  input: "밀크씨슬이 간 건강에 도움을 줄 수 있습니다"
+  expected: TRUSTWORTHY
+  reason: 개별인정형 원료이고 인정 기능성이 간 건강이다.
+
+- id: gold-107
+  input: "오메가3가 혈액순환 개선에 도움을 줄 수 있습니다"
+  expected: TRUSTWORTHY
+  reason: 고시형 인정 문구와 일치한다.
+
+- id: gold-108
+  input: "블루베리가 당뇨를 완치시킨다는 말은 근거가 없습니다"
+  expected: UNKNOWN
+  reason: 오정보를 바로잡는 문장이다. 주장이 아니므로 판정을 보류한다.
+
+- id: gold-109
+  input: "강황이 관절 건강에 도움을 줄 수 있습니다"
+  expected: TRUSTWORTHY
+  reason: 커큐민이 관절 건강으로 개별인정을 받았다.
+
+- id: gold-110
+  input: "마늘을 먹으면 고혈압이 낫는다고 합니다"
+  expected: WARNING
+  reason: 질병이 낫는다는 표현이다. 부당광고 적발 이력에도 해당한다.
+
+- id: gold-111
+  input: "이걸 꾸준히 드시면 당뇨가 낫습니다"
+  expected: WARNING
+  reason: 성분을 특정하지 못해도 질병 치료 표현은 주의로 간다.
+
+- id: gold-112
+  input: "수술 대신 이 즙을 드세요"
+  expected: UNKNOWN
+  reason: 시술을 대체하라는 내용이므로 서비스 범위 밖이다.
+
+- id: gold-113
+  input: "어제 홍삼을 한 박스 샀습니다"
+  expected: UNKNOWN
+  reason: 효능 주장이 없다. 판정할 대상이 없다.
+
+- id: gold-114
+  input: "홍삼이 혈압에 좋다고 들었어요"
+  expected: CAUTION
+  reason: >-
+    홍삼의 인정 기능성에 혈압은 없다. 다만 성분 자체는 인정 원료이고 표현도
+    완화형이라 주의까지 가기보다 조심하세요가 적절하다.
