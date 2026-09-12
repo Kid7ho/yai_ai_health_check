@@ -19,6 +19,7 @@ from healthcheck.domain.types import (
     ExtractedContent,
     ShareInput,
 )
+from healthcheck.adapters.youtube.transcript import TranscriptFetchError
 from healthcheck.pipeline import step1_input
 from healthcheck.pipeline.step3_claims import ClaimExtractor
 from healthcheck.pipeline.step4_verify import verify
@@ -64,7 +65,7 @@ class Orchestrator:
         if cached is not None:
             return cached
 
-        content = await self._content_of(share_input)
+        content, retryable_failure = await self._content_of(share_input)
         claims = await self._claims_of(content)
 
         academic = None
@@ -94,9 +95,14 @@ class Orchestrator:
         )
 
         _log_result(share_input, result)
-        await self.verdict_cache.set(
-            step1_input.cache_key(share_input), result, rules_version=self.ruleset.version
-        )
+
+        # 일시적 실패로 나온 판정은 캐시에 넣지 않는다. 자막 서버 차단 때문에
+        # 나온 '알 수 없어요'를 캐시하면, 차단이 풀린 뒤에도 그 영상은 계속
+        # 같은 답을 받는다. 캐시가 오답을 굳히는 셈이다.
+        if not retryable_failure:
+            await self.verdict_cache.set(
+                step1_input.cache_key(share_input), result, rules_version=self.ruleset.version
+            )
         return result
 
     def _needs_verification(self, claims: ClaimSet, content: ExtractedContent) -> bool:
@@ -117,25 +123,44 @@ class Orchestrator:
         quality = _transcript_quality(content, self.ruleset.thresholds)
         return quality == "ok"
 
-    async def _content_of(self, share_input: ShareInput) -> ExtractedContent:
-        """② 내용 추출."""
+    async def _content_of(self, share_input: ShareInput) -> tuple[ExtractedContent, bool]:
+        """② 내용 추출.
+
+        (내용, 일시적_실패) 쌍을 돌려준다. 일시적 실패면 판정을 캐시하지 않는다.
+        """
         if share_input.kind == "YOUTUBE" and share_input.video_id:
-            return await self.transcript.fetch(share_input.video_id)
+            try:
+                return await self.transcript.fetch(share_input.video_id), False
+            except TranscriptFetchError as error:
+                # 자막 서버 차단이나 일시 장애다. 자막이 없는 것과 결과는 같지만
+                # 다시 시도하면 달라질 수 있으므로 캐시하지 않는다.
+                logger.warning(
+                    "자막 서버 접근 실패 video=%s: %s",
+                    share_input.video_id,
+                    str(error).splitlines()[0],
+                )
+                return _no_content(), True
+            except Exception:
+                logger.exception("자막 추출 실패 video=%s", share_input.video_id)
+                return _no_content(), False
 
         if share_input.kind == "PLAIN_TEXT" and share_input.raw_text.strip():
             # 어르신이 링크 없이 주장을 직접 적어 보낸 경우다. 자막 추출이 필요 없다.
             import hashlib
 
             text = share_input.raw_text
-            return ExtractedContent(
-                text=text,
-                has_transcript=True,
-                confidence=1.0,
-                content_hash=hashlib.sha256(text.encode("utf-8")).hexdigest()[:32],
+            return (
+                ExtractedContent(
+                    text=text,
+                    has_transcript=True,
+                    confidence=1.0,
+                    content_hash=hashlib.sha256(text.encode("utf-8")).hexdigest()[:32],
+                ),
+                False,
             )
 
         # 유튜브가 아닌 링크. 이번 MVP는 내용을 추출하지 않는다.
-        return ExtractedContent(text="", has_transcript=False, confidence=0.0)
+        return _no_content(), False
 
     async def _claims_of(self, content: ExtractedContent) -> ClaimSet:
         """③ 주장 구조화. 캐시 2단을 쓴다."""
@@ -153,6 +178,10 @@ class Orchestrator:
             await self.extraction_cache.set(content.content_hash, claims)
 
         return claims
+
+
+def _no_content() -> ExtractedContent:
+    return ExtractedContent(text="", has_transcript=False, confidence=0.0)
 
 
 def _mark_cached(result: CheckResult) -> CheckResult:

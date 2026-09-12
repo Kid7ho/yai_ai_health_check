@@ -15,6 +15,7 @@ from fastapi import FastAPI
 from healthcheck.adapters.fake.academic import FakeAcademicSearchClient
 from healthcheck.adapters.liner.academic import LinerAcademicSearchClient
 from healthcheck.adapters.mfds.foodsafetykorea import FoodSafetyKoreaDataSource
+from healthcheck.adapters.youtube.transcript import YouTubeTranscriptExtractor
 from healthcheck.adapters.fake.cache import InMemoryExtractionCache, InMemoryVerdictCache
 from healthcheck.adapters.fake.callback import RecordingCallbackSender
 from healthcheck.adapters.fake.mfds import FakeMfdsDataSource
@@ -69,9 +70,15 @@ def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
         if live:
             logger.warning("ADAPTER_MODE=live이지만 MFDS_API_KEY가 없어 Fake를 씁니다")
 
-    # 자막 추출기도 실제 구현이 없다. 자막 확보 방식을 정한 뒤 만든다.
+    # 자막 추출은 키가 필요 없으므로 live 모드면 바로 실제 구현을 쓴다.
+    if live:
+        transcript = YouTubeTranscriptExtractor()
+        logger.info("자막 추출: 유튜브 실제 호출 (한국어 자막만)")
+    else:
+        transcript = FakeTranscriptExtractor()
+
     return Orchestrator(
-        transcript=FakeTranscriptExtractor(),
+        transcript=transcript,
         academic=academic,
         mfds=mfds,
         claim_extractor=RuleBasedClaimExtractor(),

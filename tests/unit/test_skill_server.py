@@ -364,3 +364,38 @@ async def test_정상_입력에는_학술_검색을_한다():
     await orchestrator.run(step1_input.classify(GINSENG_URL))
 
     assert len(academic.calls) == 1
+
+
+# ─────────────────────────────────────────────────────────────
+# 자막 서버 차단 — 일시적 실패는 캐시하지 않는다
+# ─────────────────────────────────────────────────────────────
+
+
+async def test_자막_서버_차단은_판정을_캐시하지_않는다():
+    """차단 때문에 나온 '알 수 없어요'를 캐시하면 차단이 풀려도 같은 답을 준다."""
+    from healthcheck.adapters.youtube.transcript import TranscriptFetchError
+    from healthcheck.domain.labels import Label as _Label
+
+    class BlockedExtractor:
+        async def fetch(self, video_id: str):
+            raise TranscriptFetchError("YouTube가 IP를 차단했다")
+
+    orchestrator = build_fake_orchestrator()
+    orchestrator.transcript = BlockedExtractor()
+    share_input = step1_input.classify(GINSENG_URL)
+
+    result = await orchestrator.run(share_input)
+
+    assert result.verdict.label is _Label.UNKNOWN
+    assert result.verdict.rule_id == "R-010"
+    assert await orchestrator.cached(share_input) is None
+
+
+async def test_자막이_정말_없는_경우는_캐시한다():
+    """없는 자막은 다시 시도해도 없다. 캐시해서 호출을 줄인다."""
+    orchestrator = build_fake_orchestrator()
+    share_input = step1_input.classify("https://youtu.be/nosuchvideo")
+
+    await orchestrator.run(share_input)
+
+    assert await orchestrator.cached(share_input) is not None

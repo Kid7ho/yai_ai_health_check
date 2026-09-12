@@ -43,7 +43,10 @@ class _Patterns:
 
     disease_cure: tuple[str, ...]
     effect_by_intensity: tuple[tuple[Intensity, tuple[str, ...]], ...]
-    out_of_scope: tuple[str, ...]
+    # 자막 어디에 한 번만 나와도 거절하는 표현
+    out_of_scope_immediate: tuple[str, ...]
+    # 성분 주장이 담긴 문장 안에 함께 있을 때만 거절하는 표현
+    out_of_scope_contextual: tuple[str, ...]
     effect_targets: tuple[str, ...]
     # 표기 → 표준 성분명
     ingredient_lookup: dict[str, str]
@@ -71,9 +74,9 @@ def load_patterns(
             expressions = tuple(dict.fromkeys(expressions + disease_cure))
         by_intensity.append((intensity, expressions))
 
-    out_of_scope: list[str] = []
-    for group in (raw.get("범위_밖_표현") or {}).values():
-        out_of_scope.extend(group or ())
+    scope = raw.get("범위_밖_표현") or {}
+    immediate = tuple(scope.get("즉시_거절") or ())
+    contextual = tuple(scope.get("문맥_판단") or ())
 
     targets: list[str] = []
     for group in (raw.get("효능_대상") or {}).values():
@@ -88,7 +91,8 @@ def load_patterns(
     return _Patterns(
         disease_cure=disease_cure,
         effect_by_intensity=tuple(by_intensity),
-        out_of_scope=tuple(out_of_scope),
+        out_of_scope_immediate=immediate,
+        out_of_scope_contextual=contextual,
         # 긴 표기를 먼저 맞춰야 '혈당'이 '혈당 조절'을 가로채지 않는다.
         effect_targets=tuple(sorted(set(targets), key=len, reverse=True)),
         ingredient_lookup=lookup,
@@ -112,20 +116,32 @@ class RuleBasedClaimExtractor:
         patterns = self._patterns
         text = text or ""
 
-        # 범위 판별과 질병 표현 판별은 문장 단위가 아니라 전체 텍스트에서 한다.
-        # 한 영상 안에서 한 문장만 의약품 이야기여도 범위 밖으로 본다.
-        in_scope = not _contains_any(text, patterns.out_of_scope)
         disease_cure = _contains_any(text, patterns.disease_cure)
+
+        # 의약품을 대체하라는 표현은 자막 어디에 한 번만 나와도 거절한다.
+        # 가장 위험한 유형이므로 문맥을 따지지 않는다.
+        out_of_scope = _contains_any(text, patterns.out_of_scope_immediate)
 
         claims: list[Claim] = []
         seen: set[tuple[str, str]] = set()
 
         for sentence, offset in _sentences(text):
-            for claim in self._claims_in_sentence(sentence, offset):
+            sentence_claims = self._claims_in_sentence(sentence, offset)
+
+            # 의료 이야기에 흔히 나오는 단어는 문장 단위로 본다. 자막 전체에서
+            # 찾으면 긴 영상은 거의 항상 범위 밖이 된다. 실제 8천 자 홍삼
+            # 자막에서 "병원에 가", "처방"이 곁가지로 나와 식품 영상이 통째로
+            # 거절됐다. 주장이 실린 문장에 섞였을 때만 거절한다.
+            if sentence_claims and _contains_any(sentence, patterns.out_of_scope_contextual):
+                out_of_scope = True
+
+            for claim in sentence_claims:
                 key = (claim.ingredient, claim.claimed_effect)
                 if key not in seen:
                     seen.add(key)
                     claims.append(claim)
+
+        in_scope = not out_of_scope
 
         return ClaimSet(
             claims=tuple(claims),
@@ -231,11 +247,31 @@ def _find_ingredients(
     return sorted(found, key=lambda item: item[2])
 
 
+# 한 글자나 두 글자 효능 대상은 다른 단어 안에서 잡힌다. 실제 자막에서
+# '장'이 '연구소장'과 '판매량'에, '간'이 '기간 동안'에 걸렸다. 그래서 짧은
+# 대상은 앞이 한글이 아니고 뒤가 조사나 관련 명사일 때만 인정한다.
+_SHORT_TARGET_MAX = 2
+_PARTICLES = "이가은는을를에의도과와만"
+_TAIL_WORDS = ("건강", "기능", "질환", "질병")
+
+
+def _short_target_pattern(needle: str) -> re.Pattern[str]:
+    tails = "|".join(_TAIL_WORDS)
+    return re.compile(
+        rf"(?<![가-힣]){re.escape(needle)}(?=[{_PARTICLES}]|\s*(?:{tails})|\s|$)"
+    )
+
+
 def _find_first_each(sentence: str, needles: tuple[str, ...]) -> list[tuple[str, int]]:
     """효능 대상과 그 위치."""
     found: list[tuple[str, int]] = []
     for needle in needles:
-        position = sentence.find(needle)
+        if len(needle) <= _SHORT_TARGET_MAX:
+            match = _short_target_pattern(needle).search(sentence)
+            position = match.start() if match else -1
+        else:
+            position = sentence.find(needle)
+
         if position >= 0 and not any(
             needle in other and needle != other for other, _ in found
         ):
