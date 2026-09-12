@@ -74,6 +74,23 @@ uv run uvicorn healthcheck.api.app:app --reload    # 스킬 서버 (Fake 어댑�
 대기 중인 작업 수를 돌려준다. 키가 없으면 Fake 어댑터가 붙으므로 지금 바로 띄워
 동작을 볼 수 있다.
 
+## 자막 확보 현황 검증
+
+어르신이 받는 영상에 자막이 실제로 얼마나 있는지 재는 스크립트다. 이번 MVP는
+자막이 있는 영상만 지원하므로, 이 비율이 서비스가 답할 수 있는 비율의 상한이다.
+
+```bash
+python scripts/check_transcripts.py samples/videos.txt --claims
+python scripts/check_transcripts.py samples/videos.txt --json 결과.json --interval 3
+```
+
+영상 목록은 한 줄에 하나씩 적는다. 주소 뒤에 설명을 붙여도 되고 `#`은 주석이다.
+`--claims`를 주면 자막에서 뽑아낸 주장까지 보여 준다. 규칙 기반 추출이 실제
+자막에서 어디까지 되는지 재는 용도이며 네트워크를 더 쓰지 않는다.
+
+같은 IP에서 몰아 부르면 YouTube가 차단한다. 차단이 감지되면 즉시 멈추고 남은
+항목을 미확인으로 표시한다. 차단이 있었으면 종료 코드가 2다.
+
 ## 규칙표 검수 (의료 자문의용)
 
 판정 논리는 코드에 없다. `rules/verdict_rules_v0.yaml` 한 파일에 있다.

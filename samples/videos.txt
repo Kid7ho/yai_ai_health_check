@@ -1,0 +1,12 @@
+# 자막 검증용 영상 목록
+#   한 줄에 하나. 유튜브 주소나 영상 ID를 적는다.
+#   # 뒤는 주석. 주소 뒤에 공백을 두고 설명을 붙여도 된다.
+#
+# 아래는 웹 검색으로 찾은 홍삼 관련 한국어 건강정보 영상이다.
+# 실제 어르신이 받은 영상으로 교체하는 것이 목표다.
+
+https://www.youtube.com/watch?v=iRUoUfNEQDw  홍삼 궁합 (의사 채널)
+https://www.youtube.com/watch?v=58gfFsJXiec  건강하게 홍삼 먹는 방법 (엄지의 제왕)
+https://www.youtube.com/watch?v=Rj2f0RKcJac  장수 돕는 홍삼의 효능 (KBS)
+https://www.youtube.com/watch?v=_AXmKUzkFUw  홍삼 집에서 만드는 법 (내 몸 사용 설명서)
+https://www.youtube.com/watch?v=MhNMPjOHRYE  홍삼단 개발자 인터뷰
