@@ -1,0 +1,80 @@
+# 최초 예시 5건. 네 라벨과 주요 규칙 경로를 한 번씩 지나간다.
+# 팀이 채워 넣을 때 참고용으로 남긴다.
+
+- id: gold-001
+  input: "냉동 블루베리가 당뇨를 완치시킨다"
+  expected: WARNING
+  expected_rule: R-021
+  reason: 질병 완치 표현이 있고 해당 기능성 인정도 없다. 식품은 질병을 낫게 한다고 광고할 수 없다.
+  판정입력:
+    in_scope: true
+    transcript_quality: ok
+    disease_cure_expression: true
+    ad_violation_hit: false
+    recognition: NOT_RECOGNIZED
+    functionality_match: NOT_APPLICABLE
+    supporting_papers: 0
+    refuting_papers: 0
+
+- id: gold-002
+  input: "홍삼이 면역력 증진에 도움을 줄 수 있다"
+  expected: TRUSTWORTHY
+  expected_rule: R-040
+  reason: 고시형 기능성 원료이고 주장 효능이 인정 문구와 같으며 반박 논문이 없다.
+  # TODO(확인필요): 홍삼은 고시형 원료이므로 식약처 I-0040(개별인정형)에는 없다.
+  # 고시형 목록 데이터를 확보하기 전까지 recognition=NOTIFIED를 실제로 채울 수 없다.
+  판정입력:
+    in_scope: true
+    transcript_quality: ok
+    disease_cure_expression: false
+    ad_violation_hit: false
+    recognition: NOTIFIED
+    functionality_match: EXACT
+    supporting_papers: 3
+    refuting_papers: 0
+
+- id: gold-003
+  input: "이 영상 보세요 (자막 없는 AI 생성 영상)"
+  source_url: https://youtube.com/watch?v=EXAMPLE
+  expected: UNKNOWN
+  expected_rule: R-010
+  reason: 자막이 없어 무슨 주장인지 확인할 수 없다. 추측해서 판정하지 않는다.
+  판정입력:
+    in_scope: true
+    transcript_quality: none
+    disease_cure_expression: false
+    ad_violation_hit: false
+    recognition: UNKNOWN
+    functionality_match: NOT_APPLICABLE
+    supporting_papers: 0
+    refuting_papers: 0
+
+- id: gold-004
+  input: "마늘이 혈압을 낮추는 데 좋다고 합니다"
+  expected: CAUTION
+  expected_rule: R-070
+  reason: 뒷받침 연구는 있으나 국가가 기능성을 인정한 원료가 아니다. 믿을 만하다고 말할 수 없다.
+  판정입력:
+    in_scope: true
+    transcript_quality: ok
+    disease_cure_expression: false
+    ad_violation_hit: false
+    recognition: NOT_RECOGNIZED
+    functionality_match: NOT_APPLICABLE
+    supporting_papers: 2
+    refuting_papers: 0
+
+- id: gold-005
+  input: "당뇨약 끊고 이 즙만 드시면 인슐린 안 맞아도 됩니다"
+  expected: UNKNOWN
+  expected_rule: R-001
+  reason: 의약품 복용 중단에 관한 내용이므로 서비스 범위 밖이다. 판정하지 않고 거절한다.
+  판정입력:
+    in_scope: false
+    transcript_quality: ok
+    disease_cure_expression: false
+    ad_violation_hit: false
+    recognition: UNKNOWN
+    functionality_match: NOT_APPLICABLE
+    supporting_papers: 0
+    refuting_papers: 0

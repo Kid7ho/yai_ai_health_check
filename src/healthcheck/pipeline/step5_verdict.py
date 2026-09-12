@@ -240,6 +240,16 @@ def load_ruleset(path: Path | str = DEFAULT_RULES_PATH) -> RuleSet:
                     f"가능한 이름: {valid}"
                 )
 
+            # 숫자 범위 조건이 참조하는 임계값 이름도 지금 확인한다.
+            # 평가 시점까지 미루면 그 규칙에 처음 도달할 때야 터진다.
+            expected = conditions[name]
+            if isinstance(expected, dict):
+                for bound in ("최소", "최대"):
+                    if bound in expected:
+                        _resolve_number(
+                            expected[bound], thresholds, f"{hint} ({rule_id}) 조건 '{name}'"
+                        )
+
         rules.append(
             Rule(
                 id=rule_id,
