@@ -21,7 +21,7 @@ from healthcheck.adapters.fake.callback import RecordingCallbackSender
 from healthcheck.adapters.fake.mfds import FakeMfdsDataSource
 from healthcheck.adapters.fake.transcript import FakeTranscriptExtractor
 from healthcheck.adapters.inprocess_queue import InProcessJobQueue
-from healthcheck.api import skill
+from healthcheck.api import debug, skill
 from healthcheck.config import Settings, load_settings
 from healthcheck.api.worker import start_workers
 from healthcheck.pipeline.orchestrator import Orchestrator
@@ -113,6 +113,18 @@ def create_app(
     app.state.queue = queue
     app.state.callback_sender = callback_sender
     app.include_router(skill.router)
+
+    # 디버그 채팅 화면. 개발용이며 DEBUG_UI=0으로 끈다.
+    # live와 fake 두 조립을 함께 올려 두고 화면에서 고를 수 있게 한다.
+    # 실제 API를 쓰지 않고 규칙만 시험할 때 토큰을 아낄 수 있다.
+    settings = load_settings()
+    if settings.debug_ui:
+        app.state.debug_orchestrators = {
+            "live": orchestrator,
+            "fake": build_fake_orchestrator(),
+        }
+        app.include_router(debug.router)
+        logger.info("디버그 화면: http://127.0.0.1:8000/debug")
 
     @app.get("/health")
     async def health() -> dict:

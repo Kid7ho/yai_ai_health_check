@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass
 
 from healthcheck.domain.types import (
@@ -59,22 +60,39 @@ class Orchestrator:
         logger.info("캐시 적중: key=%s version=%s", key, self.ruleset.version)
         return _mark_cached(found)
 
-    async def run(self, share_input: ShareInput) -> CheckResult:
-        """전체 파이프라인. 워커가 호출한다."""
+    async def run(
+        self, share_input: ShareInput, *, trace: dict[str, float] | None = None
+    ) -> CheckResult:
+        """전체 파이프라인. 워커가 호출한다.
+
+        trace에 dict를 넘기면 단계별 소요 시간(밀리초)을 채워 준다.
+        디버그 화면이 어느 단계가 느린지 보기 위해 쓴다. 판정에는 영향이 없다.
+        """
+        started = time.monotonic()
+
         cached = await self.cached(share_input)
         if cached is not None:
+            _record(trace, "cache", started)
             return cached
 
+        step = time.monotonic()
         content, retryable_failure = await self._content_of(share_input)
+        _record(trace, "content", step)
+
+        step = time.monotonic()
         claims = await self._claims_of(content)
+        _record(trace, "claims", step)
 
         academic = None
         mfds = None
 
         if self._needs_verification(claims, content):
             primary = claims.claims[0]
+            step = time.monotonic()
             academic, mfds = await verify(primary, academic=self.academic, mfds=self.mfds)
+            _record(trace, "verify", step)
 
+        step = time.monotonic()
         verdict_input = build_verdict_input(
             claims=claims,
             content=content,
@@ -83,6 +101,7 @@ class Orchestrator:
             thresholds=self.ruleset.thresholds,
         )
         verdict = self.ruleset.evaluate(verdict_input)
+        _record(trace, "verdict", step)
 
         result = CheckResult(
             verdict=verdict,
@@ -104,6 +123,7 @@ class Orchestrator:
             await self.verdict_cache.set(
                 step1_input.cache_key(share_input), result, rules_version=self.ruleset.version
             )
+        _record(trace, "total", started)
         return result
 
     def _needs_verification(self, claims: ClaimSet, content: ExtractedContent) -> bool:
@@ -179,6 +199,11 @@ class Orchestrator:
             await self.extraction_cache.set(content.content_hash, claims)
 
         return claims
+
+
+def _record(trace: dict[str, float] | None, name: str, started: float) -> None:
+    if trace is not None:
+        trace[name] = round((time.monotonic() - started) * 1000, 1)
 
 
 def _no_content() -> ExtractedContent:

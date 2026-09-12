@@ -42,6 +42,9 @@ class Settings:
     # 차단이 감지된 뒤 자막 호출을 멈추는 시간(초).
     transcript_cooldown: float = 600.0
 
+    # 디버그 채팅 화면(/debug)을 띄울지. 개발용이며 배포 시에는 끈다.
+    debug_ui: bool = True
+
     @property
     def has_liner_key(self) -> bool:
         return bool(self.liner_api_key)
@@ -108,6 +111,7 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         webshare_password=_clean(os.environ.get("WEBSHARE_PROXY_PASSWORD")),
         transcript_min_interval=float(os.environ.get("TRANSCRIPT_MIN_INTERVAL") or 1.5),
         transcript_cooldown=float(os.environ.get("TRANSCRIPT_COOLDOWN") or 600),
+        debug_ui=(os.environ.get("DEBUG_UI") or "1").strip().lower() not in ("0", "false", "no"),
     )
 
 

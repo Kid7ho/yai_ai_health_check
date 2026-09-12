@@ -53,6 +53,21 @@ uv run pytest tests/golden -v    # 골든셋만
 uv run uvicorn healthcheck.api.app:app --reload    # 스킬 서버 (Fake 어댑터)
 ```
 
+## 디버그 채팅 화면
+
+카카오톡 채널에 붙이기 전에 실제 데이터를 넣어 보며 동작을 확인하는 도구다.
+서버를 띄우고 <http://127.0.0.1:8000/debug>를 열면 된다.
+
+- 카카오톡처럼 생긴 채팅창에 유튜브 링크나 건강정보 문장을 넣는다
+- 실제 카카오에 나갈 카드와 면책 문구가 그대로 렌더링된다
+- 오른쪽 패널에 파이프라인 중간 산출물이 전부 나온다. 자막, 뽑아낸 주장,
+  식약처 인정 정보, 논문 목록과 찬반, 판정 입력값, 매칭된 규칙 ID,
+  단계별 소요 시간, 그리고 카카오 ack·콜백 페이로드 원문
+- `live`와 `fake`를 골라 쓴다. `fake`는 외부 API를 부르지 않으므로 규칙만
+  시험할 때 Liner 토큰을 아낀다
+
+제품 화면이 아니라 개발 도구다. 배포할 때는 `DEBUG_UI=0`으로 끈다.
+
 컨테이너로 띄울 때는 `docker build -t healthcheck . && docker run -p 8000:8000 healthcheck`.
 
 스킬 서버는 `POST /skill`에서 카카오 요청을 받고 `GET /health`로 규칙표 버전과

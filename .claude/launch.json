@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "healthcheck-debug",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": ["-m", "uvicorn", "healthcheck.api.app:app", "--port", "8000", "--app-dir", "src"],
+      "port": 8000,
+      "url": "http://localhost:8000"
+    }
+  ]
+}

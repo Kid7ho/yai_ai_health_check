@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>건강정보 확인 — 디버그 채팅</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+    background: #eceef2; color: #1b1b1b; height: 100vh; display: flex; overflow: hidden;
+  }
+  /* ── 왼쪽: 카카오톡 흉내 채팅 ───────────────────────────── */
+  .phone { width: 420px; min-width: 340px; display: flex; flex-direction: column; background: #b2c7d9; border-right: 1px solid #c9ced6; }
+  .phone header { background: #a5b9cb; padding: 12px 16px; font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+  .phone header small { font-weight: 400; opacity: .7; }
+  .chat { flex: 1; overflow-y: auto; padding: 14px 12px 20px; }
+  .row { display: flex; margin-bottom: 10px; align-items: flex-end; gap: 6px; }
+  .row.me { justify-content: flex-end; }
+  .who { font-size: 11px; color: #44536a; margin: 0 0 3px 40px; }
+  .bubble { max-width: 78%; padding: 9px 12px; border-radius: 14px; font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+  .bubble.bot { background: #fff; border-top-left-radius: 3px; }
+  .bubble.me { background: #fae100; border-top-right-radius: 3px; }
+  .time { font-size: 10px; color: #5a6b81; }
+  .card { background: #fff; border-radius: 14px; border-top-left-radius: 3px; max-width: 80%; overflow: hidden; }
+  .card .title { font-size: 16px; font-weight: 700; padding: 12px 14px 6px; }
+  .card .desc { padding: 0 14px 12px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+  .card .btn { border-top: 1px solid #eee; padding: 11px; text-align: center; font-size: 13px; color: #3c5a82; cursor: pointer; background: none; width: 100%; }
+  .card .btn:hover { background: #f7f9fb; }
+  .L-TRUSTWORTHY { color: #1a7f37; } .L-CAUTION { color: #b26a00; }
+  .L-WARNING { color: #c02626; } .L-UNKNOWN { color: #5a6b81; }
+  .composer { display: flex; gap: 8px; padding: 10px; background: #f7f7f7; border-top: 1px solid #dcdfe4; }
+  .composer input { flex: 1; padding: 10px 12px; border: 1px solid #d3d7dd; border-radius: 18px; font-size: 14px; }
+  .composer button { padding: 10px 16px; border: 0; border-radius: 18px; background: #fae100; font-weight: 600; cursor: pointer; }
+  .composer button:disabled { opacity: .5; cursor: default; }
+  .samples { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; background: #f7f7f7; }
+  .samples button { font-size: 11px; padding: 5px 9px; border: 1px solid #cfd4db; border-radius: 12px; background: #fff; cursor: pointer; }
+  /* ── 오른쪽: 디버그 패널 ────────────────────────────────── */
+  .panel { flex: 1; overflow-y: auto; padding: 16px 20px 40px; background: #fff; min-width: 380px; }
+  .panel h1 { font-size: 15px; margin: 0 0 4px; }
+  .panel .hint { font-size: 12px; color: #6b7280; margin: 0 0 14px; }
+  .modes { display: flex; gap: 14px; font-size: 12px; margin-bottom: 14px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .badge { font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #f1f3f6; color: #374151; }
+  .badge.warn { background: #fde8e8; color: #99231f; }
+  .badge.ok { background: #e6f4ea; color: #1a7f37; }
+  section { border: 1px solid #e6e8ec; border-radius: 8px; margin-bottom: 10px; }
+  section > h2 { font-size: 12px; margin: 0; padding: 9px 12px; background: #f7f8fa; cursor: pointer; display: flex; justify-content: space-between; }
+  section > div { padding: 10px 12px; border-top: 1px solid #eef0f3; }
+  section.closed > div { display: none; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  td { padding: 4px 6px; border-bottom: 1px solid #f0f1f4; vertical-align: top; }
+  td:first-child { color: #6b7280; width: 34%; }
+  pre { margin: 0; font-size: 11px; line-height: 1.5; white-space: pre-wrap; word-break: break-all; max-height: 320px; overflow: auto; }
+  .paper { font-size: 12px; padding: 5px 0; border-bottom: 1px solid #f0f1f4; }
+  .st { font-size: 10px; padding: 1px 6px; border-radius: 8px; margin-right: 6px; }
+  .st-SUPPORT { background: #e6f4ea; color: #1a7f37; }
+  .st-REFUTE { background: #fde8e8; color: #99231f; }
+  .st-NEUTRAL { background: #f1f3f6; color: #4b5563; }
+  .empty { color: #9ca3af; font-size: 12px; }
+  @media (max-width: 860px) { body { flex-direction: column; overflow: auto; } .phone { width: 100%; height: 60vh; } }
+</style>
+</head>
+<body>
+<div class="phone">
+  <header>
+    <span>건강정보 확인</span>
+    <small id="modeLabel">live</small>
+  </header>
+  <div class="chat" id="chat"></div>
+  <div class="samples" id="samples"></div>
+  <div class="composer">
+    <input id="input" placeholder="유튜브 링크나 건강정보 문장을 넣어 보세요" autocomplete="off">
+    <button id="send">보내기</button>
+  </div>
+</div>
+
+<div class="panel">
+  <h1>디버그 패널</h1>
+  <p class="hint">카카오톡 채널에 붙이기 전에 실제 데이터로 파이프라인을 확인하는 도구입니다. 제품 화면이 아닙니다.</p>
+  <div class="modes">
+    <label><input type="radio" name="mode" value="live" checked> live (실제 API 호출)</label>
+    <label><input type="radio" name="mode" value="fake"> fake (토큰 안 씀)</label>
+  </div>
+  <div class="badges" id="badges"><span class="empty">아직 실행하지 않았습니다.</span></div>
+  <div id="sections"></div>
+</div>
+
+<script>
+const SAMPLES = [
+  ["질병 완치 주장", "냉동 블루베리가 당뇨를 완치시킨다"],
+  ["인정 범위 내", "홍삼이 면역력 증진에 도움을 줄 수 있다"],
+  ["미인정 성분", "마늘이 혈압을 낮추는 데 좋다고 합니다"],
+  ["범위 밖", "당뇨약 끊고 이 즙만 드시면 인슐린 안 맞아도 됩니다"],
+  ["유튜브(Fake)", "https://youtu.be/redginseng1"],
+  ["유튜브(실제)", "https://youtu.be/iRUoUfNEQDw"],
+];
+
+const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("send");
+let lastResult = null;
+
+const now = () => new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+
+function scroll() { chat.scrollTop = chat.scrollHeight; }
+
+function addMine(text) {
+  const row = document.createElement("div");
+  row.className = "row me";
+  row.innerHTML = `<span class="time">${now()}</span><div class="bubble me"></div>`;
+  row.querySelector(".bubble").textContent = text;
+  chat.appendChild(row); scroll();
+}
+
+function addBotText(text, label) {
+  const who = document.createElement("div");
+  who.className = "who"; who.textContent = "건강정보 확인";
+  const row = document.createElement("div");
+  row.className = "row";
+  row.innerHTML = `<div class="bubble bot"></div><span class="time">${now()}</span>`;
+  const bubble = row.querySelector(".bubble");
+  bubble.textContent = text;
+  if (label) bubble.classList.add("L-" + label);
+  chat.appendChild(who); chat.appendChild(row); scroll();
+  return row;
+}
+
+function addCard(card, label) {
+  const row = document.createElement("div");
+  row.className = "row";
+  const box = document.createElement("div");
+  box.className = "card";
+  const title = document.createElement("div");
+  title.className = "title L-" + label;
+  title.textContent = card.title || "";
+  const desc = document.createElement("div");
+  desc.className = "desc";
+  desc.textContent = card.description || "";
+  box.appendChild(title); box.appendChild(desc);
+  (card.buttons || []).forEach((b) => {
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.textContent = b.label + (b.action === "share" ? "" : "");
+    btn.onclick = () => {
+      if (b.action === "share") { addBotText("(공유 동작은 카카오톡에서만 됩니다)"); return; }
+      if (lastResult) renderPayload(lastResult.reason_payload, lastResult.verdict.label);
+    };
+    box.appendChild(btn);
+  });
+  row.appendChild(box);
+  const t = document.createElement("span"); t.className = "time"; t.textContent = now();
+  row.appendChild(t);
+  chat.appendChild(row); scroll();
+}
+
+function renderPayload(payload, label) {
+  (payload.template?.outputs || []).forEach((out) => {
+    if (out.simpleText) addBotText(out.simpleText.text, null);
+    else if (out.textCard) addCard(out.textCard, label);
+  });
+}
+
+function badge(text, kind) {
+  return `<span class="badge ${kind || ""}">${text}</span>`;
+}
+
+function section(title, html, closed) {
+  return `<section class="${closed ? "closed" : ""}">
+    <h2>${title}<span>▾</span></h2><div>${html || '<span class="empty">없음</span>'}</div></section>`;
+}
+
+function rows(obj) {
+  if (!obj) return "";
+  return "<table>" + Object.entries(obj).map(([k, v]) =>
+    `<td>${k}</td><td>${v === null || v === undefined || v === "" ? "-" : String(v)}</td>`
+  ).map((r) => `<tr>${r}</tr>`).join("") + "</table>";
+}
+
+function renderPanel(data) {
+  const badges = document.getElementById("badges");
+  const v = data.verdict;
+  badges.innerHTML = [
+    badge(v.label, v.label === "TRUSTWORTHY" ? "ok" : v.label === "WARNING" ? "warn" : ""),
+    badge("규칙 " + v.rule_id),
+    badge("규칙표 " + v.rules_version),
+    badge("총 " + (data.timings_ms.total ?? data.timings_ms.cache ?? 0) + "ms"),
+    data.from_cache ? badge("캐시 적중", "ok") : badge("캐시 미스"),
+    data.retryable_failure ? badge("일시적 실패", "warn") : "",
+  ].join("");
+
+  const claims = data.claims;
+  const claimHtml = claims && claims.items.length
+    ? claims.items.map((c) =>
+        `<div class="paper"><b>${c.ingredient}</b> / ${c.claimed_effect}<br>
+         <span class="empty">강도 ${c.intensity} · 원문표기 ${c.raw_ingredient || "-"} · 위치 ${c.span.join("~")}</span></div>`).join("")
+    : '<span class="empty">주장을 뽑지 못했습니다.</span>';
+
+  const academic = data.academic;
+  const paperHtml = academic
+    ? (academic.papers.length
+        ? academic.papers.map((p) =>
+            `<div class="paper"><span class="st st-${p.stance}">${p.stance}</span>
+             <a href="${p.url}" target="_blank" rel="noopener">${p.title}</a><br>
+             <span class="empty">인용 ${p.citation_count ?? "-"} · ${p.journal || "-"} · ${p.date || "-"}</span></div>`).join("")
+        : '<span class="empty">검색 결과가 없습니다.</span>')
+    : '<span class="empty">조회하지 않았습니다.</span>';
+
+  document.getElementById("sections").innerHTML = [
+    section("① 입력 판별", rows(data.input)),
+    section("② 자막 / 본문", data.content
+      ? rows({
+          "자막 있음": data.content.has_transcript, "신뢰도": data.content.confidence,
+          "언어": data.content.language, "글자 수": data.content.length,
+          "콘텐츠 해시": data.content.content_hash,
+        }) + `<pre>${(data.content.text || "").slice(0, 1500) || "(비어 있음)"}</pre>`
+      : null),
+    section("③ 주장 구조화", (claims ? rows({
+        "범위 내": claims.in_scope, "질병 치료 표현": claims.disease_cure_expression,
+        "추출 실패": claims.extraction_failed, "주장 수": claims.items.length,
+      }) : "") + claimHtml),
+    section("④-B 식약처", rows(data.mfds)),
+    section("④-A 학술 검색", (academic ? rows({
+        "뒷받침": academic.supporting, "반박": academic.refuting, "조회 실패": academic.lookup_failed,
+      }) : "") + paperHtml),
+    section("⑤ 판정 입력값", rows(v.inputs) + "<br>" + (v.reasons || []).map((r) => `<div class="paper">${r}</div>`).join("")),
+    section("단계별 소요 시간(ms)", rows(data.timings_ms)),
+    section("어댑터", rows(data.adapters)),
+    section("카카오 ack 페이로드", `<pre>${JSON.stringify(data.ack_payload, null, 2)}</pre>`, true),
+    section("카카오 콜백 페이로드", `<pre>${JSON.stringify(data.callback_payload, null, 2)}</pre>`, true),
+  ].join("");
+
+  document.querySelectorAll("section > h2").forEach((h) => {
+    h.onclick = () => h.parentElement.classList.toggle("closed");
+  });
+}
+
+async function send(text) {
+  const utterance = (text ?? input.value).trim();
+  if (!utterance) return;
+  const mode = document.querySelector('input[name=mode]:checked').value;
+  document.getElementById("modeLabel").textContent = mode;
+
+  addMine(utterance);
+  input.value = "";
+  sendBtn.disabled = true;
+
+  // 실제 서비스는 즉시 ack 후 콜백이다. 여기서도 ack를 먼저 띄운다.
+  const ack = addBotText("받았습니다. 확인하고 있어요.\n잠시만 기다려 주세요");
+
+  try {
+    const res = await fetch("/debug/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ utterance, mode }),
+    });
+    const data = await res.json();
+    if (data.error) { addBotText("오류: " + data.error); return; }
+    lastResult = data;
+    renderPayload(data.callback_payload, data.verdict.label);
+    renderPanel(data);
+  } catch (error) {
+    addBotText("요청 실패: " + error);
+  } finally {
+    sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+document.getElementById("samples").innerHTML = SAMPLES
+  .map(([name], i) => `<button data-i="${i}">${name}</button>`).join("");
+document.querySelectorAll("#samples button").forEach((b) => {
+  b.onclick = () => send(SAMPLES[b.dataset.i][1]);
+});
+sendBtn.onclick = () => send();
+input.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+input.focus();
+</script>
+</body>
+</html>
