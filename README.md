@@ -91,6 +91,27 @@ uv run pytest tests/golden                    # 규칙 엔진 회귀 검증 (네
 현재 20건 기준 정확도는 15건이다. 틀린 5건은 원인이 둘로 모이며 둘 다 의료 자문의
 검수가 필요한 규칙 문제다. 자세한 내용은 [CLAUDE.md](CLAUDE.md)의 미해결 전제를 보라.
 
+## 고시형 원료 목록 교체
+
+고시형 기능성원료의 기능성 문구는 공개 API로 받을 수 없다. 오픈API I-0040과
+I-0050은 모두 개별인정형이고, 법제처 API로 받는 고시 본문은 표를 첨부파일로
+넘긴다. 그래서 사람이 공전 첨부파일에서 표를 뽑아야 한다.
+
+표를 확보하면 손으로 YAML을 쓰지 말고 변환 도구를 쓴다. 오타가 판정에 바로
+영향을 주기 때문이다.
+
+```bash
+python scripts/import_notified.py 공전표.tsv --dry-run   # 먼저 확인
+python scripts/import_notified.py 공전표.tsv             # 규칙 파일 생성
+```
+
+표에 필요한 열은 원료명과 기능성내용 둘이다. 효능 대상은 기능성 내용에서
+자동으로 뽑는다. 뽑지 못한 원료는 경고로 알려 주며, 그 원료는 일치도 비교가
+되지 않아 판정이 보류된다. 그때는 `rules/claim_patterns.yaml`의 효능 대상
+목록에 그 표현을 추가한다.
+
+생성 후 의료 자문의가 공전 원문과 대조하고 파일의 `검수완료`를 `true`로 바꾼다.
+
 ## 자막 확보 현황 검증
 
 어르신이 받는 영상에 자막이 실제로 얼마나 있는지 재는 스크립트다. 이번 MVP는
@@ -119,6 +140,7 @@ python scripts/check_transcripts.py samples/videos.txt --json 결과.json --inte
 | `rules/claim_patterns.yaml` | 질병 치료 표현, 효능 표현, 범위 밖 표현 목록 |
 | `rules/ingredient_aliases.yaml` | 성분명 정규화 사전, 영문 검색어 |
 | `rules/notified_ingredients.yaml` | 고시형 기능성원료 목록 ⚠ 검수 전 초안 |
+| `rules/response_guard.yaml` | 응답에 쓰면 안 되는 진단·처방 표현 |
 | `rules/stance_patterns.yaml` | 논문 찬반 판정 표현, 제외할 문헌 |
 
 수정 의견은 규칙 ID(`R-0xx`)를 적어 주면 된다. 판정 로그에는 사용된 규칙 버전과
