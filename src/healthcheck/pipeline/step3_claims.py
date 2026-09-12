@@ -13,6 +13,7 @@ tests/unit/test_claim_extractor.py에 xfail로 기록한다. 어떤 문장이 �
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass
 from functools import lru_cache
@@ -22,6 +23,8 @@ from typing import Protocol
 import yaml
 
 from healthcheck.domain.types import Claim, ClaimSet, Intensity
+
+logger = logging.getLogger(__name__)
 
 RULES_DIR = Path(__file__).resolve().parents[3] / "rules"
 DEFAULT_PATTERNS_PATH = RULES_DIR / "claim_patterns.yaml"
@@ -42,6 +45,8 @@ class _Patterns:
     """규칙 파일에서 읽어 온 표현 목록."""
 
     disease_cure: tuple[str, ...]
+    # 이 표현이 있는 문장은 주장으로 읽지 않는다. 오정보를 바로잡는 문장이다.
+    negation: tuple[str, ...]
     effect_by_intensity: tuple[tuple[Intensity, tuple[str, ...]], ...]
     # 자막 어디에 한 번만 나와도 거절하는 표현
     out_of_scope_immediate: tuple[str, ...]
@@ -90,6 +95,7 @@ def load_patterns(
 
     return _Patterns(
         disease_cure=disease_cure,
+        negation=tuple(raw.get("부정_표현") or ()),
         effect_by_intensity=tuple(by_intensity),
         out_of_scope_immediate=immediate,
         out_of_scope_contextual=contextual,
@@ -130,6 +136,13 @@ class RuleBasedClaimExtractor:
         disease_cure = False
 
         for sentence, offset in sentences:
+            # 오정보를 바로잡는 문장은 주장으로 읽지 않는다. 이 처리가 없으면
+            # "암이 낫는다는 얘기가 절대 아니에요" 같은 문장이 WARNING을
+            # 유발한다. 판정 방향이 반대로 뒤집히는 가장 위험한 오판이었다.
+            if _contains_any(sentence, patterns.negation):
+                logger.debug("부정·반박 문장으로 보고 건너뛴다: %s", sentence[:60])
+                continue
+
             sentence_claims = self._claims_in_sentence(sentence, offset)
 
             # 질병 치료 표현도 문장 단위로 본다. 글 전체에서 찾으면 4천 자
@@ -392,20 +405,13 @@ def _effect_text(
 #      "이걸 드시면 낫습니다" — 성분명이 문장에 없어 사전 매칭이 실패한다
 #   3. 비유·간접 표현
 #      "혈관이 뻥 뚫린다", "몸이 젊어진다" — 효능 대상 목록에 없다
-#   4. 부정·반박 문장을 주장으로 오인
-#      "블루베리가 당뇨를 완치시킨다는 말은 근거가 없습니다"
-#      현재 구현은 이 문장에서도 질병 치료 표현을 잡아 WARNING으로 보낸다.
-#      오정보를 반박하는 영상이 오정보로 판정된다.
+#   4. (해결됨) 부정·반박 문장을 주장으로 오인
+#      rules/claim_patterns.yaml의 부정_표현으로 걸러 낸다. 부정 표현이 있는
+#      문장은 주장으로 읽지 않는다. 실제 블로그 글의 "만병통치약은 아니며",
+#      "그건 과장입니다", "암이 낫는다는 얘기가 절대 아니에요"가 모두 잡힌다.
+#      대가가 있다. 부정 표현이 섞인 문장에서는 진짜 주장도 놓친다.
+#      오판보다 판정 보류가 안전하다는 원칙에 따라 이 방향을 택했다.
 #
-#      실제 블로그 5건을 돌려 확인한 결과, 남은 오판은 전부 이 유형이었다.
-#      "홍삼이 만병통치약은 아니며", "그건 과장입니다", "암이 낫는다는 얘기가
-#      절대 아니에요" 같은 문장이 WARNING을 유발했다. 책임 있게 쓴 글이
-#      오정보로 판정되는 셈이다.
-#
-#      고치려면 부정 표현(아니며, 아닙니다, 과장, 거짓, 근거 없)을 감지해
-#      질병 표현을 무효화해야 한다. 다만 "이거 아니면 안 됩니다" 같은 문장에서
-#      진짜 주장을 놓칠 위험이 함께 생긴다. 커버리지와 오판의 균형점이므로
-#      의료 자문의 판단이 필요하다.
 #   5. 문장 부호가 없는 자막
 #      전체가 한 문장이 되어 멀리 떨어진 성분과 효능이 짝지어진다
 #

@@ -128,15 +128,35 @@ def test_한계_비유_표현(extractor):
     assert result.claims, "'혈관이 뚫린다'를 효능으로 읽지 못한다"
 
 
-@pytest.mark.xfail(
-    reason="한계 4: 오정보를 반박하는 문장을 오정보로 오인한다. 판정 방향이 뒤집히는 가장 위험한 한계",
-    strict=True,
-)
-def test_한계_반박_문장_오인(extractor):
+def test_반박_문장을_오정보로_읽지_않는다(extractor):
+    """한계 4번이었다. 부정 표현 처리로 해결했다.
+
+    오정보를 바로잡는 영상이 오정보 판정을 받는 것은 판정 방향이 뒤집히는
+    오판이었다. 보수적 기본값 원칙과도 충돌했다.
+    """
     text = "블루베리가 당뇨를 완치시킨다는 말은 근거가 없습니다"
     result = extractor.extract(text)
-    # 반박하는 영상인데 질병 치료 표현이 잡혀 WARNING으로 간다.
+
     assert result.disease_cure_expression is False
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "홍삼이 만병통치약은 아니며, 약물 복용 시 주의가 필요합니다",
+        "홍삼이 만병통치약처럼 팔리지만, 솔직히 그건 과장입니다",
+        "이건 홍삼을 먹으면 암이 낫는다는 얘기가 절대 아니에요",
+        "블루베리로 당뇨를 고친다는 건 잘못된 정보입니다",
+    ],
+)
+def test_실제_블로그의_반박_문장들(extractor, text):
+    """전부 실제 블로그 본문에서 WARNING을 유발했던 문장이다."""
+    assert extractor.extract(text).disease_cure_expression is False
+
+
+def test_부정_표현이_없으면_그대로_잡는다(extractor):
+    """부정문 처리가 진짜 주장까지 삼키면 안 된다."""
+    assert extractor.extract("홍삼을 드시면 당뇨가 완치됩니다").disease_cure_expression is True
 
 
 @pytest.mark.xfail(reason="한계 5: 문장 부호가 없는 자막은 전체가 한 문장이 된다", strict=True)

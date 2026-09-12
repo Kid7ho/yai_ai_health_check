@@ -20,8 +20,18 @@
 
 from __future__ import annotations
 
+import logging
+from functools import lru_cache
+from pathlib import Path
+
+import yaml
+
 from healthcheck.domain.labels import LABEL_TEXT, Label
 from healthcheck.domain.types import CheckResult
+
+logger = logging.getLogger(__name__)
+
+GUARD_PATH = Path(__file__).resolve().parents[3] / "rules" / "response_guard.yaml"
 
 # 면책 문구. 모든 응답에 들어간다. 이 값을 비우거나 우회할 경로를 만들지 않는다.
 DISCLAIMER = "이 결과는 참고용이며 진단이 아닙니다."
@@ -45,6 +55,31 @@ _OUT_OF_SCOPE_TEXT = (
 
 _REASON_BUTTON = "왜 그런지 보기"
 _SHARE_BUTTON = "가족에게 보내기"
+
+# 금지 표현이 발견됐을 때 대신 내보내는 문구.
+# 근거를 못 보여 주더라도 진단처럼 읽히는 문구를 내보내지는 않는다.
+_GUARD_FALLBACK = "확인한 근거를 보여 드리기 어려워요."
+
+
+@lru_cache(maxsize=2)
+def _load_guard(path: Path | str = GUARD_PATH) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    raw = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+    return tuple(raw.get("금지_표현") or ()), tuple(raw.get("허용_예외") or ())
+
+
+def find_forbidden(text: str) -> list[str]:
+    """어르신에게 나갈 문구에 진단·처방으로 읽히는 표현이 있는지 찾는다.
+
+    이 서비스는 진단하지 않는다. 면책 문구가 붙는지는 따로 강제하지만,
+    카드 본문 자체가 진단처럼 읽히면 면책 문구만으로는 부족하다.
+    """
+    forbidden, allowed = _load_guard()
+
+    remaining = text
+    for exception in allowed:
+        remaining = remaining.replace(exception, " ")
+
+    return [phrase for phrase in forbidden if phrase in remaining]
 
 
 def ack_response() -> dict:
@@ -107,15 +142,44 @@ def render_reason(result: CheckResult) -> dict:
 
 
 def _wrap(outputs: list[dict]) -> dict:
-    """응답을 감싸는 유일한 지점. 여기서 면책 문구를 무조건 덧붙인다.
+    """응답을 감싸는 유일한 지점.
 
-    이 함수를 거치지 않는 응답 경로를 만들지 않는다.
-    면책 문구를 붙일지 여부를 받는 인자도 두지 않는다.
+    여기서 두 가지를 강제한다. 면책 문구를 무조건 덧붙이고, 진단처럼 읽히는
+    표현이 섞였는지 검사한다. 이 함수를 거치지 않는 응답 경로를 만들지 않으며,
+    둘 중 어느 것도 끌 수 있는 인자를 두지 않는다.
     """
     return {
         "version": "2.0",
-        "template": {"outputs": [*outputs, _simple_text(DISCLAIMER)]},
+        "template": {
+            "outputs": [*(_guard(output) for output in outputs), _simple_text(DISCLAIMER)]
+        },
     }
+
+
+def _guard(output: dict) -> dict:
+    """금지 표현이 섞인 문구를 안전한 문구로 바꾼다.
+
+    조용히 고치지 않는다. 오류 로그를 남겨 규칙표를 고칠 수 있게 한다.
+    금지 표현이 나올 수 있는 경로는 규칙표의 근거 문장이다.
+    """
+    if "simpleText" in output:
+        violations = find_forbidden(output["simpleText"]["text"])
+        if violations:
+            logger.error("응답 문구에 금지 표현이 있다: %s", violations)
+            return _simple_text(_GUARD_FALLBACK)
+        return output
+
+    if "textCard" in output:
+        card = output["textCard"]
+        violations = find_forbidden(f"{card.get('title', '')} {card.get('description', '')}")
+        if violations:
+            logger.error("카드 문구에 금지 표현이 있다: %s", violations)
+            safe = dict(card)
+            safe["description"] = _GUARD_FALLBACK
+            return {"textCard": safe}
+        return output
+
+    return output
 
 
 def _simple_text(text: str) -> dict:
@@ -203,4 +267,11 @@ def _clip(text: str, limit: int) -> str:
     return text[: limit - 1].rstrip() + "…"
 
 
-__all__ = ["ack_response", "render", "render_reason", "DISCLAIMER", "Label"]
+__all__ = [
+    "ack_response",
+    "render",
+    "render_reason",
+    "find_forbidden",
+    "DISCLAIMER",
+    "Label",
+]

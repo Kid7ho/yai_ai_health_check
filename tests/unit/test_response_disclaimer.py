@@ -24,6 +24,7 @@ from healthcheck.pipeline import step6_response
 from healthcheck.pipeline.step6_response import (
     DISCLAIMER,
     ack_response,
+    find_forbidden,
     render,
     render_reason,
 )
@@ -83,12 +84,16 @@ def test_면책_문구를_끄는_인자가_없다():
         assert list(params) == ["result"], f"{fn.__name__}에 추가 인자가 생겼습니다."
 
 
-def test_응답을_만드는_공개_함수는_셋뿐이다():
-    """outputs를 직접 조립하는 우회 경로를 만들지 않는다."""
+def test_응답을_만드는_공개_함수를_늘리지_않는다():
+    """outputs를 직접 조립하는 우회 경로를 만들지 않는다.
+
+    find_forbidden은 문구를 만들지 않고 검사만 하므로 우회 경로가 아니다.
+    """
     assert set(step6_response.__all__) == {
         "ack_response",
         "render",
         "render_reason",
+        "find_forbidden",
         "DISCLAIMER",
         "Label",
     }
@@ -210,3 +215,77 @@ def test_일시적_실패는_알_수_없어요로_답하지_않는다():
     assert "잠시 뒤에 다시 보내" in texts[0]
     assert DISCLAIMER in texts
     assert all("textCard" not in output for output in payload["template"]["outputs"])
+
+
+# ─────────────────────────────────────────────────────────────
+# 진단처럼 읽히는 문구 차단
+#
+# 이 서비스의 핵심은 진단하지 않는다는 점이다. 면책 문구가 붙는지는 위에서
+# 검사하지만, 카드 본문 자체가 진단처럼 읽히면 면책 문구만으로는 부족하다.
+# ─────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "phrase",
+    [
+        "진단 결과 당뇨가 의심됩니다",
+        "이 제품을 복용하세요",
+        "약 복용을 중단하세요",
+        "꾸준히 드시면 낫습니다",
+        "이것으로 치료됩니다",
+        "병원에 가지 않아도 됩니다",
+        "처방 없이 드실 수 있습니다",
+    ],
+)
+def test_진단처럼_읽히는_표현을_찾아낸다(phrase):
+    assert find_forbidden(phrase)
+
+
+def test_면책_문구는_예외다():
+    """면책 문구에는 '진단'이 들어간다. 이것을 금지로 잡으면 안 된다."""
+    assert find_forbidden(DISCLAIMER) == []
+
+
+def test_범위_밖_안내도_예외다():
+    """'약이나 치료에 관한 것은 의사 선생님께'는 오히려 권장 문구다."""
+    claims = ClaimSet(claims=(), in_scope=False, disease_cure_expression=False)
+    payload = render(result(Label.UNKNOWN, claims=claims))
+
+    assert "의사" in texts_of(payload)[0]
+    assert DISCLAIMER in texts_of(payload)
+
+
+@pytest.mark.parametrize("label", list(Label))
+def test_네_라벨의_실제_응답에_금지_표현이_없다(label):
+    """규칙표 v0.2의 근거 문장이 그대로 어르신에게 나간다."""
+    for payload in (render(result(label)), render_reason(result(label))):
+        for text in texts_of(payload):
+            assert find_forbidden(text) == [], text
+
+
+def test_규칙표_전체_근거_문장에_금지_표현이_없다():
+    """자문의가 규칙표를 고칠 때 진단 표현을 쓰면 여기서 잡힌다."""
+    from healthcheck.pipeline.step5_verdict import load_ruleset
+
+    for rule in load_ruleset().rules:
+        assert find_forbidden(rule.description) == [], rule.id
+        assert find_forbidden(rule.rationale) == [], rule.id
+
+
+def test_금지_표현이_섞이면_문구를_바꿔_내보낸다():
+    """조용히 통과시키지 않는다. 근거를 못 보여 주더라도 진단처럼 말하지 않는다."""
+    verdict = Verdict(
+        label=Label.WARNING,
+        rule_id="R-TEST",
+        rules_version="v0.2",
+        reasons=("설명", "꾸준히 드시면 낫습니다"),
+    )
+    card = render(CheckResult(verdict=verdict))["template"]["outputs"][0]["textCard"]
+
+    assert "낫습니다" not in card["description"]
+    assert card["description"] == "확인한 근거를 보여 드리기 어려워요."
+
+
+def test_라벨_문구_자체에_금지_표현이_없다():
+    for text in LABEL_TEXT.values():
+        assert find_forbidden(text) == []
