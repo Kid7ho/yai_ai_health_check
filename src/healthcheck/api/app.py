@@ -22,6 +22,7 @@ from healthcheck.adapters.youtube.transcript import YouTubeTranscriptExtractor
 from healthcheck.adapters.fake.article import FakeArticleExtractor
 from healthcheck.adapters.fake.cache import InMemoryExtractionCache, InMemoryVerdictCache
 from healthcheck.adapters.fake.callback import RecordingCallbackSender
+from healthcheck.adapters.kakao.callback import HttpCallbackSender
 from healthcheck.adapters.fake.mfds import FakeMfdsDataSource
 from healthcheck.adapters.fake.transcript import FakeTranscriptExtractor
 from healthcheck.adapters.inprocess_queue import InProcessJobQueue
@@ -31,6 +32,9 @@ from healthcheck.api.worker import start_workers
 from healthcheck.pipeline.orchestrator import Orchestrator
 from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
 from healthcheck.pipeline.step5_verdict import load_ruleset
+from healthcheck.ports.repository import CheckRepository
+from healthcheck.storage.memory_repo import InMemoryCheckRepository
+from healthcheck.storage.sqlite_repo import SqliteCheckRepository
 
 logger = logging.getLogger(__name__)
 
@@ -118,20 +122,58 @@ def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
     )
 
 
+def build_repository(settings: Settings | None = None) -> CheckRepository:
+    """설정에 따라 저장소를 고른다.
+
+    판정 기록은 재시작해도 남아야 한다. 누적 확인 건수와 오정보 유형 수가
+    사업 목표 지표이기 때문이다.
+    """
+    settings = settings or load_settings()
+    if settings.database_path in ("", ":memory:"):
+        logger.warning("저장소가 메모리다. 재시작하면 판정 기록이 사라진다.")
+        return InMemoryCheckRepository()
+    logger.info("저장소: SQLite %s", settings.database_path)
+    return SqliteCheckRepository(settings.database_path)
+
+
+def build_callback_sender(settings: Settings | None = None) -> object:
+    """실제 카카오 콜백 전송기를 쓸지 기록용 Fake를 쓸지 고른다."""
+    settings = settings or load_settings()
+    if settings.adapter_mode == "live":
+        logger.info("콜백: 카카오로 실제 전송")
+        return HttpCallbackSender()
+    return RecordingCallbackSender()
+
+
 def create_app(
     orchestrator: Orchestrator | None = None,
     callback_sender=None,
     *,
     worker_count: int = 2,
+    repository: CheckRepository | None = None,
 ) -> FastAPI:
     orchestrator = orchestrator or build_orchestrator()
     callback_sender = callback_sender or RecordingCallbackSender()
+    # 기본값을 메모리로 둔다. 테스트가 실수로 실제 DB 파일을 만들지 않게 한다.
+    # 실제 서비스는 아래 app 조립에서 SQLite를 넘긴다.
+    repository = repository or InMemoryCheckRepository()
     queue = InProcessJobQueue()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        tasks = await start_workers(queue, orchestrator, callback_sender, count=worker_count)
+        tasks = await start_workers(
+            queue, orchestrator, callback_sender, count=worker_count, repository=repository
+        )
         logger.info("워커 %d개 기동. 규칙표 %s", worker_count, orchestrator.ruleset.version)
+
+        # 기동할 때 한 번 보존 기간을 정리한다. 배포 주기가 긴 환경에서는
+        # scripts/purge_expired.py를 하루 한 번 돌리는 편이 낫다.
+        try:
+            purged = await repository.purge_expired()
+            if any(purged.values()):
+                logger.info("보존 기간 만료 정리: %s", purged)
+        except Exception:
+            logger.exception("보존 기간 정리 실패")
         try:
             yield
         finally:
@@ -139,7 +181,10 @@ def create_app(
                 task.cancel()
 
     app = FastAPI(title="건강정보 확인", lifespan=lifespan)
-    app.state.services = skill.SkillServices(orchestrator=orchestrator, queue=queue)
+    app.state.services = skill.SkillServices(
+        orchestrator=orchestrator, queue=queue, repository=repository
+    )
+    app.state.repository = repository
     app.state.queue = queue
     app.state.callback_sender = callback_sender
     app.include_router(skill.router)
@@ -156,6 +201,19 @@ def create_app(
         app.include_router(debug.router)
         logger.info("디버그 화면: http://127.0.0.1:8000/debug")
 
+    @app.get("/metrics")
+    async def metrics() -> dict:
+        """사업 목표 지표. 개인을 식별하는 값은 담지 않는다."""
+        values = await repository.metrics()
+        return {
+            "누적_확인_건수": values.total_checks,
+            "라벨별": values.by_label,
+            "오정보_유형_수": values.misinformation_types,
+            "캐시_적중": values.cache_hits,
+            "참여자_수": values.distinct_users,
+            "규칙표_버전별": values.rules_versions,
+        }
+
     @app.get("/health")
     async def health() -> dict:
         # 자막 추출이 차단 대기 중인지 노출한다. 배포 후 가장 먼저 깨지는
@@ -171,4 +229,8 @@ def create_app(
     return app
 
 
-app = create_app()
+_settings = load_settings()
+app = create_app(
+    repository=build_repository(_settings),
+    callback_sender=build_callback_sender(_settings),
+)

@@ -55,6 +55,12 @@ class Settings:
     # 기사·블로그 링크에서 본문을 뽑을지.
     article_enabled: bool = True
 
+    # 저장소. 판정 기록과 목표 지표가 여기 쌓인다.
+    database_path: str = "healthcheck.db"
+    # 개인정보 보존 기간(일). README의 저장 데이터 표와 같은 값이다.
+    text_retention_days: int = 90
+    user_key_retention_days: int = 30
+
     @property
     def has_liner_key(self) -> bool:
         return bool(self.liner_api_key)
@@ -126,6 +132,9 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         asr_model_size=(os.environ.get("ASR_MODEL_SIZE") or "small").strip(),
         asr_max_seconds=int(os.environ.get("ASR_MAX_SECONDS") or 300),
         article_enabled=_flag(os.environ.get("ARTICLE_ENABLED"), True),
+        database_path=(os.environ.get("DATABASE_PATH") or "healthcheck.db").strip(),
+        text_retention_days=int(os.environ.get("TEXT_RETENTION_DAYS") or 90),
+        user_key_retention_days=int(os.environ.get("USER_KEY_RETENTION_DAYS") or 30),
     )
 
 

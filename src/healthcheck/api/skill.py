@@ -24,6 +24,8 @@ from healthcheck.pipeline import step1_input
 from healthcheck.pipeline.orchestrator import Orchestrator
 from healthcheck.pipeline.step6_response import ack_response, render
 from healthcheck.ports.queue import CheckJob, JobQueue
+from healthcheck.ports.repository import CheckRepository
+from healthcheck.storage.record import build_record
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +43,7 @@ class SkillServices:
 
     orchestrator: Orchestrator
     queue: JobQueue
+    repository: CheckRepository | None = None
 
 
 @router.post("/skill")
@@ -59,6 +62,16 @@ async def skill(request: Request) -> dict:
     cached = await services.orchestrator.cached(share_input)
     if cached is not None:
         logger.info("동기 응답(캐시 적중) kind=%s", share_input.kind)
+        # 캐시로 답한 것도 확인 건수에 들어간다. 어르신이 확인한 사실은 같다.
+        if services.repository is not None:
+            try:
+                await services.repository.save(
+                    build_record(
+                        share_input=share_input, result=cached, user_key=user_key
+                    )
+                )
+            except Exception:
+                logger.exception("판정 기록 저장 실패(캐시 응답)")
         return render(cached)
 
     # 기본 경로: 콜백이 없으면 비동기 처리를 할 수 없다.

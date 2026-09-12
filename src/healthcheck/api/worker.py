@@ -19,6 +19,8 @@ from healthcheck.pipeline.orchestrator import Orchestrator
 from healthcheck.pipeline.step6_response import render
 from healthcheck.ports.callback import CallbackSender
 from healthcheck.ports.queue import CheckJob, JobQueue
+from healthcheck.ports.repository import CheckRepository
+from healthcheck.storage.record import build_record
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +37,12 @@ class Worker:
         queue: JobQueue,
         orchestrator: Orchestrator,
         callback_sender: CallbackSender,
+        repository: CheckRepository | None = None,
     ) -> None:
         self._queue = queue
         self._orchestrator = orchestrator
         self._callback = callback_sender
+        self._repository = repository
 
     async def run_forever(self) -> None:
         """취소될 때까지 작업을 처리한다. 앱 수명주기가 이 태스크를 관리한다."""
@@ -59,12 +63,30 @@ class Worker:
             logger.exception("파이프라인 실패: job=%s", job.job_id)
             result = _failure_result()
 
+        # 콜백 전송 성공 여부와 무관하게 먼저 기록한다. 전송이 실패해도 판정은
+        # 일어난 일이고, 누적 확인 건수와 오정보 유형 수가 목표 지표다.
+        await self._record(job, result)
+
         try:
             await self._callback.send(job.callback_url, render(result))
         except Exception:
             # 콜백은 1회만 쓸 수 있어서 여기서 재시도해도 성공하지 않는 경우가 많다.
             # 판정 자체는 캐시에 남았으므로 어르신이 다시 보내면 즉시 답할 수 있다.
             logger.exception("콜백 전송 실패: job=%s", job.job_id)
+
+
+    async def _record(self, job: CheckJob, result: CheckResult) -> None:
+        if self._repository is None:
+            return
+        try:
+            await self._repository.save(
+                build_record(
+                    share_input=job.share_input, result=result, user_key=job.user_key
+                )
+            )
+        except Exception:
+            # 저장 실패로 어르신에게 답을 못 보내는 일은 만들지 않는다.
+            logger.exception("판정 기록 저장 실패: job=%s", job.job_id)
 
 
 def _failure_result() -> CheckResult:
@@ -84,11 +106,12 @@ async def start_workers(
     orchestrator: Orchestrator,
     callback_sender: CallbackSender,
     count: int = 2,
+    repository: CheckRepository | None = None,
 ) -> list[asyncio.Task]:
     """워커 여러 개를 띄운다.
 
     개수를 늘리면 동시 처리량이 늘지만, 외부 API 호출도 함께 늘어난다.
     Liner 토큰 비용을 지원받는 구조이므로 기본값은 작게 둔다.
     """
-    worker = Worker(queue, orchestrator, callback_sender)
+    worker = Worker(queue, orchestrator, callback_sender, repository)
     return [asyncio.create_task(worker.run_forever()) for _ in range(count)]
