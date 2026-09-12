@@ -1,0 +1,20 @@
+# 파이썬
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# 환경 변수 — API 키를 절대 커밋하지 않는다
+.env
+.env.*
+!.env.example
+
+# 운영체제
+.DS_Store
+
+# 로컬 데이터베이스
+*.db
+*.sqlite3
