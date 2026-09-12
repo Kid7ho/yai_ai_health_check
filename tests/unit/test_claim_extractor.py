@@ -234,7 +234,6 @@ def test_병을_치료한다는_서술은_잡는다(extractor):
     [
         "홍삼은 부작용이 전혀 없어서 누구나 드실 수 있습니다",
         "이 제품은 식약처 공식 인증을 받았습니다",
-        "저는 이걸로 나았습니다",
         "천연 항생제라고 불리는 마늘입니다",
         "하루 만에 효과를 느끼실 수 있습니다",
         "약보다 효과가 좋습니다",
@@ -262,3 +261,20 @@ def test_금지_표현은_질병_치료_표현과_별개로_기록한다(extract
     result = extractor.extract("홍삼은 부작용이 전혀 없습니다")
     assert result.prohibited_ad_expression is True
     assert result.disease_cure_expression is False
+
+
+def test_개인_체험기는_부당광고로_보지_않는다(extractor):
+    """광고가 아닌 시민의 공유 글에도 흔히 나오는 형태다.
+
+    어르신이 지인에게 받는 메시지 상당수가 이런 후기다. 그것을 부당광고로
+    판정하면 광고가 아닌 글을 위반으로 표시하게 된다.
+    """
+    result = extractor.extract("저는 홍삼 먹고 컨디션이 좋아졌습니다")
+    assert result.prohibited_ad_expression is False
+
+
+def test_체험기가_질병_완치를_말하면_질병_표현으로_잡힌다(extractor):
+    """부당광고 목록에서 빼도 위험한 형태는 놓치지 않는다."""
+    result = extractor.extract("저는 홍삼 먹고 당뇨가 나았습니다")
+    assert result.prohibited_ad_expression is False
+    assert result.disease_cure_expression is True
