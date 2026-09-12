@@ -30,6 +30,7 @@ from healthcheck.pipeline.step5_verdict import (
     build_verdict_input,
 )
 from healthcheck.ports.academic import AcademicSearchClient
+from healthcheck.ports.article import ArticleExtractor
 from healthcheck.ports.cache import ExtractionCache, VerdictCache
 from healthcheck.ports.mfds import MfdsDataSource
 from healthcheck.ports.transcript import TranscriptExtractor
@@ -46,6 +47,8 @@ class Orchestrator:
     ruleset: RuleSet
     verdict_cache: VerdictCache
     extraction_cache: ExtractionCache
+    # 유튜브가 아닌 링크의 본문을 뽑는다. 없으면 그런 링크는 판정 보류가 된다.
+    article: ArticleExtractor | None = None
 
     async def cached(self, share_input: ShareInput) -> CheckResult | None:
         """캐시 1단만 조회한다. 5초 동기 응답 경로에서 쓴다.
@@ -180,7 +183,15 @@ class Orchestrator:
                 False,
             )
 
-        # 유튜브가 아닌 링크. 이번 MVP는 내용을 추출하지 않는다.
+        if share_input.kind == "OTHER_LINK" and share_input.url and self.article is not None:
+            try:
+                return await self.article.fetch(share_input.url), False
+            except Exception as error:
+                # 기사 조회 실패는 자막 없음과 같게 취급한다. 링크가 죽었거나
+                # 사이트가 자동 요청을 막은 경우이며, R-010이 판정을 보류한다.
+                logger.warning("기사 본문 추출 실패 url=%s: %s", share_input.url, error)
+                return _no_content(), False
+
         return _no_content(), False
 
     async def _claims_of(self, content: ExtractedContent) -> ClaimSet:

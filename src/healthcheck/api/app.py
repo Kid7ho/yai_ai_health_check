@@ -15,7 +15,11 @@ from fastapi import FastAPI
 from healthcheck.adapters.fake.academic import FakeAcademicSearchClient
 from healthcheck.adapters.liner.academic import LinerAcademicSearchClient
 from healthcheck.adapters.mfds.foodsafetykorea import FoodSafetyKoreaDataSource
+from healthcheck.adapters.web.article import TrafilaturaArticleExtractor
+from healthcheck.adapters.youtube.asr import WhisperAsrTranscriber
+from healthcheck.adapters.youtube.fallback import CaptionsThenAsrExtractor
 from healthcheck.adapters.youtube.transcript import YouTubeTranscriptExtractor
+from healthcheck.adapters.fake.article import FakeArticleExtractor
 from healthcheck.adapters.fake.cache import InMemoryExtractionCache, InMemoryVerdictCache
 from healthcheck.adapters.fake.callback import RecordingCallbackSender
 from healthcheck.adapters.fake.mfds import FakeMfdsDataSource
@@ -41,6 +45,7 @@ def build_fake_orchestrator() -> Orchestrator:
         ruleset=load_ruleset(),
         verdict_cache=InMemoryVerdictCache(),
         extraction_cache=InMemoryExtractionCache(),
+        article=FakeArticleExtractor(),
     )
 
 
@@ -74,8 +79,32 @@ def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
     if live:
         transcript = YouTubeTranscriptExtractor.from_settings(settings)
         logger.info("자막 추출: 유튜브 실제 호출 (한국어 자막만)")
+        if settings.asr_enabled:
+            # 자막이 없을 때만 음성 인식으로 넘어간다. 자막이 1초면 끝나는
+            # 일을 분 단위 작업으로 대신할 이유가 없다.
+            transcript = CaptionsThenAsrExtractor(
+                transcript,
+                WhisperAsrTranscriber(
+                    model_size=settings.asr_model_size,
+                    max_seconds=settings.asr_max_seconds,
+                    proxy_url=settings.youtube_proxy_url,
+                ),
+            )
+            logger.info(
+                "음성 인식 사용: 모델 %s, 최대 %d초. 응답이 분 단위로 늦어질 수 있다.",
+                settings.asr_model_size,
+                settings.asr_max_seconds,
+            )
     else:
         transcript = FakeTranscriptExtractor()
+
+    if live and settings.article_enabled:
+        article = TrafilaturaArticleExtractor()
+        logger.info("기사 본문 추출: 사용")
+    elif settings.article_enabled:
+        article = FakeArticleExtractor()
+    else:
+        article = None
 
     return Orchestrator(
         transcript=transcript,
@@ -85,6 +114,7 @@ def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
         ruleset=load_ruleset(settings.rules_path),
         verdict_cache=InMemoryVerdictCache(),
         extraction_cache=InMemoryExtractionCache(),
+        article=article,
     )
 
 

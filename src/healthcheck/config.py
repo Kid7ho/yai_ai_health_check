@@ -45,6 +45,16 @@ class Settings:
     # 디버그 채팅 화면(/debug)을 띄울지. 개발용이며 배포 시에는 끈다.
     debug_ui: bool = True
 
+    # 자막이 없는 영상을 음성 인식으로 처리할지. 기본은 꺼짐이다.
+    # 켜면 응답이 분 단위로 늦어지고 첫 실행에서 모델을 내려받는다.
+    asr_enabled: bool = False
+    asr_model_size: str = "small"
+    # 음성 인식할 최대 길이(초). 0이면 영상 전체. 길면 그만큼 오래 걸린다.
+    asr_max_seconds: int = 300
+
+    # 기사·블로그 링크에서 본문을 뽑을지.
+    article_enabled: bool = True
+
     @property
     def has_liner_key(self) -> bool:
         return bool(self.liner_api_key)
@@ -111,8 +121,19 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         webshare_password=_clean(os.environ.get("WEBSHARE_PROXY_PASSWORD")),
         transcript_min_interval=float(os.environ.get("TRANSCRIPT_MIN_INTERVAL") or 1.5),
         transcript_cooldown=float(os.environ.get("TRANSCRIPT_COOLDOWN") or 600),
-        debug_ui=(os.environ.get("DEBUG_UI") or "1").strip().lower() not in ("0", "false", "no"),
+        debug_ui=_flag(os.environ.get("DEBUG_UI"), True),
+        asr_enabled=_flag(os.environ.get("ASR_ENABLED"), False),
+        asr_model_size=(os.environ.get("ASR_MODEL_SIZE") or "small").strip(),
+        asr_max_seconds=int(os.environ.get("ASR_MAX_SECONDS") or 300),
+        article_enabled=_flag(os.environ.get("ARTICLE_ENABLED"), True),
     )
+
+
+def _flag(value: str | None, default: bool) -> bool:
+    """켜짐·꺼짐 환경 변수. 비어 있으면 기본값을 쓴다."""
+    if value is None or not value.strip():
+        return default
+    return value.strip().lower() not in ("0", "false", "no", "off")
 
 
 def _clean(value: str | None) -> str | None:
