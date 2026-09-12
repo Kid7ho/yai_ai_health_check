@@ -31,6 +31,17 @@ class Settings:
     rules_path: Path = PROJECT_ROOT / "rules" / "verdict_rules_v0.yaml"
     worker_count: int = 2
 
+    # 자막 추출용 프록시. YouTube는 클라우드 제공자 IP를 대부분 차단한다.
+    # 둘 중 하나만 설정한다. 비워 두면 서버 IP로 직접 호출한다.
+    youtube_proxy_url: str | None = field(default=None, repr=False)
+    webshare_username: str | None = field(default=None, repr=False)
+    webshare_password: str | None = field(default=None, repr=False)
+
+    # 자막 호출 간 최소 간격(초). 짧은 시간에 몰아 부르면 차단을 부른다.
+    transcript_min_interval: float = 1.5
+    # 차단이 감지된 뒤 자막 호출을 멈추는 시간(초).
+    transcript_cooldown: float = 600.0
+
     @property
     def has_liner_key(self) -> bool:
         return bool(self.liner_api_key)
@@ -39,6 +50,10 @@ class Settings:
     def has_mfds_key(self) -> bool:
         return bool(self.mfds_api_key)
 
+    @property
+    def has_youtube_proxy(self) -> bool:
+        return bool(self.youtube_proxy_url or (self.webshare_username and self.webshare_password))
+
     def masked(self) -> dict[str, str]:
         """기동 로그에 남길 요약. 키 값은 절대 넣지 않는다."""
         return {
@@ -46,6 +61,7 @@ class Settings:
             "liner_api_key": "설정됨" if self.has_liner_key else "없음",
             "mfds_api_key": "설정됨" if self.has_mfds_key else "없음",
             "rules_path": str(self.rules_path),
+            "youtube_proxy": "설정됨" if self.has_youtube_proxy else "없음",
         }
 
 
@@ -87,6 +103,11 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         liner_api_key=_clean(os.environ.get("LINER_API_KEY")),
         mfds_api_key=_clean(os.environ.get("MFDS_API_KEY")),
         worker_count=int(os.environ.get("WORKER_COUNT") or 2),
+        youtube_proxy_url=_clean(os.environ.get("YOUTUBE_PROXY_URL")),
+        webshare_username=_clean(os.environ.get("WEBSHARE_PROXY_USERNAME")),
+        webshare_password=_clean(os.environ.get("WEBSHARE_PROXY_PASSWORD")),
+        transcript_min_interval=float(os.environ.get("TRANSCRIPT_MIN_INTERVAL") or 1.5),
+        transcript_cooldown=float(os.environ.get("TRANSCRIPT_COOLDOWN") or 600),
     )
 
 

@@ -20,6 +20,7 @@ import asyncio
 import hashlib
 import logging
 import re
+import time
 
 from youtube_transcript_api import (
     IpBlocked,
@@ -31,6 +32,9 @@ from youtube_transcript_api import (
     YouTubeTranscriptApi,
 )
 
+from youtube_transcript_api.proxies import GenericProxyConfig, ProxyConfig, WebshareProxyConfig
+
+from healthcheck.config import Settings
 from healthcheck.domain.types import ExtractedContent
 
 logger = logging.getLogger(__name__)
@@ -62,6 +66,84 @@ class TranscriptFetchError(RuntimeError):
     """
 
 
+def build_proxy_config(settings: Settings) -> ProxyConfig | None:
+    """설정에서 프록시 구성을 만든다.
+
+    YouTube는 클라우드 제공자 IP를 대부분 차단한다. 서버에 올리면 프록시
+    없이는 자막 추출이 거의 동작하지 않는다. 로컬 개발에서는 필요 없다.
+    """
+    if settings.webshare_username and settings.webshare_password:
+        logger.info("자막 추출: Webshare 프록시 사용")
+        return WebshareProxyConfig(
+            proxy_username=settings.webshare_username,
+            proxy_password=settings.webshare_password,
+        )
+    if settings.youtube_proxy_url:
+        logger.info("자막 추출: 일반 프록시 사용")
+        return GenericProxyConfig(
+            http_url=settings.youtube_proxy_url, https_url=settings.youtube_proxy_url
+        )
+    logger.warning(
+        "자막 추출 프록시가 설정되지 않았다. 서버 IP로 직접 호출하며 "
+        "클라우드 환경에서는 차단될 가능성이 높다."
+    )
+    return None
+
+
+class _Throttle:
+    """호출 간 최소 간격을 지킨다.
+
+    실제로 10여 건을 연달아 부르자 IP가 차단됐다. 차단은 한 번 걸리면
+    풀리는 데 오래 걸리므로, 애초에 몰아 부르지 않는 편이 싸다.
+    """
+
+    def __init__(self, min_interval: float) -> None:
+        self._min_interval = min_interval
+        self._lock = asyncio.Lock()
+        self._last_call = 0.0
+
+    async def wait(self) -> None:
+        if self._min_interval <= 0:
+            return
+        async with self._lock:
+            elapsed = time.monotonic() - self._last_call
+            remaining = self._min_interval - elapsed
+            if remaining > 0:
+                await asyncio.sleep(remaining)
+            self._last_call = time.monotonic()
+
+
+class _CircuitBreaker:
+    """차단이 감지되면 일정 시간 호출을 끊는다.
+
+    차단된 상태에서 계속 부르면 차단 기간만 길어지고, 요청마다 왕복 지연을
+    낭비한다. 차단 중에는 네트워크를 타지 않고 바로 실패를 알린다.
+    """
+
+    def __init__(self, cooldown: float) -> None:
+        self._cooldown = cooldown
+        self._opened_at: float | None = None
+
+    @property
+    def is_open(self) -> bool:
+        if self._opened_at is None:
+            return False
+        if time.monotonic() - self._opened_at >= self._cooldown:
+            logger.info("자막 추출 차단 대기가 끝났다. 다시 시도한다.")
+            self._opened_at = None
+            return False
+        return True
+
+    def remaining(self) -> float:
+        if self._opened_at is None:
+            return 0.0
+        return max(0.0, self._cooldown - (time.monotonic() - self._opened_at))
+
+    def trip(self) -> None:
+        self._opened_at = time.monotonic()
+        logger.warning("자막 추출 차단 감지. %.0f초간 호출을 멈춘다.", self._cooldown)
+
+
 class YouTubeTranscriptExtractor:
     def __init__(
         self,
@@ -69,17 +151,49 @@ class YouTubeTranscriptExtractor:
         languages: tuple[str, ...] = KOREAN_LANGUAGES,
         manual_confidence: float = MANUAL_CONFIDENCE,
         generated_confidence: float = GENERATED_CONFIDENCE,
+        min_interval: float = 1.5,
+        cooldown: float = 600.0,
+        proxy_config: ProxyConfig | None = None,
         api: object | None = None,
     ) -> None:
         self._languages = languages
         self._manual_confidence = manual_confidence
         self._generated_confidence = generated_confidence
-        self._api = api or YouTubeTranscriptApi()
+        self._throttle = _Throttle(min_interval)
+        self._breaker = _CircuitBreaker(cooldown)
+        self._api = api or YouTubeTranscriptApi(proxy_config=proxy_config)
         self.call_count = 0
+        self.blocked_count = 0
+
+    @classmethod
+    def from_settings(cls, settings: Settings) -> "YouTubeTranscriptExtractor":
+        return cls(
+            min_interval=settings.transcript_min_interval,
+            cooldown=settings.transcript_cooldown,
+            proxy_config=build_proxy_config(settings),
+        )
+
+    @property
+    def is_blocked(self) -> bool:
+        """차단 대기 중인가. /health에서 노출한다."""
+        return self._breaker.is_open
 
     async def fetch(self, video_id: str) -> ExtractedContent:
+        if self._breaker.is_open:
+            raise TranscriptFetchError(
+                f"자막 추출이 차단 대기 중이다. {self._breaker.remaining():.0f}초 뒤 다시 시도한다."
+            )
+
+        await self._throttle.wait()
         self.call_count += 1
-        return await asyncio.to_thread(self._fetch_blocking, video_id)
+
+        try:
+            return await asyncio.to_thread(self._fetch_blocking, video_id)
+        except TranscriptFetchError as error:
+            if isinstance(error.__cause__, (IpBlocked, RequestBlocked, PoTokenRequired)):
+                self.blocked_count += 1
+                self._breaker.trip()
+            raise
 
     def _fetch_blocking(self, video_id: str) -> ExtractedContent:
         try:
@@ -98,6 +212,9 @@ class YouTubeTranscriptExtractor:
 
         try:
             fetched = transcript.fetch()
+        except (IpBlocked, RequestBlocked, PoTokenRequired) as error:
+            # 목록 조회는 통과했는데 본문에서 막히는 경우가 실제로 있었다.
+            raise TranscriptFetchError(f"자막 본문 접근 차단: {type(error).__name__}") from error
         except Exception as error:
             raise TranscriptFetchError(f"자막 본문 조회 실패: {error}") from error
 

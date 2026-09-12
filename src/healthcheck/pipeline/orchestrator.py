@@ -91,6 +91,7 @@ class Orchestrator:
             mfds=mfds,
             content=content,
             from_cache=False,
+            retryable_failure=retryable_failure,
             source_urls=(share_input.url,) if share_input.url else (),
         )
 

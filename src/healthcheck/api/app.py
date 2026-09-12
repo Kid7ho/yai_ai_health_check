@@ -72,7 +72,7 @@ def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
 
     # 자막 추출은 키가 필요 없으므로 live 모드면 바로 실제 구현을 쓴다.
     if live:
-        transcript = YouTubeTranscriptExtractor()
+        transcript = YouTubeTranscriptExtractor.from_settings(settings)
         logger.info("자막 추출: 유튜브 실제 호출 (한국어 자막만)")
     else:
         transcript = FakeTranscriptExtractor()
@@ -116,10 +116,14 @@ def create_app(
 
     @app.get("/health")
     async def health() -> dict:
+        # 자막 추출이 차단 대기 중인지 노출한다. 배포 후 가장 먼저 깨지는
+        # 지점이므로 외부에서 확인할 수 있어야 한다.
+        blocked = getattr(orchestrator.transcript, "is_blocked", False)
         return {
-            "status": "ok",
+            "status": "degraded" if blocked else "ok",
             "rules_version": orchestrator.ruleset.version,
             "queued": queue.size,
+            "transcript_blocked": blocked,
         }
 
     return app

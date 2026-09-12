@@ -34,6 +34,10 @@ _MAX_BUTTON_LABEL = 14
 
 # 어르신이 읽을 안내 문구
 _ACK_TEXT = "받았습니다. 확인하고 있어요.\n잠시만 기다려 주세요 (약 15초)"
+_RETRY_TEXT = (
+    "지금은 확인해 드리기 어려워요.\n"
+    "잠시 뒤에 다시 보내 주시면 확인해 드릴게요."
+)
 _OUT_OF_SCOPE_TEXT = (
     "이건 음식이나 건강기능식품 이야기가 아니라서 확인해 드릴 수 없어요.\n"
     "약이나 치료에 관한 것은 꼭 의사 선생님께 물어보세요."
@@ -59,6 +63,11 @@ def render(result: CheckResult) -> dict:
     """
     verdict = result.verdict
     label = verdict.label
+
+    # 일시적 실패는 '알 수 없어요'로 답하지 않는다. 다시 보내면 달라질 수 있는
+    # 상태인데 판정이 끝난 것처럼 보여 주면 어르신이 다시 시도하지 않는다.
+    if result.retryable_failure:
+        return _wrap([_simple_text(_RETRY_TEXT)])
 
     if not _is_in_scope(result):
         return _wrap([_simple_text(_OUT_OF_SCOPE_TEXT)])

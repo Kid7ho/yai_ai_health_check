@@ -222,4 +222,8 @@ class CheckResult:
     content: ExtractedContent | None = None
     # 캐시에서 나온 결과인가. 5초 동기 응답 경로를 탔는지 확인하는 지표다.
     from_cache: bool = False
+    # 일시적 실패로 나온 결과인가. 자막 서버 차단처럼 다시 시도하면 달라질 수
+    # 있는 경우다. 이 결과는 캐시하지 않고, 어르신에게도 '알 수 없어요'가 아니라
+    # 잠시 뒤 다시 보내 달라고 안내한다.
+    retryable_failure: bool = False
     source_urls: tuple[str, ...] = field(default_factory=tuple)

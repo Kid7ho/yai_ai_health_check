@@ -200,3 +200,13 @@ def test_범위_밖이면_판정_카드_대신_거절_안내를_준다():
     outputs = render(result(Label.UNKNOWN, claims=claims))["template"]["outputs"]
     assert all("textCard" not in output for output in outputs)
     assert "의사" in outputs[0]["simpleText"]["text"]
+
+
+def test_일시적_실패는_알_수_없어요로_답하지_않는다():
+    """다시 보내면 달라질 수 있는 상태다. 판정이 끝난 것처럼 보이면 안 된다."""
+    payload = render(CheckResult(verdict=result(Label.UNKNOWN).verdict, retryable_failure=True))
+    texts = texts_of(payload)
+
+    assert "잠시 뒤에 다시 보내" in texts[0]
+    assert DISCLAIMER in texts
+    assert all("textCard" not in output for output in payload["template"]["outputs"])

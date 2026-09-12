@@ -399,3 +399,37 @@ async def test_자막이_정말_없는_경우는_캐시한다():
     await orchestrator.run(share_input)
 
     assert await orchestrator.cached(share_input) is not None
+
+
+async def test_차단_상태를_health에_노출한다():
+    """배포 후 가장 먼저 깨지는 지점이라 외부에서 확인할 수 있어야 한다."""
+    from healthcheck.adapters.youtube.transcript import YouTubeTranscriptExtractor
+
+    orchestrator = build_fake_orchestrator()
+    extractor = YouTubeTranscriptExtractor(api=object(), min_interval=0, cooldown=600)
+    extractor._breaker.trip()
+    orchestrator.transcript = extractor
+
+    app = create_app(orchestrator, worker_count=0)
+    with TestClient(app) as client:
+        body = client.get("/health").json()
+
+    assert body["transcript_blocked"] is True
+    assert body["status"] == "degraded"
+
+
+async def test_차단된_영상은_다시_보내_달라고_안내한다():
+    from healthcheck.adapters.youtube.transcript import TranscriptFetchError
+
+    class BlockedExtractor:
+        async def fetch(self, video_id: str):
+            raise TranscriptFetchError("차단")
+
+    sender = RecordingCallbackSender()
+    orchestrator = build_fake_orchestrator()
+    orchestrator.transcript = BlockedExtractor()
+    worker = Worker(InProcessJobQueue(), orchestrator, sender)
+
+    await worker.process(job_for(GINSENG_URL))
+
+    assert "잠시 뒤에 다시 보내" in texts_of(sender.last.payload)[0]
