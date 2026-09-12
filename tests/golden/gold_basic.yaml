@@ -78,3 +78,20 @@
     functionality_match: NOT_APPLICABLE
     supporting_papers: 0
     refuting_papers: 0
+
+- id: gold-006
+  input: "마늘이 혈압을 낮추는 데 좋다고 합니다"
+  expected: CAUTION
+  expected_rule: R-071
+  reason: >-
+    뒷받침 연구가 여러 편이지만 반박 연구도 있고 국가 인정 원료가 아니다.
+    실제 Liner 검색 결과가 뒷받침 7편 반박 2편이었다.
+  판정입력:
+    in_scope: true
+    transcript_quality: ok
+    disease_cure_expression: false
+    ad_violation_hit: false
+    recognition: NOT_RECOGNIZED
+    functionality_match: NOT_APPLICABLE
+    supporting_papers: 7
+    refuting_papers: 2

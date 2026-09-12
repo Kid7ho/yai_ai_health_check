@@ -146,6 +146,28 @@ def test_미인정_원료에_연구만_있으면_조심():
     assert verdict.rule_id == "R-070"
 
 
+def test_반박이_섞여도_뒷받침이_다수면_조심():
+    """실제 학술 검색에서는 어떤 주장이든 반박 논문이 한두 편 나온다.
+
+    반박 0편을 요구하는 R-070만으로는 국가 인정이 없는 성분이 거의 전부
+    UNKNOWN으로 떨어진다. Liner 실제 호출에서 마늘·혈압이 뒷받침 7편
+    반박 2편이었고 판정이 UNKNOWN이었다.
+    """
+    verdict = load_ruleset().evaluate(
+        vi(recognition="NOT_RECOGNIZED", supporting_papers=7, refuting_papers=2)
+    )
+    assert verdict.label is Label.CAUTION
+    assert verdict.rule_id == "R-071"
+
+
+def test_뒷받침이_다수_기준에_못_미치면_판정을_보류한다():
+    """임계값 다수연구_최소_뒷받침논문이 실제로 걸리는지 확인한다."""
+    verdict = load_ruleset().evaluate(
+        vi(recognition="NOT_RECOGNIZED", supporting_papers=2, refuting_papers=1)
+    )
+    assert verdict.rule_id == "R-999"
+
+
 def test_반박_논문이_우세하면_주의():
     """파생 조건 '반박논문_우세'가 임계값 2로 계산되는지 확인한다."""
     ruleset = load_ruleset()
@@ -168,7 +190,7 @@ def test_어디에도_맞지_않으면_알_수_없어요():
 
 def test_판정_결과에_역추적_정보가_담긴다():
     verdict = load_ruleset().evaluate(vi(in_scope=False))
-    assert verdict.rules_version == "v0"
+    assert verdict.rules_version == "v0.1"
     assert verdict.rule_id
     assert verdict.reasons and all(verdict.reasons)
     assert verdict.inputs is not None
