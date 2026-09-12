@@ -248,6 +248,11 @@ def _sources(result: CheckResult) -> list[str]:
             sources.append(f"식품의약품안전처 건강기능식품 기능성 원료인정 현황 ({label})")
             if mfds.functionality_text:
                 sources.append(f"인정된 기능성: {mfds.functionality_text}")
+        if mfds.recognition == "NOT_RECOGNIZED" and mfds.other_recognitions:
+            # 성분 자체는 인정 원료인데 주장한 효능은 인정되지 않은 경우다.
+            # 이 구분을 알려 주지 않으면 어르신이 "인정 안 된 성분"으로 오해한다.
+            sources.append(f"이 성분은 다른 기능성으로는 인정받았습니다: {mfds.other_recognitions[0]}")
+            sources.append("다만 이 영상에서 말하는 효능은 인정된 내용이 아닙니다.")
         if mfds.ad_violation_hit:
             sources.append("식품의약품안전처 부당광고 적발 정보")
 

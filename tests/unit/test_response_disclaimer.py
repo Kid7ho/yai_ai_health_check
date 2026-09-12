@@ -289,3 +289,21 @@ def test_금지_표현이_섞이면_문구를_바꿔_내보낸다():
 def test_라벨_문구_자체에_금지_표현이_없다():
     for text in LABEL_TEXT.values():
         assert find_forbidden(text) == []
+
+
+def test_다른_효능으로_인정받은_사실을_구분해_설명한다():
+    """성분은 인정 원료인데 주장 효능만 미인정인 경우다.
+
+    이 구분을 알려 주지 않으면 어르신이 "인정 안 된 성분"으로 오해한다.
+    """
+    mfds = MfdsEvidence(
+        recognition="NOT_RECOGNIZED",
+        functionality_text=None,
+        match_level="NOT_APPLICABLE",
+        other_recognitions=("간 건강에 도움을 줄 수 있음",),
+    )
+    text = "\n".join(texts_of(render_reason(result(Label.CAUTION, mfds=mfds))))
+
+    assert "다른 기능성으로는 인정받았습니다" in text
+    assert "간 건강" in text
+    assert find_forbidden(text) == []

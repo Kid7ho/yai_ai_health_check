@@ -115,13 +115,33 @@ def test_뒷받침_논문이_없으면_신뢰를_주지_않는다():
     assert verdict.rule_id == "R-041"
 
 
-def test_반박_논문이_있으면_단정하지_않는다():
+def test_반박_논문이_적으면_신뢰를_준다():
+    """실제 학술 검색은 어떤 주장이든 반박 논문을 한두 편 돌려준다.
+
+    반박 0편을 요구하면 국가 인정 문구와 정확히 일치하는 주장까지
+    TRUSTWORTHY에 도달하지 못한다. 오메가3·혈액순환이 4편 대 2편,
+    강황·관절이 6편 대 2편이었는데 둘 다 CAUTION으로 떨어졌다.
+    """
     verdict = load_ruleset().evaluate(
         vi(
             recognition="INDIVIDUAL",
             functionality_match="EXACT",
-            supporting_papers=5,
-            refuting_papers=1,
+            supporting_papers=4,
+            refuting_papers=2,
+        )
+    )
+    assert verdict.label is Label.TRUSTWORTHY
+    assert verdict.rule_id == "R-040"
+
+
+def test_반박_논문이_많으면_단정하지_않는다():
+    """뒷받침이 반박의 두 배에 못 미치면 신뢰를 주지 않는다."""
+    verdict = load_ruleset().evaluate(
+        vi(
+            recognition="INDIVIDUAL",
+            functionality_match="EXACT",
+            supporting_papers=3,
+            refuting_papers=2,
         )
     )
     assert verdict.label is Label.CAUTION
@@ -163,7 +183,7 @@ def test_반박이_섞여도_뒷받침이_다수면_조심():
 def test_뒷받침이_다수_기준에_못_미치면_판정을_보류한다():
     """임계값 다수연구_최소_뒷받침논문이 실제로 걸리는지 확인한다."""
     verdict = load_ruleset().evaluate(
-        vi(recognition="NOT_RECOGNIZED", supporting_papers=2, refuting_papers=1)
+        vi(recognition="NOT_RECOGNIZED", supporting_papers=1, refuting_papers=1)
     )
     assert verdict.rule_id == "R-999"
 
@@ -190,7 +210,7 @@ def test_어디에도_맞지_않으면_알_수_없어요():
 
 def test_판정_결과에_역추적_정보가_담긴다():
     verdict = load_ruleset().evaluate(vi(in_scope=False))
-    assert verdict.rules_version == "v0.3"
+    assert verdict.rules_version == "v0.4"
     assert verdict.rule_id
     assert verdict.reasons and all(verdict.reasons)
     assert verdict.inputs is not None

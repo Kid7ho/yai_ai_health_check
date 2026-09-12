@@ -138,10 +138,15 @@ class FoodSafetyKoreaDataSource:
             )
 
         covered = [str(target) for target in entry.get("효능_대상") or ()]
+        level = match_level(claim, functionality, covered)
+
+        if level == "MISMATCH":
+            return _not_recognized_for_this_effect(claim, [functionality])
+
         return MfdsEvidence(
             recognition="NOTIFIED",
             functionality_text=functionality,
-            match_level=match_level(claim, functionality, covered),
+            match_level=level,
             ad_violation_hit=False,
         )
 
@@ -164,11 +169,20 @@ class FoodSafetyKoreaDataSource:
 
         best = self._best_row(claim, rows)
         functionality = _clean(best.get("FNCLTY_CN"))
+        level = match_level(claim, functionality or "", [])
+
+        if level == "MISMATCH":
+            # 인정 여부는 성분 하나가 아니라 (성분, 효능) 쌍에 대한 것이다.
+            # "마늘"이 간 건강으로 인정됐다는 사실은 혈압 주장의 근거가 아니다.
+            # 신청원료명 부분 검색이 다른 제품 형태의 인정까지 끌어오므로,
+            # 주장 효능을 다루는 인정 건이 없으면 그 효능에 대해 미인정으로 본다.
+            others = [text for text in (_clean(row.get("FNCLTY_CN")) for row in rows) if text]
+            return _not_recognized_for_this_effect(claim, others)
 
         return MfdsEvidence(
             recognition="INDIVIDUAL",
             functionality_text=functionality,
-            match_level=match_level(claim, functionality or "", []),
+            match_level=level,
             ad_violation_hit=False,
             recognition_no=_clean(best.get("HF_FNCLTY_MTRAL_RCOGN_NO")),
         )
@@ -227,6 +241,26 @@ class FoodSafetyKoreaDataSource:
         if self._client is not None and self._owns_client:
             await self._client.aclose()
             self._client = None
+
+
+def _not_recognized_for_this_effect(claim: Claim, others: list[str]) -> MfdsEvidence:
+    """주장 효능에 대해서는 인정된 기능성이 없다.
+
+    성분이 다른 효능으로 인정받은 사실은 other_recognitions에 남긴다. 판정에는
+    쓰지 않지만, 어르신에게 왜 그런지 설명할 때 쓰고 역추적에도 필요하다.
+    """
+    logger.info(
+        "성분은 인정 원료이나 주장 효능(%s)에 대한 인정은 없다: %s",
+        claim.claimed_effect[:20],
+        claim.ingredient,
+    )
+    return MfdsEvidence(
+        recognition="NOT_RECOGNIZED",
+        functionality_text=None,
+        match_level="NOT_APPLICABLE",
+        ad_violation_hit=False,
+        other_recognitions=tuple(dict.fromkeys(others))[:3],
+    )
 
 
 def _clean(value: object) -> str | None:

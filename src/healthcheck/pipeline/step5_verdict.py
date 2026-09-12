@@ -56,8 +56,24 @@ def _refuting_dominant(vi: VerdictInput, thresholds: dict[str, Any]) -> bool:
     return (vi.refuting_papers - vi.supporting_papers) >= margin
 
 
+def _supporting_dominant(vi: VerdictInput, thresholds: dict[str, Any]) -> bool:
+    """뒷받침 논문이 반박 논문보다 분명히 많은 상태.
+
+    반박 논문이 한 편도 없어야 한다는 조건은 현실에서 거의 성립하지 않는다.
+    실제 학술 검색은 어떤 주장이든 반박 논문을 한두 편 돌려준다. 국가가
+    인정한 기능성 문구와 정확히 일치하는 주장까지 '믿을 만해요'에 도달하지
+    못하면 그 라벨이 사실상 존재하지 않게 된다. 그래서 배수로 본다.
+    """
+    multiple = thresholds["신뢰_뒷받침_배수"]
+    minimum = thresholds["신뢰_최소_뒷받침논문"]
+    if vi.supporting_papers < minimum:
+        return False
+    return vi.supporting_papers >= vi.refuting_papers * multiple
+
+
 DERIVED_CONDITIONS: dict[str, DerivedFn] = {
     "반박논문_우세": _refuting_dominant,
+    "뒷받침_우세": _supporting_dominant,
 }
 
 # VerdictInput이 실제로 가진 필드 이름. 규칙표 검증에 쓴다.

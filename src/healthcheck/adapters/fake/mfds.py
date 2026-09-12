@@ -105,10 +105,21 @@ class FakeMfdsDataSource:
                 ad_violation_hit=ad_hit,
             )
 
+        level = _match_level(claim, found)
+        if level == "MISMATCH":
+            # 실제 구현과 같은 규칙을 따른다. 인정 여부는 (성분, 효능) 쌍이다.
+            return MfdsEvidence(
+                recognition="NOT_RECOGNIZED",
+                functionality_text=None,
+                match_level="NOT_APPLICABLE",
+                ad_violation_hit=ad_hit,
+                other_recognitions=(found.functionality_text,),
+            )
+
         return MfdsEvidence(
             recognition=found.recognition,
             functionality_text=found.functionality_text,
-            match_level=_match_level(claim, found),
+            match_level=level,
             ad_violation_hit=ad_hit,
             recognition_no=found.recognition_no,
         )

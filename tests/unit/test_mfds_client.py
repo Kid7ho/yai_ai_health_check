@@ -93,10 +93,30 @@ async def test_인정_건이_여러_개면_주장과_가장_잘_맞는_문구를
 
 
 async def test_기능성_문구의_따옴표와_등급_표기를_정리한다():
+    liver_claim = Claim(ingredient="마늘", claimed_effect="간에 좋다", intensity="SUGGESTIVE", span=(0, 2))
     source = source_with(lambda request: httpx.Response(200, json=payload([ROW_LIVER])))
-    evidence = await source.lookup(GARLIC)
+
+    evidence = await source.lookup(liver_claim)
 
     assert evidence.functionality_text.startswith("간 건강")
+
+
+async def test_주장_효능에_대한_인정이_없으면_미인정으로_본다():
+    """인정 여부는 성분 하나가 아니라 (성분, 효능) 쌍에 대한 것이다.
+
+    "마늘"이 간 건강으로 인정됐다는 사실은 혈압 주장의 근거가 아니다.
+    신청원료명 부분 검색이 다른 제품 형태의 인정까지 끌어오기 때문에,
+    이 처리가 없으면 마늘·혈압 주장이 R-060의 WARNING으로 갔다.
+    """
+    source = source_with(lambda request: httpx.Response(200, json=payload([ROW_LIVER])))
+
+    evidence = await source.lookup(GARLIC)
+
+    assert evidence.recognition == "NOT_RECOGNIZED"
+    assert evidence.match_level == "NOT_APPLICABLE"
+    assert evidence.functionality_text is None
+    # 다른 효능으로 인정받은 사실은 설명용으로 남긴다.
+    assert evidence.other_recognitions and "간 건강" in evidence.other_recognitions[0]
 
 
 async def test_부당광고_정보는_아직_없으므로_항상_False다():

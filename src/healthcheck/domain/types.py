@@ -159,6 +159,10 @@ class MfdsEvidence:
     # 인정번호. I-0040의 HF_FNCLTY_MTRAL_RCOGN_NO 값에 해당한다.
     recognition_no: str | None = None
     lookup_failed: bool = False
+    # 같은 성분이 '다른 효능'으로 인정받은 내용. 주장 효능은 미인정이지만
+    # 성분 자체는 인정 원료일 때 채워진다. 어르신에게 "이 성분은 간 건강으로는
+    # 인정됐지만 혈압 기능성은 인정되지 않았습니다"라고 설명하는 재료다.
+    other_recognitions: tuple[str, ...] = ()
 
 
 # ─────────────────────────────────────────────────────────────
