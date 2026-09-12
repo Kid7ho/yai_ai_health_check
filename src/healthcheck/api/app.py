@@ -14,6 +14,7 @@ from fastapi import FastAPI
 
 from healthcheck.adapters.fake.academic import FakeAcademicSearchClient
 from healthcheck.adapters.liner.academic import LinerAcademicSearchClient
+from healthcheck.adapters.mfds.foodsafetykorea import FoodSafetyKoreaDataSource
 from healthcheck.adapters.fake.cache import InMemoryExtractionCache, InMemoryVerdictCache
 from healthcheck.adapters.fake.callback import RecordingCallbackSender
 from healthcheck.adapters.fake.mfds import FakeMfdsDataSource
@@ -60,11 +61,13 @@ def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
         if live:
             logger.warning("ADAPTER_MODE=live이지만 LINER_API_KEY가 없어 Fake를 씁니다")
 
-    # TODO(확인필요): 식약처 오픈API 인증키가 아직 없다. 키가 나오면
-    # MfdsDataSource 실제 구현을 만들어 여기에 꽂는다.
     if live and settings.has_mfds_key:
-        logger.warning("식약처 실제 구현이 아직 없어 Fake를 씁니다")
-    mfds = FakeMfdsDataSource()
+        mfds = FoodSafetyKoreaDataSource(settings.mfds_api_key)
+        logger.info("식약처: 식품안전나라 오픈API 실제 호출")
+    else:
+        mfds = FakeMfdsDataSource()
+        if live:
+            logger.warning("ADAPTER_MODE=live이지만 MFDS_API_KEY가 없어 Fake를 씁니다")
 
     # 자막 추출기도 실제 구현이 없다. 자막 확보 방식을 정한 뒤 만든다.
     return Orchestrator(

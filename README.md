@@ -36,7 +36,10 @@
 | 주장 구조화(③) | 규칙 기반 구현 완료. 한계 5건은 xfail로 기록 |
 | 이중 검증(④) | 조회 병렬 실행과 실패 처리 완료. 실제 호출은 Fake |
 | Fake 구현체 4종 | 완료. 키 없이 전체 파이프라인이 돌아간다 |
-| 외부 API 실제 호출 | 만들지 않음. 키 승인 대기 중 |
+| Liner 학술 검색 실제 호출 | 완료. 실제 논문으로 검증 |
+| 식약처 오픈API 실제 호출 | 완료. I-0040 개별인정형 조회 |
+| 식약처 부당광고 데이터 | 없음. 전용 API를 특정하지 못함 |
+| 유튜브 자막 추출 실제 구현 | 미착수 |
 
 테스트 105건 통과, 5건은 규칙 기반 추출의 알려진 한계를 기록한 xfail이다.
 
@@ -64,7 +67,9 @@ uv run uvicorn healthcheck.api.app:app --reload    # 스킬 서버 (Fake 어댑�
 |---|---|
 | `rules/verdict_rules_v0.yaml` | 판정 규칙 12건. 위에서 아래 순서로 평가 |
 | `rules/claim_patterns.yaml` | 질병 치료 표현, 효능 표현, 범위 밖 표현 목록 |
-| `rules/ingredient_aliases.yaml` | 성분명 정규화 사전 |
+| `rules/ingredient_aliases.yaml` | 성분명 정규화 사전, 영문 검색어 |
+| `rules/notified_ingredients.yaml` | 고시형 기능성원료 목록 ⚠ 검수 전 초안 |
+| `rules/stance_patterns.yaml` | 논문 찬반 판정 표현, 제외할 문헌 |
 
 수정 의견은 규칙 ID(`R-0xx`)를 적어 주면 된다. 판정 로그에는 사용된 규칙 버전과
 매칭된 규칙 ID가 함께 남으므로, 어떤 판정이 왜 나왔는지 나중에 되짚을 수 있다.
