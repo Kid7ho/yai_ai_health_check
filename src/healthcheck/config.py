@@ -55,6 +55,15 @@ class Settings:
     # 기사·블로그 링크에서 본문을 뽑을지.
     article_enabled: bool = True
 
+    # 로그 수준. 기본 INFO다. 이 설정이 없으면 판정 로그와 조회 로그가 전부
+    # 버려진다. uvicorn은 자기 로거만 설정하고 우리 로거는 건드리지 않는다.
+    log_level: str = "INFO"
+
+    # 카카오 요청 본문을 로그에 남길지. 연동 초기에 실제 구조를 확인하는 용도다.
+    # 사용자 식별자는 가려서 남기지만 발화 내용이 로그에 들어가므로 연동이
+    # 끝나면 꺼야 한다.
+    log_skill_request: bool = False
+
     # 스킬 엔드포인트 인증. 공개 주소로 노출하면 최소 하나는 켜야 한다.
     # 인증이 없으면 주소를 아는 누구나 파이프라인을 호출한다.
     skill_auth_header: str = "X-Skill-Token"
@@ -145,6 +154,8 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         asr_model_size=(os.environ.get("ASR_MODEL_SIZE") or "small").strip(),
         asr_max_seconds=int(os.environ.get("ASR_MAX_SECONDS") or 300),
         article_enabled=_flag(os.environ.get("ARTICLE_ENABLED"), True),
+        log_level=(os.environ.get("LOG_LEVEL") or "INFO").strip().upper(),
+        log_skill_request=_flag(os.environ.get("LOG_SKILL_REQUEST"), False),
         skill_auth_header=(os.environ.get("SKILL_AUTH_HEADER") or "X-Skill-Token").strip(),
         skill_auth_token=_clean(os.environ.get("SKILL_AUTH_TOKEN")),
         skill_path=_normalize_path(os.environ.get("SKILL_PATH")),
@@ -175,3 +186,25 @@ def _clean(value: str | None) -> str | None:
         return None
     value = value.strip()
     return value or None
+
+
+def setup_logging(level: str = "INFO") -> None:
+    """healthcheck 로거에 출력 핸들러를 붙인다.
+
+    uvicorn은 자기 로거만 설정한다. 우리 모듈의 logger.info는 기본 수준이
+    WARNING이라 전부 버려졌다. 판정 로그, 조회 로그, 캐시 적중 로그가 모두
+    여기에 해당한다. 운영에서 무슨 일이 일어났는지 보려면 필요하다.
+    """
+    import logging
+
+    logger = logging.getLogger("healthcheck")
+    logger.setLevel(getattr(logging, level, logging.INFO))
+
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(
+            logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s")
+        )
+        logger.addHandler(handler)
+    # 루트로 다시 올려 보내지 않는다. uvicorn 핸들러와 겹쳐 두 번 찍힌다.
+    logger.propagate = False

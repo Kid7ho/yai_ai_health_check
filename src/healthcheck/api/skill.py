@@ -66,6 +66,17 @@ async def skill(request: Request) -> dict:
 
     body = await request.json()
 
+    if getattr(request.app.state, "log_skill_request", False):
+        import json as _json
+
+        logger.info(
+            "카카오 요청 본문(식별자 가림): %s",
+            _json.dumps(mask_body(body), ensure_ascii=False)[:4000],
+        )
+        logger.info(
+            "카카오 요청 헤더 이름들: %s", sorted(request.headers.keys())
+        )
+
     utterance = _dig(body, "userRequest", "utterance") or ""
     callback_url = _dig(body, "userRequest", "callbackUrl")
     user_key = _dig(body, "userRequest", "user", "id")
@@ -119,6 +130,26 @@ def _simple(text: str) -> dict:
     전부 step6_response.render()를 지나가며 거기서 면책 문구가 붙는다.
     """
     return {"version": "2.0", "template": {"outputs": [{"simpleText": {"text": text}}]}}
+
+
+# 로그에 남기기 전에 가릴 필드 경로. 사용자 식별자는 남기지 않는다.
+_MASKED_KEYS = ("id", "botUserKey", "plusfriendUserKey", "appUserId")
+
+
+def mask_body(value: Any) -> Any:
+    """요청 본문에서 사용자 식별자를 가린다.
+
+    연동 초기에 실제 요청 구조를 확인해야 하지만, 식별자를 로그에 남길
+    이유는 없다. 값의 길이만 알 수 있게 바꿔 둔다.
+    """
+    if isinstance(value, dict):
+        return {
+            key: ("***" if key in _MASKED_KEYS and isinstance(inner, str) else mask_body(inner))
+            for key, inner in value.items()
+        }
+    if isinstance(value, list):
+        return [mask_body(item) for item in value]
+    return value
 
 
 def _dig(body: Any, *path: str) -> Any:

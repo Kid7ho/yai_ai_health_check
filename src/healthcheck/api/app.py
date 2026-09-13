@@ -28,7 +28,7 @@ from healthcheck.adapters.fake.transcript import FakeTranscriptExtractor
 from healthcheck.adapters.inprocess_queue import InProcessJobQueue
 from healthcheck.api import debug, skill
 from healthcheck.api.auth import SkillAuth, warn_if_unprotected
-from healthcheck.config import Settings, load_settings
+from healthcheck.config import Settings, load_settings, setup_logging
 from healthcheck.api.worker import start_workers
 from healthcheck.pipeline.orchestrator import Orchestrator
 from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
@@ -156,6 +156,7 @@ def create_app(
     skill_path: str | None = None,
 ) -> FastAPI:
     settings = load_settings()
+    setup_logging(settings.log_level)
     auth = (
         auth
         if auth is not None
@@ -198,6 +199,12 @@ def create_app(
         orchestrator=orchestrator, queue=queue, repository=repository, auth=auth
     )
     app.state.auth = auth
+    app.state.log_skill_request = settings.log_skill_request
+    if settings.log_skill_request:
+        logger.warning(
+            "카카오 요청 본문 기록이 켜져 있다. 연동 확인이 끝나면 "
+            "LOG_SKILL_REQUEST=0으로 꺼라. 발화 내용이 로그에 남는다."
+        )
     app.state.repository = repository
     app.state.queue = queue
     app.state.callback_sender = callback_sender
