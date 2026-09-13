@@ -10,12 +10,15 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from dataclasses import dataclass
 
+from healthcheck.domain.labels import Label
 from healthcheck.domain.types import (
     CheckResult,
+    ClaimCheck,
     ClaimSet,
     ExtractedContent,
     ShareInput,
@@ -115,24 +118,24 @@ class Orchestrator:
         claims = await self._claims_of(content)
         _record(trace, "claims", step)
 
-        academic = None
-        mfds = None
-
-        if self._needs_verification(claims, content):
-            primary = claims.claims[0]
-            step = time.monotonic()
-            academic, mfds = await verify(primary, academic=self.academic, mfds=self.mfds)
-            _record(trace, "verify", step)
+        claim_checks = await self._check_claims(claims, content, trace)
 
         step = time.monotonic()
-        verdict_input = build_verdict_input(
-            claims=claims,
-            content=content,
-            academic=academic,
-            mfds=mfds,
-            thresholds=self.ruleset.thresholds,
-        )
-        verdict = self.ruleset.evaluate(verdict_input)
+        if claim_checks:
+            # 가장 엄한 결과를 쓴다. 뒤에 나온 주장이 더 위험해도 반영되게 한다.
+            decisive = max(claim_checks, key=lambda check: SEVERITY[check.verdict.label])
+            verdict = decisive.verdict
+            academic, mfds, primary_claim = decisive.academic, decisive.mfds, decisive.claim
+        else:
+            verdict_input = build_verdict_input(
+                claims=claims,
+                content=content,
+                academic=None,
+                mfds=None,
+                thresholds=self.ruleset.thresholds,
+            )
+            verdict = self.ruleset.evaluate(verdict_input)
+            academic = mfds = primary_claim = None
         _record(trace, "verdict", step)
 
         result = CheckResult(
@@ -141,6 +144,8 @@ class Orchestrator:
             academic=academic,
             mfds=mfds,
             content=content,
+            primary_claim=primary_claim,
+            claim_checks=tuple(claim_checks),
             from_cache=False,
             retryable_failure=retryable_failure,
             source_urls=(share_input.url,) if share_input.url else (),
@@ -157,6 +162,54 @@ class Orchestrator:
                 await self.verdict_cache.set(key, result, rules_version=self.ruleset.version)
         _record(trace, "total", started)
         return result
+
+    async def _check_claims(
+        self,
+        claims: ClaimSet,
+        content: ExtractedContent,
+        trace: dict[str, float] | None,
+    ) -> list[ClaimCheck]:
+        """주장을 최대 MAX_VERIFIED_CLAIMS건까지 검증한다.
+
+        이전에는 본문에 먼저 나온 주장 하나만 검증했다. 영상 자막 한 편에서 주장
+        10건이 나왔는데 "홍삼 / 눈" 한 건만 확인했다. 뒤에 위험한 주장이 있어도
+        판정에 반영되지 않았다.
+
+        단정 표현을 먼저 고른다. 같은 강도면 본문 순서를 따른다. 검증은 동시에
+        보낸다. 상한을 둔 이유는 Liner 토큰 비용이다.
+        """
+        if not self._needs_verification(claims, content):
+            return []
+
+        order = {"ASSERTIVE": 0, "SUGGESTIVE": 1, "UNCERTAIN": 2}
+        seen: set[tuple[str, str]] = set()
+        candidates = []
+        for claim in sorted(claims.claims, key=lambda c: order.get(c.intensity, 3)):
+            key = (claim.ingredient, claim.claimed_effect.replace(" ", ""))
+            if key not in seen:
+                seen.add(key)
+                candidates.append(claim)
+        candidates = candidates[:MAX_VERIFIED_CLAIMS]
+
+        step = time.monotonic()
+        evidence = await asyncio.gather(
+            *(verify(claim, academic=self.academic, mfds=self.mfds) for claim in candidates)
+        )
+        _record(trace, "verify", step)
+
+        checks = []
+        for claim, (academic, mfds) in zip(candidates, evidence):
+            verdict_input = build_verdict_input(
+                claims=claims,
+                content=content,
+                academic=academic,
+                mfds=mfds,
+                thresholds=self.ruleset.thresholds,
+            )
+            checks.append(
+                ClaimCheck(claim=claim, verdict=self.ruleset.evaluate(verdict_input), academic=academic, mfds=mfds)
+            )
+        return checks
 
     async def _resolve(
         self, share_input: ShareInput, trace: dict[str, float] | None
@@ -322,6 +375,15 @@ def _cap_content(content: ExtractedContent) -> ExtractedContent:
     )
 
 
+# 한 요청에서 검증할 주장의 최대 수. 주장마다 Liner와 식약처를 호출한다.
+MAX_VERIFIED_CLAIMS = 3
+
+# 여러 주장의 판정 중 무엇을 쓸지 정하는 엄격함 순서.
+# UNKNOWN을 TRUSTWORTHY보다 엄하게 둔다. 확인하지 못한 주장이 섞였는데
+# 전체를 '믿을 만해요'라고 말하면 과장이다. 모든 주장이 믿을 만할 때만 믿을 만하다.
+SEVERITY = {Label.TRUSTWORTHY: 0, Label.UNKNOWN: 1, Label.CAUTION: 2, Label.WARNING: 3}
+
+
 def _no_content() -> ExtractedContent:
     return ExtractedContent(text="", has_transcript=False, confidence=0.0)
 
@@ -342,7 +404,7 @@ def _log_result(share_input: ShareInput, result: CheckResult) -> None:
     """
     verdict = result.verdict
     claims = result.claims
-    primary = claims.claims[0] if claims and claims.claims else None
+    primary = result.primary_claim or (claims.claims[0] if claims and claims.claims else None)
 
     logger.info(
         "판정 완료 kind=%s label=%s rule=%s version=%s 성분=%s 강도=%s 범위내=%s 자막=%s",

@@ -245,9 +245,11 @@ def _describe(result: CheckResult) -> str:
 
 def _checked_claim_text(result: CheckResult) -> str:
     """무엇을 확인했는지 어르신 말로 돌려준다."""
-    if result.claims is None or not result.claims.claims:
-        return ""
-    claim = result.claims.claims[0]
+    claim = result.primary_claim
+    if claim is None:
+        if result.claims is None or not result.claims.claims:
+            return ""
+        claim = result.claims.claims[0]
     return f"{claim.ingredient}이(가) {claim.claimed_effect}"
 
 

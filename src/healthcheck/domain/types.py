@@ -237,6 +237,16 @@ class Verdict:
 
 
 @dataclass(frozen=True, slots=True)
+class ClaimCheck:
+    """주장 하나를 검증한 결과."""
+
+    claim: Claim
+    verdict: Verdict
+    academic: AcademicEvidence | None = None
+    mfds: MfdsEvidence | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class CheckResult:
     """한 건의 확인 요청에 대한 최종 산출물.
 
@@ -257,4 +267,8 @@ class CheckResult:
     # 판정 대신 어르신에게 알려야 할 안내. 예: 영상이 아닌 유튜브 링크.
     # 값이 있으면 응답 생성이 판정 카드 대신 안내 문구를 보낸다.
     notice: str | None = None
+    # 판정을 결정한 주장. 여러 주장 중 가장 엄한 결과를 낸 것이다.
+    primary_claim: Claim | None = None
+    # 검증한 주장 전부와 각각의 판정. 역추적과 근거 화면에 쓴다.
+    claim_checks: tuple[ClaimCheck, ...] = ()
     source_urls: tuple[str, ...] = field(default_factory=tuple)
