@@ -167,7 +167,11 @@ class TrafilaturaArticleExtractor:
         )
 
         if response.status_code != 200:
-            raise ArticleFetchError(f"기사 조회 응답 {response.status_code}")
+            # 5xx와 429는 사이트 쪽 일시 장애나 호출 제한이다. 다시 시도하면 될 수 있다.
+            retryable = response.status_code >= 500 or response.status_code == 429
+            raise ArticleFetchError(
+                f"기사 조회 응답 {response.status_code}", retryable=retryable
+            )
 
         content_type = response.headers.get("content-type", "")
         if "html" not in content_type and "text" not in content_type:

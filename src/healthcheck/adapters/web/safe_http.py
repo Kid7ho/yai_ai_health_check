@@ -30,7 +30,16 @@ USER_AGENT = (
 
 
 class FetchError(RuntimeError):
-    """외부 주소 조회 실패."""
+    """외부 주소 조회 실패.
+
+    retryable은 다시 시도하면 결과가 달라질 수 있는지다. 통신 오류, 시간 초과,
+    5xx, 429가 여기 해당한다. 이런 실패로 나온 판정은 캐시하지 않는다.
+    404나 내부망 차단은 다시 시도해도 같으므로 retryable이 아니다.
+    """
+
+    def __init__(self, message: str, *, retryable: bool = False) -> None:
+        super().__init__(message)
+        self.retryable = retryable
 
 
 class UnsafeUrlError(FetchError):
@@ -92,7 +101,8 @@ async def safe_request(
                 follow_redirects=False,
             )
         except httpx.HTTPError as error:
-            raise FetchError(f"통신 오류: {error}") from error
+            # 통신 오류와 시간 초과는 잠시 뒤 다시 시도하면 될 수 있다.
+            raise FetchError(f"통신 오류: {error}", retryable=True) from error
 
         if response.is_redirect:
             location = response.headers.get("location")

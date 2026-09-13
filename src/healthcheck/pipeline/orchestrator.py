@@ -255,10 +255,17 @@ class Orchestrator:
             try:
                 return await self.article.fetch(share_input.url), False
             except Exception as error:
-                # 기사 조회 실패는 자막 없음과 같게 취급한다. 링크가 죽었거나
-                # 사이트가 자동 요청을 막은 경우이며, R-010이 판정을 보류한다.
-                logger.warning("기사 본문 추출 실패 url=%s: %s", share_input.url, error)
-                return _no_content(), False
+                # 일시적 실패(통신 오류, 5xx, 429)는 캐시하지 않는다. 사이트가 잠깐
+                # 503을 돌려준 것만으로 '알 수 없어요'가 굳으면, 사이트가 살아난
+                # 뒤에도 같은 답을 준다. 404나 차단처럼 다시 해도 같은 실패만 캐시한다.
+                retryable = bool(getattr(error, "retryable", False))
+                logger.warning(
+                    "기사 본문 추출 실패 url=%s 재시도가능=%s: %s",
+                    share_input.url,
+                    retryable,
+                    error,
+                )
+                return _no_content(), retryable
 
         return _no_content(), False
 
