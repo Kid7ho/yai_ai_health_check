@@ -21,6 +21,7 @@ ad_violation_hit을 항상 False로 둔다. 그래서 지금은 R-020과 R-030�
 from __future__ import annotations
 
 import logging
+import time
 from functools import lru_cache
 from pathlib import Path
 from urllib.parse import quote
@@ -40,9 +41,16 @@ DEFAULT_NOTIFIED_PATH = RULES_DIR / "notified_ingredients.yaml"
 DEFAULT_PATTERNS_PATH = RULES_DIR / "claim_patterns.yaml"
 
 DEFAULT_TIMEOUT = 8.0
-# 한 성분에 인정 건이 여러 개다. 기능성 문구가 조금씩 달라서 몇 건을 받아
-# 주장과 가장 잘 맞는 것을 고른다.
-MAX_ROWS = 10
+# 한 성분에 인정 건이 여러 개다. 기능성 문구가 조금씩 달라서 전부 받아
+# 주장과 가장 잘 맞는 것을 고른다. 10건만 받았을 때 프로바이오틱스(37건),
+# 가르시니아(19건), 밀크씨슬(18건) 등은 뒤쪽의 맞는 인정 건을 놓쳤다.
+MAX_ROWS = 100
+
+# 같은 성분·효능 주장의 조회 결과를 캐시하는 시간(초). 인정 현황은 자주 바뀌지 않는다.
+CACHE_TTL = 24 * 3600
+
+# 신청원료명에 이 말이 있으면 여러 원료를 섞은 복합물이다.
+_COMPOUND_MARKERS = ("복합물", "혼합", "복합추출물")
 
 
 class MfdsLookupError(RuntimeError):
@@ -111,12 +119,22 @@ class FoodSafetyKoreaDataSource:
         self._owns_client = client is None
         self._notified_path = notified_path
         self.call_count = 0
+        self._cache: dict[tuple[str, str, str], tuple[float, MfdsEvidence]] = {}
+        self.cache_hits = 0
 
     async def lookup(self, claim: Claim) -> MfdsEvidence:
+        key = (claim.ingredient, claim.claimed_effect, claim.intensity)
+        cached = self._cache.get(key)
+        if cached and time.monotonic() - cached[0] < CACHE_TTL:
+            self.cache_hits += 1
+            return cached[1]
+
         notified = self._lookup_notified(claim)
-        if notified is not None:
-            return notified
-        return await self._lookup_individual(claim)
+        evidence = notified if notified is not None else await self._lookup_individual(claim)
+
+        # 조회에 성공한 결과만 캐시한다. 실패는 예외로 올라가 여기까지 오지 않는다.
+        self._cache[key] = (time.monotonic(), evidence)
+        return evidence
 
     # ── 고시형 (공전 기반 로컬 목록) ──────────────────────────────
 
@@ -171,6 +189,12 @@ class FoodSafetyKoreaDataSource:
         functionality = _clean(best.get("FNCLTY_CN"))
         level = match_level(claim, functionality or "", [])
 
+        # 복합물의 인정은 여러 원료를 섞은 제품 기준이다. 단일 성분 주장과 완전히
+        # 일치한다고 보지 않는다. "포도블루베리추출혼합분말"의 인정이 블루베리
+        # 단일 성분의 인정처럼 쓰였다.
+        if level == "EXACT" and _is_compound(best.get("APLC_RAWMTRL_NM")):
+            level = "PARTIAL"
+
         if level == "MISMATCH":
             # 인정 여부는 성분 하나가 아니라 (성분, 효능) 쌍에 대한 것이다.
             # "마늘"이 간 건강으로 인정됐다는 사실은 혈압 주장의 근거가 아니다.
@@ -196,7 +220,12 @@ class FoodSafetyKoreaDataSource:
         priority = {"EXACT": 0, "PARTIAL": 1, "MISMATCH": 2, "NOT_APPLICABLE": 3}
         return min(
             rows,
-            key=lambda row: priority[match_level(claim, _clean(row.get("FNCLTY_CN")) or "", [])],
+            key=lambda row: (
+                priority[match_level(claim, _clean(row.get("FNCLTY_CN")) or "", [])],
+                # 같은 일치도면 복합물이 아닌 단일 원료 인정을 먼저 쓴다.
+                _is_compound(row.get("APLC_RAWMTRL_NM")),
+                len(str(row.get("APLC_RAWMTRL_NM") or "")),
+            ),
         )
 
     async def _fetch_rows(self, ingredient: str) -> list[dict]:
@@ -261,6 +290,10 @@ def _not_recognized_for_this_effect(claim: Claim, others: list[str]) -> MfdsEvid
         ad_violation_hit=False,
         other_recognitions=tuple(dict.fromkeys(others))[:3],
     )
+
+
+def _is_compound(name: object) -> bool:
+    return any(marker in str(name or "") for marker in _COMPOUND_MARKERS)
 
 
 def _clean(value: object) -> str | None:

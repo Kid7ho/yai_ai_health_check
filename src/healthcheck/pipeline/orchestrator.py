@@ -156,7 +156,18 @@ class Orchestrator:
         # 일시적 실패로 나온 판정은 캐시에 넣지 않는다. 자막 서버 차단 때문에
         # 나온 '알 수 없어요'를 캐시하면, 차단이 풀린 뒤에도 그 영상은 계속
         # 같은 답을 받는다. 캐시가 오답을 굳히는 셈이다.
-        if not retryable_failure:
+        # 식약처나 Liner 조회가 실패한 채 나온 판정은 캐시하지 않는다. 근거가 빠진
+        # 판정이 굳으면, 조회가 되살아난 뒤에도 같은 영상에 같은 답을 준다.
+        # 2단계에서 기사 추출 실패에는 막았는데 검증 단계에는 빠져 있었다.
+        evidence_failed = any(
+            (check.academic is not None and check.academic.lookup_failed)
+            or (check.mfds is not None and check.mfds.lookup_failed)
+            for check in claim_checks
+        )
+        if evidence_failed:
+            logger.warning("검증 조회 일부가 실패해 이 판정은 캐시하지 않는다")
+
+        if not retryable_failure and not evidence_failed:
             keys = {original_key, step1_input.cache_key(share_input)}
             for key in keys:
                 await self.verdict_cache.set(key, result, rules_version=self.ruleset.version)
