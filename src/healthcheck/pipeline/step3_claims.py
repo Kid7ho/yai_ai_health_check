@@ -210,8 +210,10 @@ class RuleBasedClaimExtractor:
         targets = _find_first_each(sentence, patterns.effect_targets)
         intensity, effect_pos = _find_intensity(sentence, patterns.effect_by_intensity)
 
-        # 효능 표현도 효능 대상도 없으면 주장이 아니다. 성분 이름만 나온 문장이다.
-        if not targets and effect_pos is None:
+        # 효능 표현이 없으면 주장이 아니다. 성분과 신체 부위가 같은 문장에 나왔을
+        # 뿐이다. 실제 영상 자막에서 "홍삼 / 눈", "홍삼 / 뼈"처럼 주장이 아닌 짝이
+        # 10건 가까이 잡혔다. 질병 치료 표현은 별도로 문장 전체에서 잡는다.
+        if effect_pos is None:
             return []
 
         claims: list[Claim] = []
