@@ -31,6 +31,7 @@ from healthcheck.pipeline.step5_verdict import (
 )
 from healthcheck.ports.academic import AcademicSearchClient
 from healthcheck.ports.article import ArticleExtractor
+from healthcheck.ports.links import LinkResolver
 from healthcheck.ports.cache import ExtractionCache, VerdictCache
 from healthcheck.ports.mfds import MfdsDataSource
 from healthcheck.ports.transcript import TranscriptExtractor
@@ -49,6 +50,8 @@ class Orchestrator:
     extraction_cache: ExtractionCache
     # 유튜브가 아닌 링크의 본문을 뽑는다. 없으면 그런 링크는 판정 보류가 된다.
     article: ArticleExtractor | None = None
+    # 단축 링크를 푼다. 없으면 단축 링크는 풀지 않은 채 기사로 처리된다.
+    link_resolver: LinkResolver | None = None
 
     async def cached(self, share_input: ShareInput) -> CheckResult | None:
         """캐시 1단만 조회한다. 5초 동기 응답 경로에서 쓴다.
@@ -77,6 +80,24 @@ class Orchestrator:
         if cached is not None:
             _record(trace, "cache", started)
             return cached
+
+        # 단축 링크는 풀어야 실제 대상을 안다. 원래 키를 기억해 두었다가 결과를
+        # 두 키 모두에 저장한다. 같은 단축 링크가 다시 오면 동기 경로에서
+        # 바로 맞히고, 긴 주소로 먼저 확인된 글이면 여기서 맞힌다.
+        original_key = step1_input.cache_key(share_input)
+        if share_input.needs_resolution:
+            share_input = await self._resolve(share_input, trace)
+            cached = await self.cached(share_input)
+            if cached is not None:
+                await self.verdict_cache.set(
+                    original_key, cached, rules_version=self.ruleset.version
+                )
+                _record(trace, "cache", started)
+                return cached
+
+        if share_input.kind == "YOUTUBE_OTHER":
+            # 채널·재생목록 링크다. 확인할 영상이 없으므로 조회하지 않고 안내한다.
+            return self._notice_result(share_input, "youtube_not_video")
 
         step = time.monotonic()
         content, retryable_failure = await self._content_of(share_input)
@@ -123,11 +144,58 @@ class Orchestrator:
         # 나온 '알 수 없어요'를 캐시하면, 차단이 풀린 뒤에도 그 영상은 계속
         # 같은 답을 받는다. 캐시가 오답을 굳히는 셈이다.
         if not retryable_failure:
-            await self.verdict_cache.set(
-                step1_input.cache_key(share_input), result, rules_version=self.ruleset.version
-            )
+            keys = {original_key, step1_input.cache_key(share_input)}
+            for key in keys:
+                await self.verdict_cache.set(key, result, rules_version=self.ruleset.version)
         _record(trace, "total", started)
         return result
+
+    async def _resolve(
+        self, share_input: ShareInput, trace: dict[str, float] | None
+    ) -> ShareInput:
+        """단축 링크를 풀고 종류를 다시 판별한다.
+
+        풀지 못하면 원래 입력을 그대로 둔다. 기사 추출이 실패해 판정이 보류될
+        뿐 오류로 끝나지는 않는다.
+        """
+        if self.link_resolver is None or not share_input.url:
+            return share_input
+
+        step = time.monotonic()
+        try:
+            final_url = await self.link_resolver.resolve(share_input.url)
+        except Exception as error:
+            logger.warning("단축 링크 해석 실패 url=%s: %s", share_input.url, error)
+            _record(trace, "resolve", step)
+            return share_input
+        _record(trace, "resolve", step)
+
+        resolved = step1_input.classify(final_url)
+        return ShareInput(
+            raw_text=share_input.raw_text,
+            kind=resolved.kind,
+            video_id=resolved.video_id,
+            url=resolved.url or final_url,
+            truncated=share_input.truncated,
+            needs_resolution=False,
+        )
+
+    def _notice_result(self, share_input: ShareInput, notice: str) -> CheckResult:
+        """판정 없이 안내만 보내는 결과. 규칙표를 거치지 않았음을 규칙 ID로 남긴다."""
+        from healthcheck.domain.labels import Label
+        from healthcheck.domain.types import Verdict
+
+        logger.info("안내로 응답 kind=%s notice=%s", share_input.kind, notice)
+        return CheckResult(
+            verdict=Verdict(
+                label=Label.UNKNOWN,
+                rule_id=f"INPUT-{notice.upper()}",
+                rules_version=self.ruleset.version,
+                reasons=(),
+            ),
+            notice=notice,
+            source_urls=(share_input.url,) if share_input.url else (),
+        )
 
     def _needs_verification(self, claims: ClaimSet, content: ExtractedContent) -> bool:
         """④ 이중 검증을 돌릴 필요가 있는가.

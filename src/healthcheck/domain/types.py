@@ -251,4 +251,7 @@ class CheckResult:
     # 있는 경우다. 이 결과는 캐시하지 않고, 어르신에게도 '알 수 없어요'가 아니라
     # 잠시 뒤 다시 보내 달라고 안내한다.
     retryable_failure: bool = False
+    # 판정 대신 어르신에게 알려야 할 안내. 예: 영상이 아닌 유튜브 링크.
+    # 값이 있으면 응답 생성이 판정 카드 대신 안내 문구를 보낸다.
+    notice: str | None = None
     source_urls: tuple[str, ...] = field(default_factory=tuple)

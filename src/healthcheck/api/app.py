@@ -16,11 +16,13 @@ from healthcheck.adapters.fake.academic import FakeAcademicSearchClient
 from healthcheck.adapters.liner.academic import LinerAcademicSearchClient
 from healthcheck.adapters.mfds.foodsafetykorea import FoodSafetyKoreaDataSource
 from healthcheck.adapters.web.article import TrafilaturaArticleExtractor
+from healthcheck.adapters.web.links import HttpLinkResolver
 from healthcheck.adapters.youtube.asr import WhisperAsrTranscriber
 from healthcheck.adapters.youtube.fallback import CaptionsThenAsrExtractor
 from healthcheck.adapters.youtube.transcript import YouTubeTranscriptExtractor
 from healthcheck.adapters.fake.article import FakeArticleExtractor
 from healthcheck.adapters.fake.cache import InMemoryExtractionCache, InMemoryVerdictCache
+from healthcheck.adapters.fake.links import FakeLinkResolver
 from healthcheck.adapters.fake.callback import RecordingCallbackSender
 from healthcheck.adapters.kakao.callback import HttpCallbackSender
 from healthcheck.adapters.fake.mfds import FakeMfdsDataSource
@@ -51,6 +53,7 @@ def build_fake_orchestrator() -> Orchestrator:
         verdict_cache=InMemoryVerdictCache(),
         extraction_cache=InMemoryExtractionCache(),
         article=FakeArticleExtractor(),
+        link_resolver=FakeLinkResolver(),
     )
 
 
@@ -120,6 +123,7 @@ def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
         verdict_cache=InMemoryVerdictCache(),
         extraction_cache=InMemoryExtractionCache(),
         article=article,
+        link_resolver=HttpLinkResolver() if live else FakeLinkResolver(),
     )
 
 

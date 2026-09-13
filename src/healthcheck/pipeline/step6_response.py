@@ -44,6 +44,14 @@ _MAX_BUTTON_LABEL = 14
 
 # 어르신이 읽을 안내 문구
 _ACK_TEXT = "받았습니다. 확인하고 있어요.\n잠시만 기다려 주세요 (약 15초)"
+# 판정 대신 보내는 안내 문구
+_NOTICE_TEXT = {
+    "youtube_not_video": (
+        "보내 주신 링크는 유튜브 채널이나 재생목록이에요.\n"
+        "확인하고 싶은 영상 하나의 링크를 보내 주세요."
+    ),
+}
+
 _RETRY_TEXT = (
     "지금은 확인해 드리기 어려워요.\n"
     "잠시 뒤에 다시 보내 주시면 확인해 드릴게요."
@@ -103,6 +111,9 @@ def render(result: CheckResult) -> dict:
     # 상태인데 판정이 끝난 것처럼 보여 주면 어르신이 다시 시도하지 않는다.
     if result.retryable_failure:
         return _wrap([_simple_text(_RETRY_TEXT)])
+
+    if result.notice:
+        return _wrap([_simple_text(_NOTICE_TEXT.get(result.notice, _RETRY_TEXT))])
 
     if not _is_in_scope(result):
         return _wrap([_simple_text(_OUT_OF_SCOPE_TEXT)])
