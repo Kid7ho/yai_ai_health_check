@@ -31,6 +31,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import random
+import re
+import time
 from functools import lru_cache
 from pathlib import Path
 
@@ -132,7 +135,27 @@ def is_relevant(paper_title: str, description: str | None, ingredient: str, effe
     # 앞 5글자만 잘라 부분 문자열로 찾는다. immune/immunity, diabetes/diabetic,
     # hypertension/hypertensive가 같은 줄기로 묶인다.
     stems = [word[:_STEM_LENGTH] for word in effect.lower().split() if len(word) > 3]
-    return any(stem in text for stem in stems)
+    if not any(stem in text for stem in stems):
+        return False
+
+    # 성분도 제목이나 초록에 나와야 한다. 효능만 같고 다른 성분을 다룬 논문을
+    # 이 성분의 근거로 세면 안 된다. 영문 표기가 없는 성분은 영어 논문에서 찾을
+    # 수 없으므로 이 검사를 건너뛴다.
+    if ingredient and ingredient.isascii():
+        ingredient_stems = [w[:_STEM_LENGTH] for w in ingredient.lower().split() if len(w) > 3]
+        if ingredient_stems and not any(stem in text for stem in ingredient_stems):
+            return False
+
+    return not _looks_like_file(paper_title, description)
+
+
+def _looks_like_file(title: str, description: str | None) -> bool:
+    """논문이 아니라 파일 목록으로 보이는 결과.
+
+    실측에서 "vitamin c immunity pdf"라는 제목의 인용 0건 항목이 뒷받침 논문으로
+    세어졌다. 제목에 파일 확장자가 들어간 항목만 좁게 거른다.
+    """
+    return bool(re.search(r"(?:\bpdf\b|\.pdf\b|\bhwp\b|\bdocx?\b|\bppt\b)", title.lower()))
 
 
 def classify_stance(paper_title: str, description: str | None) -> str:
@@ -160,8 +183,11 @@ class LinerAcademicSearchClient:
         *,
         url: str = SCHOLAR_URL,
         timeout: float = DEFAULT_TIMEOUT,
-        max_retries: int = 1,
+        max_retries: int = 3,
         client: httpx.AsyncClient | None = None,
+        max_qps: float = 2.0,
+        rate_limit_wait: float = 1.0,
+        cache_ttl: float = 24 * 3600,
     ) -> None:
         if not api_key:
             raise ValueError("LINER_API_KEY가 없습니다. .env를 확인하세요.")
@@ -169,6 +195,18 @@ class LinerAcademicSearchClient:
         self._url = url
         self._timeout = timeout
         self._max_retries = max_retries
+        # Liner 공식 문서: Scholar 검색은 초당 2건(2 QPS). 실측에서도 동시 4건 중
+        # 2건이 429로 거절됐고 1초 간격 순차 호출은 모두 통과했다.
+        # 동시 호출 수가 아니라 요청 시작 간격을 제한한다. 응답이 0.3초 안에 오면
+        # 동시 2건으로도 초당 6건이 나가기 때문이다. 이 클라이언트 하나를 워커와
+        # 요청 전체가 공유하므로 여기서 막으면 서비스 전체의 호출 속도가 막힌다.
+        self._gate = _QpsGate(max_qps)
+        self._rate_limit_wait = rate_limit_wait
+        # 같은 성분·효능 질의는 다른 영상·글에서도 반복된다. 결과를 캐시해
+        # 토큰과 호출 제한을 아낀다. 성공한 결과만 담는다.
+        self._cache: dict[tuple[str, int], tuple[float, tuple]] = {}
+        self._cache_ttl = cache_ttl
+        self.cache_hits = 0
         self._client = client
         self._owns_client = client is None
         # 호출 횟수를 센다. Liner 토큰 비용을 지원받는 구조이므로
@@ -187,6 +225,13 @@ class LinerAcademicSearchClient:
             "max_results": max(1, min(max_results, 20)),
         }
 
+        cache_key = (query, payload["max_results"])
+        cached = self._cache.get(cache_key)
+        if cached and time.monotonic() - cached[0] < self._cache_ttl:
+            self.cache_hits += 1
+            logger.info("학술 검색 캐시 적중 query=%r", query)
+            return cached[1]
+
         data = await self._post(payload, query=query)
         results = data.get("results") or []
 
@@ -198,6 +243,7 @@ class LinerAcademicSearchClient:
             if is_relevant(paper.title, paper.description, ingredient, effect)
         )
 
+        self._cache[cache_key] = (time.monotonic(), papers)
         logger.info(
             "학술 검색 완료 query=%r 받은결과=%d 관련=%d 뒷받침=%d 반박=%d",
             query,
@@ -209,11 +255,21 @@ class LinerAcademicSearchClient:
         return papers
 
     async def _post(self, payload: dict, *, query: str) -> dict:
+        """호출 제한을 지키며 보낸다.
+
+        Liner 공식 권장을 따른다. 429의 Retry-After를 최소 대기 시간으로 삼고
+        지수 백오프에 지터를 더한다. 응답의 retryable이 거짓이면 재시도하지 않는다.
+        5xx와 통신 오류도 지수 백오프로 기다린다. 401·403은 키 문제라 재시도하지 않는다.
+        """
         client = self._ensure_client()
         headers = {"x-api-key": self._api_key, "Content-Type": "application/json"}
 
         last_error: Exception | None = None
         for attempt in range(self._max_retries + 1):
+            backoff = self._rate_limit_wait * (2**attempt)
+            wait = backoff
+
+            await self._gate.wait()
             try:
                 response = await client.post(
                     self._url, json=payload, headers=headers, timeout=self._timeout
@@ -221,21 +277,21 @@ class LinerAcademicSearchClient:
             except httpx.HTTPError as error:
                 last_error = error
                 logger.warning("학술 검색 통신 오류 (%d회차): %s", attempt + 1, error)
-            else:
+                response = None
+
+            if response is not None:
                 if response.status_code == 200:
                     return response.json()
 
-                # 429는 호출 제한, 5xx는 서버 문제다. 둘만 재시도한다.
-                # 401·403은 키 문제이므로 재시도해도 같은 결과다.
-                if response.status_code in (429, 500, 502, 503, 504):
-                    last_error = AcademicSearchError(
-                        f"학술 검색 응답 {response.status_code}"
-                    )
-                    logger.warning(
-                        "학술 검색 재시도 대상 응답 %d (%d회차)",
-                        response.status_code,
-                        attempt + 1,
-                    )
+                if response.status_code == 429:
+                    if not _is_retryable(response):
+                        raise AcademicSearchError("학술 검색 호출 제한(재시도 불가)")
+                    wait = max(_retry_after(response, self._rate_limit_wait), backoff)
+                    last_error = AcademicSearchError("학술 검색 호출 제한(429)")
+                    logger.warning("학술 검색 호출 제한. %.2f초 뒤 다시 보낸다 (%d회차)", wait, attempt + 1)
+                elif response.status_code in (500, 502, 503, 504):
+                    last_error = AcademicSearchError(f"학술 검색 응답 {response.status_code}")
+                    logger.warning("학술 검색 서버 오류 %d (%d회차)", response.status_code, attempt + 1)
                 else:
                     # 본문에 키가 섞여 나올 수 있으므로 앞부분만 남긴다.
                     raise AcademicSearchError(
@@ -243,7 +299,8 @@ class LinerAcademicSearchClient:
                     )
 
             if attempt < self._max_retries:
-                await asyncio.sleep(0.5 * (attempt + 1))
+                # 지터를 더한다. 여러 요청이 같은 순간에 다시 몰리지 않게 한다.
+                await asyncio.sleep(min(wait + random.uniform(0, wait * 0.25), 10.0))
 
         raise AcademicSearchError(f"학술 검색 실패: query={query!r}") from last_error
 
@@ -258,6 +315,42 @@ class LinerAcademicSearchClient:
         if self._client is not None and self._owns_client:
             await self._client.aclose()
             self._client = None
+
+
+class _QpsGate:
+    """요청 시작 간격을 1/qps초 이상으로 벌린다. 여러 요청이 공유한다."""
+
+    def __init__(self, qps: float) -> None:
+        self._interval = 1.0 / qps if qps > 0 else 0.0
+        self._lock = asyncio.Lock()
+        self._next_at = 0.0
+
+    async def wait(self) -> None:
+        if self._interval <= 0:
+            return
+        async with self._lock:
+            now = time.monotonic()
+            if self._next_at > now:
+                await asyncio.sleep(self._next_at - now)
+                now = time.monotonic()
+            self._next_at = max(now, self._next_at) + self._interval
+
+
+def _is_retryable(response: httpx.Response) -> bool:
+    """429 본문의 retryable. 본문이 없거나 읽을 수 없으면 재시도 가능으로 본다."""
+    try:
+        error = response.json().get("error") or {}
+    except Exception:
+        return True
+    return error.get("retryable", True) is not False
+
+
+def _retry_after(response: httpx.Response, default: float) -> float:
+    """Retry-After 헤더의 초 값. 없거나 이상하면 기본값을 쓴다. 최대 10초로 자른다."""
+    try:
+        return max(0.0, min(float(response.headers.get("retry-after", default)), 10.0))
+    except ValueError:
+        return default
 
 
 def _to_paper(item: dict) -> Paper:
