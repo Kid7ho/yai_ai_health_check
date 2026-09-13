@@ -17,7 +17,11 @@ from healthcheck.domain.labels import Label
 # ─────────────────────────────────────────────────────────────
 
 # ① 입력 수신 단계의 링크 종류 판별 결과
-InputKind = Literal["YOUTUBE", "OTHER_LINK", "PLAIN_TEXT"]
+#   YOUTUBE        영상 하나를 가리키는 유튜브 링크
+#   YOUTUBE_OTHER  유튜브 링크지만 영상이 아니다 (채널, 재생목록, 검색 결과)
+#   OTHER_LINK     기사·블로그 등 유튜브가 아닌 링크. 단축 링크도 여기서 출발한다
+#   PLAIN_TEXT     링크가 없는 텍스트
+InputKind = Literal["YOUTUBE", "YOUTUBE_OTHER", "OTHER_LINK", "PLAIN_TEXT"]
 
 # 주장하는 효능이 식약처 인정 기능성 문구와 얼마나 맞는가
 #   EXACT          완전 일치
@@ -58,6 +62,10 @@ class ShareInput:
     # 유튜브 링크일 때만 채워진다. 캐시 1단(판정 캐시)의 키로 쓰인다.
     video_id: str | None = None
     url: str | None = None
+    # 입력이 길이 상한을 넘어 잘렸는가.
+    truncated: bool = False
+    # 단축 링크라서 실제 주소를 풀어야 종류를 확정할 수 있는가.
+    needs_resolution: bool = False
 
 
 # ─────────────────────────────────────────────────────────────
