@@ -79,8 +79,9 @@ def test_한국어_성분과_효능을_영문_검색어로_바꾼다():
 
 
 def test_영문_표기가_없는_성분은_한국어로_보낸다():
-    claim = Claim(ingredient="도라지", claimed_effect="기침에 좋다", intensity="SUGGESTIVE", span=(0, 3))
-    assert build_query(claim) == "도라지"
+    # 도라지는 사전 확장으로 영문 표기가 생겨서 아직 없는 성분으로 바꿨다.
+    claim = Claim(ingredient="산수유", claimed_effect="기침에 좋다", intensity="SUGGESTIVE", span=(0, 3))
+    assert build_query(claim) == "산수유"
 
 
 # ─────────────────────────────────────────────────────────────

@@ -81,3 +81,31 @@ def test_새_원료도_영문_검색어가_있다():
 
     claim = Claim(ingredient="비타민C", claimed_effect="면역력에 도움을", intensity="SUGGESTIVE", span=(0, 4))
     assert build_query(claim) == "vitamin C immune function"
+
+
+# ── 존댓말과 효능 동사 ───────────────────────────────────────
+#
+# 효능 표현을 요구하도록 바꾸자 가장 흔한 말투의 문장이 주장으로 잡히지 않았다.
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "홍삼이 면역력에 도움을 줍니다",
+        "칼슘은 뼈 건강에 도움이 됩니다",
+        "비타민 D는 뼈 건강에 좋습니다",
+        "루테인을 먹으면 치매도 예방된다고 합니다",
+        "녹차가 체지방 감소에 효과가 있습니다",
+        "마늘이 혈압을 낮춰 줍니다",
+        "생강이 염증을 억제한다고 해요",
+        "오메가3가 중성지질을 줄여 줍니다",
+    ],
+)
+def test_존댓말과_효능_동사도_주장으로_잡는다(extractor, text):
+    assert extractor.extract(text).claims, text
+
+
+def test_예방은_추측_표현과_함께여도_주장이다(extractor):
+    claim = extractor.extract("루테인을 먹으면 치매도 예방된다고 합니다").claims[0]
+    assert claim.ingredient == "루테인"
+    assert "치매" in claim.claimed_effect
