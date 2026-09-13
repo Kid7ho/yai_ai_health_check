@@ -166,6 +166,13 @@ class Orchestrator:
         )
         if evidence_failed:
             logger.warning("검증 조회 일부가 실패해 이 판정은 캐시하지 않는다")
+            # 판정이 그 근거를 쓰는 규칙에서 나왔다면 믿을 수 없다. 조회 실패를
+            # "학계에 이견이 있다"처럼 내용 판단으로 말하지 않고 다시 보내 달라고
+            # 안내한다. 질병 치료 표현처럼 근거와 무관한 판정은 그대로 보여 준다.
+            if self.ruleset.uses_evidence(result.verdict.rule_id):
+                from dataclasses import replace
+
+                result = replace(result, retryable_failure=True)
 
         if not retryable_failure and not evidence_failed:
             keys = {original_key, step1_input.cache_key(share_input)}

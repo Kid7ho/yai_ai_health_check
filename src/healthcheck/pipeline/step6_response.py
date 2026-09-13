@@ -149,7 +149,11 @@ def render_reason(result: CheckResult) -> dict:
     """
     verdict = result.verdict
     lines = [f"{LABEL_TEXT[verdict.label]}", ""]
-    lines.extend(reason for reason in verdict.reasons if reason)
+    # 어르신용 안내를 보여 준다. 규칙표의 근거 문장은 검수용이라 보여 주지 않는다.
+    if verdict.guidance:
+        lines.append(verdict.guidance)
+    else:
+        lines.extend(reason for reason in verdict.reasons if reason)
 
     sources = _sources(result)
     if sources:
@@ -259,11 +263,12 @@ def _checked_claim_text(result: CheckResult) -> str:
 
 def _headline(result: CheckResult) -> str:
     """판정 근거 한 줄. 규칙표에 적힌 설명을 그대로 쓴다."""
+    # 규칙표의 '안내'를 쓴다. 이전에는 검수용 '근거' 문장이 카드에 그대로 나가
+    # "보수적 기본값입니다" 같은 설명이 어르신 화면에 보였다.
+    if result.verdict.guidance:
+        return result.verdict.guidance
     reasons = [reason for reason in result.verdict.reasons if reason]
-    if not reasons:
-        return ""
-    # 규칙표의 설명은 검수용 문장이라 길다. 카드에는 근거 문장을 쓴다.
-    return reasons[-1]
+    return reasons[-1] if reasons else ""
 
 
 def _mentions(result: CheckResult) -> list[str]:

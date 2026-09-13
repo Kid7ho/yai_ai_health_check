@@ -113,7 +113,8 @@ def test_뒷받침_논문이_없으면_신뢰를_주지_않는다():
         vi(recognition="INDIVIDUAL", functionality_match="EXACT", supporting_papers=0)
     )
     assert verdict.label is Label.CAUTION
-    assert verdict.rule_id == "R-041"
+    # 논문이 없는 경우는 반박 논문이 있는 R-041과 구분해 R-042가 받는다.
+    assert verdict.rule_id == "R-042"
 
 
 def test_반박_논문이_적으면_신뢰를_준다():
@@ -211,7 +212,7 @@ def test_어디에도_맞지_않으면_알_수_없어요():
 
 def test_판정_결과에_역추적_정보가_담긴다():
     verdict = load_ruleset().evaluate(vi(in_scope=False))
-    assert verdict.rules_version == "v0.7"
+    assert verdict.rules_version == "v0.8"
     assert verdict.rule_id
     assert verdict.reasons and all(verdict.reasons)
     assert verdict.inputs is not None

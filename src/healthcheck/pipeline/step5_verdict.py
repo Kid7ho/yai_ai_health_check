@@ -71,6 +71,11 @@ def _supporting_dominant(vi: VerdictInput, thresholds: dict[str, Any]) -> bool:
     return vi.supporting_papers >= vi.refuting_papers * multiple
 
 
+# 식약처·학술 근거에서 오는 판정 입력. 이 값을 쓰는 규칙은 조회 실패에 영향을 받는다.
+EVIDENCE_CONDITIONS = frozenset(
+    {"recognition", "functionality_match", "supporting_papers", "refuting_papers", "뒷받침_우세", "반박논문_우세"}
+)
+
 DERIVED_CONDITIONS: dict[str, DerivedFn] = {
     "반박논문_우세": _refuting_dominant,
     "뒷받침_우세": _supporting_dominant,
@@ -94,6 +99,19 @@ class Rule:
     conditions: dict[str, Any]
     label: Label
     rationale: str
+    # 어르신에게 보여 줄 짧은 안내. 검수용 rationale과 따로 둔다.
+    guidance: str = ""
+
+    @property
+    def uses_evidence(self) -> bool:
+        """판정에 식약처·학술 근거가 쓰였는가.
+
+        기본 규칙(조건 없음)도 근거가 부족해서 떨어진 것일 수 있으므로 포함한다.
+        근거 조회가 실패했을 때 이 규칙으로 나온 판정은 믿을 수 없다.
+        """
+        if not self.conditions:
+            return True
+        return bool(set(self.conditions) & EVIDENCE_CONDITIONS)
 
     def matches(self, vi: VerdictInput, thresholds: dict[str, Any]) -> bool:
         """조건 전부를 만족해야 일치다. 조건이 비어 있으면 항상 일치한다."""
@@ -111,6 +129,12 @@ class RuleSet:
     thresholds: dict[str, Any]
     rules: tuple[Rule, ...]
 
+    def uses_evidence(self, rule_id: str) -> bool:
+        for rule in self.rules:
+            if rule.id == rule_id:
+                return rule.uses_evidence
+        return False
+
     def evaluate(self, vi: VerdictInput) -> Verdict:
         """위에서 아래로 평가하고 처음 일치한 규칙의 결과를 돌려준다."""
         for rule in self.rules:
@@ -121,6 +145,7 @@ class RuleSet:
                     rules_version=self.version,
                     reasons=(rule.description, rule.rationale),
                     inputs=vi,
+                    guidance=rule.guidance,
                 )
         # 마지막 규칙이 조건 없는 UNKNOWN임을 로딩 시점에 검증하므로
         # 여기까지 내려올 수 없다. 그래도 방어적으로 UNKNOWN을 돌려준다.
@@ -273,6 +298,7 @@ def load_ruleset(path: Path | str = DEFAULT_RULES_PATH) -> RuleSet:
                 conditions=conditions,
                 label=label,
                 rationale=str(entry.get("근거", "")).strip(),
+                guidance=str(entry.get("안내", "")).strip(),
             )
         )
 
