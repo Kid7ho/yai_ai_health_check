@@ -21,15 +21,19 @@ trafilatura로 본문만 골라낸다. 광고와 댓글, 관련기사 목록이 
 from __future__ import annotations
 
 import hashlib
-import ipaddress
 import logging
 import re
-import socket
 from urllib.parse import parse_qs, urlparse
 
 import httpx
 import trafilatura
 
+from healthcheck.adapters.web.safe_http import (
+    FetchError,
+    UnsafeUrlError,
+    assert_safe_url,
+    safe_request,
+)
 from healthcheck.domain.types import ExtractedContent
 
 logger = logging.getLogger(__name__)
@@ -40,11 +44,6 @@ MAX_BYTES = 2_000_000
 # 이보다 짧으면 본문 추출에 실패한 것으로 본다. 제목만 남은 경우다.
 MIN_TEXT_LENGTH = 80
 
-# 브라우저가 아닌 요청을 막는 사이트가 많다.
-_USER_AGENT = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
-)
 
 
 # 네이버 블로그는 본문을 iframe 안에서 따로 불러온다. 겉 페이지를 긁으면
@@ -90,43 +89,10 @@ def normalize_url(url: str) -> str:
     return url
 
 
-class ArticleFetchError(RuntimeError):
-    """본문 조회 실패. ② 단계가 자막 없음과 같게 취급한다."""
-
-
-class UnsafeUrlError(ArticleFetchError):
-    """내부망이나 허용되지 않는 주소."""
-
-
-def assert_safe_url(url: str) -> None:
-    """사내망·로컬호스트로 향하는 요청을 막는다.
-
-    사용자가 보낸 주소를 서버가 그대로 긁으므로, 검사 없이 두면 서버가
-    내부 서비스를 대신 조회해 주는 통로가 된다.
-    """
-    parsed = urlparse(url)
-    if parsed.scheme not in ("http", "https"):
-        raise UnsafeUrlError(f"허용되지 않는 주소 방식입니다: {parsed.scheme}")
-
-    host = parsed.hostname
-    if not host:
-        raise UnsafeUrlError("주소에 호스트가 없습니다.")
-
-    try:
-        infos = socket.getaddrinfo(host, None)
-    except socket.gaierror as error:
-        raise ArticleFetchError(f"주소를 찾을 수 없습니다: {host}") from error
-
-    for info in infos:
-        address = ipaddress.ip_address(info[4][0])
-        if (
-            address.is_private
-            or address.is_loopback
-            or address.is_link_local
-            or address.is_reserved
-            or address.is_multicast
-        ):
-            raise UnsafeUrlError(f"내부망 주소로는 요청하지 않습니다: {host}")
+# 기존 이름을 유지한다. 호출하는 쪽과 테스트가 이 이름을 쓴다.
+ArticleFetchError = FetchError
+UnsafeUrlError = UnsafeUrlError
+assert_safe_url = assert_safe_url
 
 
 def _drop_boilerplate(text: str) -> str:
@@ -160,9 +126,6 @@ class TrafilaturaArticleExtractor:
         if target != url:
             logger.info("본문 주소로 바꿔 요청한다: %s", target)
 
-        if self._check_url:
-            assert_safe_url(target)
-
         self.call_count += 1
         html = await self._download(target)
 
@@ -190,15 +153,18 @@ class TrafilaturaArticleExtractor:
         )
 
     async def _download(self, url: str) -> str:
-        client = self._client or httpx.AsyncClient(follow_redirects=True)
-        self._client = client
+        """리다이렉트마다 주소를 검사하며 가져온다.
 
-        try:
-            response = await client.get(
-                url, timeout=self._timeout, headers={"User-Agent": _USER_AGENT}
-            )
-        except httpx.HTTPError as error:
-            raise ArticleFetchError(f"기사 조회 통신 오류: {error}") from error
+        처음 주소만 검사하면 공개 주소가 내부 주소로 리다이렉트할 때 그대로
+        따라간다. safe_request가 단계마다 검사한다.
+        """
+        if self._client is None:
+            self._client = httpx.AsyncClient()
+            self._owns_client = True
+
+        response, _ = await safe_request(
+            self._client, "GET", url, timeout=self._timeout, check_url=self._check_url
+        )
 
         if response.status_code != 200:
             raise ArticleFetchError(f"기사 조회 응답 {response.status_code}")
