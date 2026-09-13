@@ -9,7 +9,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import time
+from dataclasses import dataclass, field
 from typing import Protocol
 
 from healthcheck.domain.types import ShareInput
@@ -25,6 +26,8 @@ class CheckJob:
     callback_url: str
     # 카카오 사용자 키. 개인정보이므로 보존 기간 정책을 따라 만료시킨다.
     user_key: str | None = None
+    # 작업을 받은 시각. 콜백 URL 유효 시간(5분)을 넘겼는지 판단한다.
+    created_at: float = field(default_factory=time.monotonic)
 
 
 class JobQueue(Protocol):

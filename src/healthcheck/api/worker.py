@@ -28,6 +28,10 @@ logger = logging.getLogger(__name__)
 # 규칙 ID로 구분할 수 있게 한다. 판정 로그에서 걸러 내기 위해서다.
 _ERROR_RULE_ID = "ERR-PIPELINE"
 
+# 콜백 URL은 5분간 유효하다. 여유를 두고 4분 30초가 지나면 보내지 않는다.
+# 만료된 주소로 보내면 거절만 받고, 어르신 화면에는 이미 아무 답도 가지 않는다.
+CALLBACK_DEADLINE_SECONDS = 270
+
 
 class Worker:
     """큐에서 작업을 꺼내 파이프라인을 돌리고 콜백을 보낸다."""
@@ -38,11 +42,13 @@ class Worker:
         orchestrator: Orchestrator,
         callback_sender: CallbackSender,
         repository: CheckRepository | None = None,
+        last_results=None,
     ) -> None:
         self._queue = queue
         self._orchestrator = orchestrator
         self._callback = callback_sender
         self._repository = repository
+        self._last_results = last_results
 
     async def run_forever(self) -> None:
         """취소될 때까지 작업을 처리한다. 앱 수명주기가 이 태스크를 관리한다."""
@@ -66,6 +72,18 @@ class Worker:
         # 콜백 전송 성공 여부와 무관하게 먼저 기록한다. 전송이 실패해도 판정은
         # 일어난 일이고, 누적 확인 건수와 오정보 유형 수가 목표 지표다.
         await self._record(job, result)
+        if self._last_results is not None:
+            # "왜 그런지 보기" 버튼에 답하려면 직전 결과가 필요하다.
+            self._last_results.put(job.user_key, result)
+
+        import time
+
+        elapsed = time.monotonic() - job.created_at
+        if elapsed > CALLBACK_DEADLINE_SECONDS:
+            logger.warning(
+                "콜백 유효 시간이 지나 보내지 않는다 job=%s 경과=%.0f초", job.job_id, elapsed
+            )
+            return
 
         try:
             await self._callback.send(job.callback_url, render(result))
@@ -107,11 +125,12 @@ async def start_workers(
     callback_sender: CallbackSender,
     count: int = 2,
     repository: CheckRepository | None = None,
+    last_results=None,
 ) -> list[asyncio.Task]:
     """워커 여러 개를 띄운다.
 
     개수를 늘리면 동시 처리량이 늘지만, 외부 API 호출도 함께 늘어난다.
     Liner 토큰 비용을 지원받는 구조이므로 기본값은 작게 둔다.
     """
-    worker = Worker(queue, orchestrator, callback_sender, repository)
+    worker = Worker(queue, orchestrator, callback_sender, repository, last_results)
     return [asyncio.create_task(worker.run_forever()) for _ in range(count)]

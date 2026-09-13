@@ -70,6 +70,9 @@ class Settings:
     skill_auth_token: str | None = field(default=None, repr=False)
     # 엔드포인트 경로. 헤더를 지정할 수 없을 때 추측하기 어려운 값으로 바꾼다.
     skill_path: str = "/skill"
+    # 콜백을 보내도 되는 호스트 끝부분. 실제 카카오 콜백 주소를 확인하면 코드
+    # 수정 없이 이 값만 바꾼다. 쉼표로 여러 개를 적는다.
+    callback_allowed_suffixes: tuple[str, ...] = ("kakao.com", "kakaoenterprise.com")
 
     # 저장소. 판정 기록과 목표 지표가 여기 쌓인다.
     database_path: str = "healthcheck.db"
@@ -159,6 +162,11 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         skill_auth_header=(os.environ.get("SKILL_AUTH_HEADER") or "X-Skill-Token").strip(),
         skill_auth_token=_clean(os.environ.get("SKILL_AUTH_TOKEN")),
         skill_path=_normalize_path(os.environ.get("SKILL_PATH")),
+        callback_allowed_suffixes=tuple(
+            part.strip().lower()
+            for part in (os.environ.get("CALLBACK_ALLOWED_SUFFIXES") or "kakao.com,kakaoenterprise.com").split(",")
+            if part.strip()
+        ),
         database_path=(os.environ.get("DATABASE_PATH") or "healthcheck.db").strip(),
         text_retention_days=int(os.environ.get("TEXT_RETENTION_DAYS") or 90),
         user_key_retention_days=int(os.environ.get("USER_KEY_RETENTION_DAYS") or 30),

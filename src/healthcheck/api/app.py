@@ -151,7 +151,7 @@ def build_callback_sender(settings: Settings | None = None) -> object:
     settings = settings or load_settings()
     if settings.adapter_mode == "live":
         logger.info("콜백: 카카오로 실제 전송")
-        return HttpCallbackSender()
+        return HttpCallbackSender(allowed_suffixes=settings.callback_allowed_suffixes)
     return RecordingCallbackSender()
 
 
@@ -181,11 +181,17 @@ def create_app(
     # 실제 서비스는 아래 app 조립에서 SQLite를 넘긴다.
     repository = repository or InMemoryCheckRepository()
     queue = InProcessJobQueue()
+    last_results = skill.LastResults()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         tasks = await start_workers(
-            queue, orchestrator, callback_sender, count=worker_count, repository=repository
+            queue,
+            orchestrator,
+            callback_sender,
+            count=worker_count,
+            repository=repository,
+            last_results=last_results,
         )
         logger.info("워커 %d개 기동. 규칙표 %s", worker_count, orchestrator.ruleset.version)
 
@@ -205,8 +211,13 @@ def create_app(
 
     app = FastAPI(title="건강정보 확인", lifespan=lifespan)
     app.state.services = skill.SkillServices(
-        orchestrator=orchestrator, queue=queue, repository=repository, auth=auth
+        orchestrator=orchestrator,
+        queue=queue,
+        repository=repository,
+        auth=auth,
+        last_results=last_results,
     )
+    app.state.last_results = last_results
     app.state.auth = auth
     app.state.log_skill_request = settings.log_skill_request
     if settings.log_skill_request:

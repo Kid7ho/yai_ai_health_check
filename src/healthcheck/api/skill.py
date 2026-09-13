@@ -24,7 +24,7 @@ from healthcheck.api.auth import SkillAuth
 from healthcheck.adapters.inprocess_queue import QueueFull
 from healthcheck.pipeline import step1_input
 from healthcheck.pipeline.orchestrator import Orchestrator
-from healthcheck.pipeline.step6_response import ack_response, render
+from healthcheck.pipeline.step6_response import _REASON_BUTTON, ack_response, render, render_reason
 from healthcheck.ports.queue import CheckJob, JobQueue
 from healthcheck.ports.repository import CheckRepository
 from healthcheck.storage.record import build_record
@@ -47,6 +47,42 @@ _NO_CALLBACK_TEXT = (
 )
 
 
+class LastResults:
+    """사용자별 직전 확인 결과. "왜 그런지 보기" 버튼에 답하기 위해 둔다.
+
+    카카오 버튼은 누르면 버튼 글자를 사용자 발화로 다시 보낸다. 직전 결과를
+    기억하지 않으면 그 글자를 새 확인 요청으로 처리해 '알 수 없어요'를 돌려준다.
+    메모리에만 두고 한 시간 뒤 버린다. 사용자 키를 오래 들고 있지 않기 위해서다.
+    """
+
+    TTL_SECONDS = 3600
+    MAX_USERS = 5000
+
+    def __init__(self) -> None:
+        self._items: dict[str, tuple[float, object]] = {}
+
+    def put(self, user_key: str | None, result) -> None:
+        if not user_key:
+            return
+        import time
+
+        if len(self._items) >= self.MAX_USERS:
+            oldest = min(self._items, key=lambda key: self._items[key][0])
+            self._items.pop(oldest, None)
+        self._items[user_key] = (time.monotonic(), result)
+
+    def get(self, user_key: str | None):
+        if not user_key or user_key not in self._items:
+            return None
+        import time
+
+        stored_at, result = self._items[user_key]
+        if time.monotonic() - stored_at > self.TTL_SECONDS:
+            self._items.pop(user_key, None)
+            return None
+        return result
+
+
 @dataclass(slots=True)
 class SkillServices:
     """엔드포인트가 쓰는 것들. 앱 상태에 담아 두고 테스트에서 교체한다."""
@@ -55,6 +91,7 @@ class SkillServices:
     queue: JobQueue
     repository: CheckRepository | None = None
     auth: SkillAuth = field(default_factory=SkillAuth)
+    last_results: LastResults = field(default_factory=LastResults)
 
 
 async def skill(request: Request) -> dict:
@@ -81,12 +118,23 @@ async def skill(request: Request) -> dict:
     callback_url = _dig(body, "userRequest", "callbackUrl")
     user_key = _dig(body, "userRequest", "user", "id")
 
+    # "왜 그런지 보기" 버튼. 새 확인 요청이 아니라 직전 결과의 근거를 돌려준다.
+    # 외부 호출 없이 바로 답하므로 5초 안에 끝난다.
+    if utterance.strip() == _REASON_BUTTON:
+        previous = services.last_results.get(user_key)
+        if previous is None:
+            return _simple("먼저 확인하고 싶은 영상이나 글을 보내 주세요.")
+        if previous.notice or previous.retryable_failure:
+            return render(previous)
+        return render_reason(previous)
+
     share_input = step1_input.classify(utterance)
 
     # 예외 경로: 캐시가 맞으면 외부 호출 없이 바로 답한다.
     cached = await services.orchestrator.cached(share_input)
     if cached is not None:
         logger.info("동기 응답(캐시 적중) kind=%s", share_input.kind)
+        services.last_results.put(user_key, cached)
         # 캐시로 답한 것도 확인 건수에 들어간다. 어르신이 확인한 사실은 같다.
         if services.repository is not None:
             try:
