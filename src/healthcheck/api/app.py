@@ -19,6 +19,7 @@ from healthcheck.adapters.web.article import TrafilaturaArticleExtractor
 from healthcheck.adapters.web.links import HttpLinkResolver
 from healthcheck.adapters.youtube.asr import WhisperAsrTranscriber
 from healthcheck.adapters.youtube.fallback import CaptionsThenAsrExtractor
+from healthcheck.adapters.youtube.titled import TitledTranscriptExtractor, YouTubeTitleFetcher
 from healthcheck.adapters.youtube.transcript import YouTubeTranscriptExtractor
 from healthcheck.adapters.fake.article import FakeArticleExtractor
 from healthcheck.adapters.fake.cache import InMemoryExtractionCache, InMemoryVerdictCache
@@ -103,6 +104,10 @@ def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
                 settings.asr_model_size,
                 settings.asr_max_seconds,
             )
+        # 가장 바깥에 둔다. 자막과 음성 인식을 먼저 시도하고, 둘 다 없을 때만
+        # 영상 제목으로 본문을 만든다. 안쪽에 두면 제목이 음성 인식을 가린다.
+        transcript = TitledTranscriptExtractor(transcript, YouTubeTitleFetcher())
+        logger.info("영상 제목: 자막 앞에 붙이고, 자막이 없으면 제목으로 판정")
     else:
         transcript = FakeTranscriptExtractor()
 

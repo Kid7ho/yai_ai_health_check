@@ -41,8 +41,26 @@ logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 8.0
 # 본문으로 읽어 들일 최대 바이트. 한국어 기사 한 편은 보통 수십 KB다.
 MAX_BYTES = 2_000_000
-# 이보다 짧으면 본문 추출에 실패한 것으로 본다. 제목만 남은 경우다.
-MIN_TEXT_LENGTH = 80
+# 제목을 뺀 본문이 이보다 짧으면 기사로 보지 않는다. 80자였을 때 종료된
+# 서비스의 136자짜리 안내문이 본문으로 통과했다.
+MIN_TEXT_LENGTH = 200
+
+# 짧은 페이지에 이런 문구가 있으면 기사가 아니라 안내·오류 페이지로 본다.
+# 긴 기사가 "서비스 종료"를 언급하는 경우까지 거르지 않도록 짧은 페이지에만 쓴다.
+NOTICE_PAGE_MAX_LENGTH = 800
+NOTICE_PAGE_MARKERS = (
+    "서비스가 종료",
+    "서비스를 종료",
+    "운영팀입니다",
+    "로그인이 필요",
+    "로그인 후 이용",
+    "페이지를 찾을 수 없",
+    "존재하지 않는 페이지",
+    "삭제된 게시물",
+    "삭제되었거나",
+    "비공개 글",
+    "접근 권한이 없",
+)
 
 
 
@@ -95,6 +113,17 @@ UnsafeUrlError = UnsafeUrlError
 assert_safe_url = assert_safe_url
 
 
+def _as_dict(document) -> dict:
+    """trafilatura 버전에 따라 결과가 dict이거나 Document 객체다."""
+    if document is None:
+        return {}
+    if isinstance(document, dict):
+        return document
+    if hasattr(document, "as_dict"):
+        return document.as_dict()
+    return vars(document)
+
+
 def _drop_boilerplate(text: str) -> str:
     """사이트 안내문을 버린다. 주장으로 읽히면 엉뚱한 판정이 나온다."""
     lines = [
@@ -127,21 +156,36 @@ class TrafilaturaArticleExtractor:
             logger.info("본문 주소로 바꿔 요청한다: %s", target)
 
         self.call_count += 1
-        html = await self._download(target)
+        raw = await self._download(target)
 
-        text = trafilatura.extract(
-            html,
+        # 원본 바이트를 그대로 넘긴다. 직접 문자열로 풀면 응답 헤더에 문자셋이
+        # 없는 EUC-KR 페이지가 깨졌다. trafilatura는 meta charset을 보고 푼다.
+        document = trafilatura.bare_extraction(
+            raw,
+            url=target,
+            with_metadata=True,
             include_comments=False,  # 댓글에는 엉뚱한 성분 이야기가 섞인다
             include_tables=False,
             favor_precision=True,  # 본문이 아닌 블록을 버리는 쪽을 택한다
         )
-        text = _drop_boilerplate(text or "")
+        fields = _as_dict(document)
 
-        if len(text) < MIN_TEXT_LENGTH:
-            logger.info("본문 추출 실패 또는 너무 짧다 url=%s 길이=%d", url, len(text))
-            return ExtractedContent(text="", has_transcript=False, confidence=0.0)
+        body = _drop_boilerplate(fields.get("text") or "")
+        title = str(fields.get("title") or "").strip()
 
-        logger.info("기사 본문 확보 url=%s 글자수=%d", url, len(text))
+        if len(body) < MIN_TEXT_LENGTH:
+            logger.info("본문이 너무 짧아 기사로 보지 않는다 url=%s 길이=%d", url, len(body))
+            return ExtractedContent(text="", has_transcript=False, confidence=0.0, source="article")
+
+        if len(body) <= NOTICE_PAGE_MAX_LENGTH and any(m in body for m in NOTICE_PAGE_MARKERS):
+            logger.info("안내·오류 페이지로 보여 기사로 보지 않는다 url=%s", url)
+            return ExtractedContent(text="", has_transcript=False, confidence=0.0, source="article")
+
+        # 헤드라인을 본문 앞에 붙인다. 건강 오정보는 핵심 주장이 제목에 담기는
+        # 경우가 많은데, 사이트에 따라 추출 본문에 제목이 빠졌다.
+        text = body if not title or body.startswith(title) else f"{title}\n{body}"
+
+        logger.info("기사 본문 확보 url=%s 제목=%s 글자수=%d", url, bool(title), len(text))
         return ExtractedContent(
             text=text,
             has_transcript=True,
@@ -150,20 +194,22 @@ class TrafilaturaArticleExtractor:
             confidence=0.85,
             language="ko",
             content_hash=hashlib.sha256(text.encode("utf-8")).hexdigest()[:32],
+            source="article",
         )
 
-    async def _download(self, url: str) -> str:
-        """리다이렉트마다 주소를 검사하며 가져온다.
-
-        처음 주소만 검사하면 공개 주소가 내부 주소로 리다이렉트할 때 그대로
-        따라간다. safe_request가 단계마다 검사한다.
-        """
+    async def _download(self, url: str) -> bytes:
+        """리다이렉트마다 주소를 검사하고, 받는 도중에 크기를 제한한다."""
         if self._client is None:
             self._client = httpx.AsyncClient()
             self._owns_client = True
 
         response, _ = await safe_request(
-            self._client, "GET", url, timeout=self._timeout, check_url=self._check_url
+            self._client,
+            "GET",
+            url,
+            timeout=self._timeout,
+            check_url=self._check_url,
+            max_bytes=self._max_bytes,
         )
 
         if response.status_code != 200:
@@ -177,9 +223,7 @@ class TrafilaturaArticleExtractor:
         if "html" not in content_type and "text" not in content_type:
             raise ArticleFetchError(f"본문을 읽을 수 없는 형식입니다: {content_type}")
 
-        return response.content[: self._max_bytes].decode(
-            response.encoding or "utf-8", errors="replace"
-        )
+        return response.content
 
     async def aclose(self) -> None:
         if self._client is not None and self._owns_client:

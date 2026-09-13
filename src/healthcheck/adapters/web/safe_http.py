@@ -82,35 +82,63 @@ async def safe_request(
     timeout: float,
     check_url: bool = True,
     max_redirects: int = MAX_REDIRECTS,
+    max_bytes: int | None = None,
 ) -> tuple[httpx.Response, str]:
     """리다이렉트를 한 단계씩 따라가며 매 단계 주소를 검사한다.
 
     (최종 응답, 최종 주소)를 돌려준다. 최종 주소는 단축 링크를 푼 결과로도 쓴다.
+
+    max_bytes를 주면 본문을 받는 도중에 끊는다. 이전에는 응답 전체를 받은 뒤에
+    잘라서, 큰 파일이 오면 메모리를 다 쓴 다음에야 잘랐다.
     """
     current = url
     for _ in range(max_redirects + 1):
         if check_url:
             assert_safe_url(current)
 
+        request = client.build_request(
+            method, current, timeout=timeout, headers={"User-Agent": USER_AGENT}
+        )
         try:
-            response = await client.request(
-                method,
-                current,
-                timeout=timeout,
-                headers={"User-Agent": USER_AGENT},
-                follow_redirects=False,
-            )
+            response = await client.send(request, stream=True, follow_redirects=False)
         except httpx.HTTPError as error:
             # 통신 오류와 시간 초과는 잠시 뒤 다시 시도하면 될 수 있다.
             raise FetchError(f"통신 오류: {error}", retryable=True) from error
 
         if response.is_redirect:
+            await response.aclose()
             location = response.headers.get("location")
             if not location:
                 raise FetchError("리다이렉트 응답에 이동할 주소가 없습니다.")
             current = urljoin(current, location)
             continue
 
-        return response, current
+        try:
+            body = await _read_limited(response, max_bytes)
+        except httpx.HTTPError as error:
+            raise FetchError(f"본문 수신 오류: {error}", retryable=True) from error
+        finally:
+            await response.aclose()
+
+        # 스트림을 닫았으므로 받아 둔 본문으로 응답을 다시 만든다.
+        # content-encoding은 이미 풀린 본문이라 헤더에서 뺀다.
+        headers = [(k, v) for k, v in response.headers.items() if k.lower() != "content-encoding"]
+        return (
+            httpx.Response(response.status_code, headers=headers, content=body, request=request),
+            current,
+        )
 
     raise FetchError(f"리다이렉트가 {max_redirects}번을 넘었습니다.")
+
+
+async def _read_limited(response: httpx.Response, max_bytes: int | None) -> bytes:
+    """본문을 받되 max_bytes에서 멈춘다."""
+    chunks: list[bytes] = []
+    received = 0
+    async for chunk in response.aiter_bytes():
+        if max_bytes is not None and received + len(chunk) > max_bytes:
+            chunks.append(chunk[: max_bytes - received])
+            break
+        chunks.append(chunk)
+        received += len(chunk)
+    return b"".join(chunks)

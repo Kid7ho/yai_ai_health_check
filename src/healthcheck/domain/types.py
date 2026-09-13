@@ -88,6 +88,9 @@ class ExtractedContent:
     language: str | None = None
     # 캐시 2단(추출 캐시)의 키. 같은 자막이면 같은 값이 나와야 한다.
     content_hash: str | None = None
+    # 본문의 출처. captions | asr | article | title_only | text
+    # 제목만으로 판정한 경우를 로그와 근거 화면에서 구분하기 위해 남긴다.
+    source: str | None = None
 
 
 # ─────────────────────────────────────────────────────────────
