@@ -218,7 +218,11 @@ function renderPanel(data) {
     section("③ 주장 구조화", (claims ? rows({
         "범위 내": claims.in_scope, "질병 치료 표현": claims.disease_cure_expression,
         "추출 실패": claims.extraction_failed, "주장 수": claims.items.length,
+        "브랜드": (claims.brands || []).join(", "), "전문가 역할": (claims.authority_roles || []).join(", "),
       }) : "") + claimHtml),
+    section("⑤ 주장별 판정", (data.claim_checks || []).length
+      ? data.claim_checks.map((c) => `<div class="paper"><b>${c.label}</b> ${c.rule_id} · ${c.ingredient} / ${c.claimed_effect}</div>`).join("")
+      : '<span class="empty">검증한 주장이 없습니다.</span>'),
     section("④-B 식약처", rows(data.mfds)),
     section("④-A 학술 검색", (academic ? rows({
         "뒷받침": academic.supporting, "반박": academic.refuting, "조회 실패": academic.lookup_failed,

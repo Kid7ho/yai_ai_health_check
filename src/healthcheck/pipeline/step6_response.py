@@ -156,6 +156,10 @@ def render_reason(result: CheckResult) -> dict:
         lines.extend(["", "근거"])
         lines.extend(f"· {source}" for source in sources)
 
+    mentions = _mentions(result)
+    if mentions:
+        lines.extend(["", *mentions])
+
     return _wrap([_simple_text("\n".join(lines))])
 
 
@@ -260,6 +264,26 @@ def _headline(result: CheckResult) -> str:
         return ""
     # 규칙표의 설명은 검수용 문장이라 길다. 카드에는 근거 문장을 쓴다.
     return reasons[-1]
+
+
+def _mentions(result: CheckResult) -> list[str]:
+    """본문에 언급된 브랜드와 전문가 역할. 근거 화면에만 보여 준다.
+
+    판정에는 쓰지 않는다. 어르신이 이 글이 특정 제품을 파는 것인지, 전문가의
+    권위를 빌리고 있는지 알아볼 수 있게 하려는 것이다. 실제로 그 역할의 인물인지는
+    확인하지 않으므로 그 사실을 함께 적는다.
+    """
+    claims = result.claims
+    if claims is None:
+        return []
+
+    lines: list[str] = []
+    if claims.brands:
+        lines.append("언급된 브랜드: " + ", ".join(claims.brands))
+    if claims.authority_roles:
+        lines.append("언급된 전문가 역할: " + ", ".join(claims.authority_roles))
+        lines.append("실제로 그 역할의 사람인지는 확인하지 않았어요.")
+    return lines
 
 
 def _sources(result: CheckResult) -> list[str]:

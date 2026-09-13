@@ -34,7 +34,7 @@
 | 카카오 스킬 서버 골격 | 완료. 즉시 ack → 워커 → 콜백 |
 | 입력 수신(①) | 완료. 실제 입력 52가지 전수 검증, 단축 링크 해석 |
 | 응답 생성(⑥) | 완료 |
-| 주장 구조화(③) | 규칙 기반 구현 완료. 한계 5건은 xfail로 기록 |
+| 주장 구조화(③) | 완료. 최대 3건 검증, 성분 38종, 브랜드·전문가 역할은 근거 화면 표시 |
 | 이중 검증(④) | 조회 병렬 실행과 실패 처리 완료. 실제 호출은 Fake |
 | Fake 구현체 4종 | 완료. 키 없이 전체 파이프라인이 돌아간다 |
 | Liner 학술 검색 실제 호출 | 완료. 실제 논문으로 검증 |
@@ -167,6 +167,8 @@ python scripts/check_transcripts.py samples/videos.txt --json 결과.json --inte
 | `rules/notified_ingredients.yaml` | 고시형 기능성원료 목록 ⚠ 검수 전 초안 |
 | `rules/response_guard.yaml` | 응답에 쓰면 안 되는 진단·처방 표현 |
 | `rules/ad_violation_patterns.yaml` | 법으로 금지된 광고 표현 ⚠ 법률 검토 필요 |
+| `rules/brand_names.yaml` | 근거 화면에 표시할 브랜드 씨앗 목록 |
+| `rules/authority_roles.yaml` | 근거 화면에 표시할 전문가 역할 표현 |
 | `rules/stance_patterns.yaml` | 논문 찬반 판정 표현, 제외할 문헌 |
 
 수정 의견은 규칙 ID(`R-0xx`)를 적어 주면 된다. 판정 로그에는 사용된 규칙 버전과

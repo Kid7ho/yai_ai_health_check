@@ -30,6 +30,11 @@ RULES_DIR = Path(__file__).resolve().parents[3] / "rules"
 DEFAULT_PATTERNS_PATH = RULES_DIR / "claim_patterns.yaml"
 DEFAULT_ALIASES_PATH = RULES_DIR / "ingredient_aliases.yaml"
 DEFAULT_AD_PATH = RULES_DIR / "ad_violation_patterns.yaml"
+DEFAULT_BRAND_PATH = RULES_DIR / "brand_names.yaml"
+DEFAULT_ROLES_PATH = RULES_DIR / "authority_roles.yaml"
+
+# 근거 화면에 보여 줄 최대 개수. 긴 글에서 목록이 끝없이 늘지 않게 한다.
+MAX_MENTIONS = 5
 
 # 문장 경계. 자막에는 마침표가 아예 없는 경우가 많아서 줄바꿈도 경계로 본다.
 _SENTENCE_SPLIT = re.compile(r"[.!?。\n]+")
@@ -50,6 +55,12 @@ class _Patterns:
     negation: tuple[str, ...]
     # 법령이 금지하는 광고 표현. 적발 기록 조회가 아니라 표현 매칭이다.
     prohibited_ad: tuple[str, ...]
+    # 표기 → 표준 브랜드명
+    brand_lookup: dict[str, str]
+    # 전문가 역할. 긴 표현부터 찾는다.
+    roles: tuple[str, ...]
+    # 역할 뒤에 이 말이 오면 역할로 보지 않는다. "의사결정"의 "의사"
+    role_exclusions: dict[str, tuple[str, ...]]
     effect_by_intensity: tuple[tuple[Intensity, tuple[str, ...]], ...]
     # 자막 어디에 한 번만 나와도 거절하는 표현
     out_of_scope_immediate: tuple[str, ...]
@@ -65,6 +76,8 @@ def load_patterns(
     patterns_path: Path | str = DEFAULT_PATTERNS_PATH,
     aliases_path: Path | str = DEFAULT_ALIASES_PATH,
     ad_path: Path | str = DEFAULT_AD_PATH,
+    brand_path: Path | str = DEFAULT_BRAND_PATH,
+    roles_path: Path | str = DEFAULT_ROLES_PATH,
 ) -> _Patterns:
     """규칙 파일을 읽는다. 판정 규칙표와 같은 이유로 코드에 넣지 않는다."""
     raw = yaml.safe_load(Path(patterns_path).read_text(encoding="utf-8")) or {}
@@ -97,6 +110,20 @@ def load_patterns(
         if key != "version" and isinstance(group, list):
             prohibited_ad.extend(group or ())
 
+    brand_raw = yaml.safe_load(Path(brand_path).read_text(encoding="utf-8")) or {}
+    brand_lookup: dict[str, str] = {}
+    for standard, variants in (brand_raw.get("브랜드") or {}).items():
+        brand_lookup[str(standard)] = str(standard)
+        for variant in variants or ():
+            brand_lookup[str(variant)] = str(standard)
+
+    roles_raw = yaml.safe_load(Path(roles_path).read_text(encoding="utf-8")) or {}
+    roles = tuple(sorted(set(roles_raw.get("역할") or ()), key=len, reverse=True))
+    role_exclusions = {
+        str(role): tuple(followers or ())
+        for role, followers in (roles_raw.get("제외_뒤따름") or {}).items()
+    }
+
     lookup: dict[str, str] = {}
     for standard, variants in (aliases.get("성분") or {}).items():
         lookup[standard] = standard
@@ -107,6 +134,9 @@ def load_patterns(
         disease_cure=disease_cure,
         negation=tuple(raw.get("부정_표현") or ()),
         prohibited_ad=tuple(prohibited_ad),
+        brand_lookup=brand_lookup,
+        roles=roles,
+        role_exclusions=role_exclusions,
         effect_by_intensity=tuple(by_intensity),
         out_of_scope_immediate=immediate,
         out_of_scope_contextual=contextual,
@@ -184,6 +214,10 @@ class RuleBasedClaimExtractor:
             in_scope=not out_of_scope,
             disease_cure_expression=disease_cure,
             prohibited_ad_expression=prohibited_ad,
+            # 브랜드와 역할은 글 전체에서 찾는다. 긴 글에서 성분 주변만 보면
+            # 제목의 "의사가 알려주는" 같은 표현을 놓친다.
+            brands=_find_brands(text, patterns.brand_lookup),
+            authority_roles=_find_roles(text, patterns.roles, patterns.role_exclusions),
             extraction_failed=not claims,
         )
 
@@ -311,6 +345,57 @@ def _focus(text: str, lookup: dict[str, str]) -> list[tuple[str, int]]:
                 keep.add(neighbor)
 
     return [sentences[index] for index in sorted(keep)]
+
+
+def _find_brands(text: str, lookup: dict[str, str]) -> tuple[str, ...]:
+    """본문에 나온 브랜드를 처음 나온 순서대로 돌려준다.
+
+    영문 표기는 단어 경계로 찾는다. "GNC"가 다른 영문 단어 안에서 잡히지 않게 한다.
+    """
+    found: list[tuple[int, str]] = []
+    for variant, standard in lookup.items():
+        if re.fullmatch(r"[A-Za-z0-9]+", variant):
+            match = re.search(rf"(?<![A-Za-z0-9]){re.escape(variant)}(?![A-Za-z0-9])", text)
+            position = match.start() if match else -1
+        else:
+            position = text.find(variant)
+        if position >= 0:
+            found.append((position, standard))
+
+    ordered: list[str] = []
+    for _, standard in sorted(found):
+        if standard not in ordered:
+            ordered.append(standard)
+    return tuple(ordered[:MAX_MENTIONS])
+
+
+def _find_roles(
+    text: str, roles: tuple[str, ...], exclusions: dict[str, tuple[str, ...]]
+) -> tuple[str, ...]:
+    """본문에 나온 전문가 역할을 처음 나온 순서대로 돌려준다.
+
+    긴 표현을 먼저 찾고 그 자리를 비워 둔다. "한의사"가 "의사"로 한 번 더
+    잡히지 않게 한다. "의사결정"처럼 다른 뜻으로 쓰인 경우는 뒤따르는 말로 거른다.
+    """
+    taken: list[tuple[int, int]] = []
+    found: list[tuple[int, str]] = []
+
+    for role in roles:
+        start = text.find(role)
+        while start >= 0:
+            end = start + len(role)
+            overlaps = any(a <= start < b or a < end <= b for a, b in taken)
+            excluded = any(text.startswith(follow, end) for follow in exclusions.get(role, ()))
+            if not overlaps and not excluded:
+                taken.append((start, end))
+                found.append((start, role))
+            start = text.find(role, end)
+
+    ordered: list[str] = []
+    for _, role in sorted(found):
+        if role not in ordered:
+            ordered.append(role)
+    return tuple(ordered[:MAX_MENTIONS])
 
 
 def _contains_any(text: str, needles: tuple[str, ...]) -> bool:

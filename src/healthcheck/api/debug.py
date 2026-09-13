@@ -80,6 +80,15 @@ async def check(request: Request) -> dict:
         "mfds": asdict(result.mfds) if result.mfds else None,
         "academic": _academic_of(result),
         "verdict": _verdict_of(result),
+        "claim_checks": [
+            {
+                "ingredient": check.claim.ingredient,
+                "claimed_effect": check.claim.claimed_effect,
+                "label": check.verdict.label.value,
+                "rule_id": check.verdict.rule_id,
+            }
+            for check in result.claim_checks
+        ],
         "from_cache": result.from_cache,
         "retryable_failure": result.retryable_failure,
         "rules_version": orchestrator.ruleset.version,
@@ -113,6 +122,8 @@ def _claims_of(result: CheckResult) -> dict | None:
         "disease_cure_expression": claims.disease_cure_expression,
         "extraction_failed": claims.extraction_failed,
         "items": [asdict(claim) for claim in claims.claims],
+        "brands": list(claims.brands),
+        "authority_roles": list(claims.authority_roles),
     }
 
 

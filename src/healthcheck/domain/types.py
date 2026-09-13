@@ -127,6 +127,11 @@ class ClaimSet:
     prohibited_ad_expression: bool = False
     # 규칙 기반 추출이 주장을 하나도 못 뽑았으면 True. UNKNOWN으로 이어진다.
     extraction_failed: bool = False
+    # 본문에 언급된 브랜드. 근거 화면에만 보여 주고 판정에는 쓰지 않는다.
+    brands: tuple[str, ...] = ()
+    # 본문에 언급된 전문가 역할(의사, 약사 등). 실명은 뽑지 않는다.
+    # 근거 화면에만 보여 주고 판정에는 쓰지 않는다.
+    authority_roles: tuple[str, ...] = ()
 
 
 # ─────────────────────────────────────────────────────────────
