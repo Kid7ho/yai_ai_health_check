@@ -52,6 +52,18 @@ _NOTICE_TEXT = {
     ),
 }
 
+def _notice_text(notice: str) -> str:
+    """안내 종류에 맞는 문구. 사이트 이름이 붙는 안내는 '종류:이름' 형태로 온다."""
+    if notice.startswith("login_required:"):
+        site = notice.split(":", 1)[1] or "이 사이트"
+        # 막을 수 없는 한계다. 대신 어르신이 할 수 있는 다른 방법을 알려 준다.
+        return (
+            f"{site} 글은 로그인이 필요해서 내용을 볼 수 없어요.\n"
+            "글 내용을 복사해서 보내 주시면 확인해 드릴게요."
+        )
+    return _NOTICE_TEXT.get(notice, _RETRY_TEXT)
+
+
 _RETRY_TEXT = (
     "지금은 확인해 드리기 어려워요.\n"
     "잠시 뒤에 다시 보내 주시면 확인해 드릴게요."
@@ -113,7 +125,7 @@ def render(result: CheckResult) -> dict:
         return _wrap([_simple_text(_RETRY_TEXT)])
 
     if result.notice:
-        return _wrap([_simple_text(_NOTICE_TEXT.get(result.notice, _RETRY_TEXT))])
+        return _wrap([_simple_text(_notice_text(result.notice))])
 
     if not _is_in_scope(result):
         return _wrap([_simple_text(_OUT_OF_SCOPE_TEXT)])

@@ -69,6 +69,24 @@ SHORT_LINK_HOSTS = frozenset(
     }
 )
 
+# 로그인해야 글을 볼 수 있는 곳. 서버가 가져가면 로그인 화면만 받는다.
+# 실측에서 네이버 카페와 인스타그램은 0자, 페이스북은 400이었다.
+# 호스트 끝이 일치하면 해당한다(m.facebook.com 등 하위 도메인 포함).
+LOGIN_WALL_SITES: dict[str, str] = {
+    "cafe.naver.com": "네이버 카페",
+    "instagram.com": "인스타그램",
+    "facebook.com": "페이스북",
+    "fb.com": "페이스북",
+    "fb.watch": "페이스북",
+    "x.com": "X(트위터)",
+    "twitter.com": "X(트위터)",
+    "tiktok.com": "틱톡",
+    "band.us": "밴드",
+    "story.kakao.com": "카카오스토리",
+    "threads.net": "스레드",
+    "threads.com": "스레드",
+}
+
 # 캐시 키를 만들 때 지우는 추적 파라미터. 같은 글인데 공유 경로마다 다른
 # 값이 붙어 캐시가 맞지 않았다.
 _TRACKING_PARAMS = frozenset(
@@ -203,6 +221,17 @@ def is_youtube(url: str) -> bool:
 
 def is_short_link(url: str) -> bool:
     return _bare_host(urlparse(_ensure_scheme(url)).hostname) in SHORT_LINK_HOSTS
+
+
+def login_wall_site(url: str | None) -> str | None:
+    """로그인이 필요한 사이트면 어르신에게 보여 줄 이름을, 아니면 None을 돌려준다."""
+    if not url:
+        return None
+    host = _bare_host(urlparse(_ensure_scheme(url)).hostname)
+    for domain, name in LOGIN_WALL_SITES.items():
+        if host == domain or host.endswith("." + domain):
+            return name
+    return None
 
 
 def canonical_url(url: str) -> str:
@@ -348,6 +377,7 @@ __all__ = [
     "is_short_link",
     "canonical_url",
     "cache_key",
+    "login_wall_site",
     "MAX_INPUT_CHARS",
     "SHORT_LINK_HOSTS",
 ]

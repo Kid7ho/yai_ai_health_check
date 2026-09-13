@@ -99,8 +99,16 @@ class Orchestrator:
             # 채널·재생목록 링크다. 확인할 영상이 없으므로 조회하지 않고 안내한다.
             return self._notice_result(share_input, "youtube_not_video")
 
+        if share_input.kind == "OTHER_LINK":
+            # 로그인해야 볼 수 있는 곳이다. 가져가도 로그인 화면만 받는다.
+            # 막을 수 없는 한계이므로 '알 수 없어요' 대신 이유와 다른 방법을 알린다.
+            site = step1_input.login_wall_site(share_input.url)
+            if site:
+                return self._notice_result(share_input, f"login_required:{site}")
+
         step = time.monotonic()
         content, retryable_failure = await self._content_of(share_input)
+        content = _cap_content(content)
         _record(trace, "content", step)
 
         step = time.monotonic()
@@ -189,7 +197,7 @@ class Orchestrator:
         return CheckResult(
             verdict=Verdict(
                 label=Label.UNKNOWN,
-                rule_id=f"INPUT-{notice.upper()}",
+                rule_id=f"INPUT-{notice.split(':', 1)[0].upper()}",
                 rules_version=self.ruleset.version,
                 reasons=(),
             ),
@@ -290,6 +298,28 @@ class Orchestrator:
 def _record(trace: dict[str, float] | None, name: str, started: float) -> None:
     if trace is not None:
         trace[name] = round((time.monotonic() - started) * 1000, 1)
+
+
+# 주장 추출에 넘기는 본문의 상한. 긴 방송 영상 자막이 26만 자까지 나왔다.
+# 규칙 기반 추출이 느려지고 DB에 그대로 저장된다. 건강정보의 핵심 주장은
+# 대체로 앞부분에 반복되므로 앞에서부터 자른다. 기사는 추출 단계에서 이미
+# 크기를 제한하지만 자막과 음성 인식은 제한이 없어서 여기서 공통으로 자른다.
+MAX_CONTENT_CHARS = 20_000
+
+
+def _cap_content(content: ExtractedContent) -> ExtractedContent:
+    if len(content.text) <= MAX_CONTENT_CHARS:
+        return content
+    import hashlib
+    from dataclasses import replace
+
+    text = content.text[:MAX_CONTENT_CHARS]
+    logger.info("본문이 길어 앞 %d자만 쓴다. 원래 %d자", MAX_CONTENT_CHARS, len(content.text))
+    return replace(
+        content,
+        text=text,
+        content_hash=hashlib.sha256(text.encode("utf-8")).hexdigest()[:32],
+    )
 
 
 def _no_content() -> ExtractedContent:
