@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import uuid
 from dataclasses import dataclass, field
 from typing import Any
@@ -42,6 +43,10 @@ def build_router(path: str = "/skill") -> APIRouter:
     return router
 
 _BUSY_TEXT = "지금 확인 요청이 많아요.\n잠시 뒤에 다시 보내 주세요."
+_MEDIA_TEXT = (
+    "사진은 아직 확인할 수 없어요.\n"
+    "영상이나 글의 링크, 또는 글 내용을 보내 주세요."
+)
 _NO_CALLBACK_TEXT = (
     "지금은 바로 확인해 드릴 수 없어요.\n잠시 뒤에 다시 보내 주세요."
 )
@@ -118,6 +123,13 @@ async def skill(request: Request) -> dict:
     callback_url = _dig(body, "userRequest", "callbackUrl")
     user_key = _dig(body, "userRequest", "user", "id")
 
+    # 사진. 실채널에서 사진을 보내면 utterance에 카카오 CDN 서명 주소가 오고
+    # params.media.type이 image다. 링크로 처리하면 서버가 사진을 내려받고
+    # '알 수 없어요'를 돌려준다. 이미지 판독은 범위 밖이므로 조회 없이 안내한다.
+    if _is_media_upload(body):
+        logger.info("사진·파일 입력이라 확인하지 않는다")
+        return _simple(_MEDIA_TEXT)
+
     # "왜 그런지 보기" 버튼. 새 확인 요청이 아니라 직전 결과의 근거를 돌려준다.
     # 외부 호출 없이 바로 답하므로 5초 안에 끝난다.
     if utterance.strip() == _REASON_BUTTON:
@@ -193,6 +205,24 @@ _MASKED_KEYS = (
 )
 
 
+def _is_media_upload(body: Any) -> bool:
+    """사진·파일 업로드 요청인가.
+
+    실채널에서 확인한 두 표시 중 하나라도 있으면 업로드로 본다.
+    params.media.type과 flow.trigger.type(IMAGE_UPLOAD)이다.
+    """
+    media = _dig(body, "userRequest", "params", "media")
+    if isinstance(media, dict) and media.get("type"):
+        return True
+    trigger = _dig(body, "flow", "trigger", "type")
+    return isinstance(trigger, str) and trigger.endswith("_UPLOAD")
+
+
+# 서명이 붙은 주소. 카카오 CDN 사진 주소는 쿼리에 접근 서명을 담는다.
+# 로그에 남으면 기록을 본 사람이 사진을 열 수 있으므로 쿼리를 통째로 가린다.
+_SIGNED_QUERY = re.compile(r"\?[^\s\"]*(?:credential|signature|token|expires)=[^\s\"]*", re.IGNORECASE)
+
+
 def mask_body(value: Any) -> Any:
     """요청 본문에서 사용자 식별자를 가린다.
 
@@ -206,6 +236,8 @@ def mask_body(value: Any) -> Any:
         }
     if isinstance(value, list):
         return [mask_body(item) for item in value]
+    if isinstance(value, str):
+        return _SIGNED_QUERY.sub("?(가림)", value)
     return value
 
 

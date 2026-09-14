@@ -147,3 +147,33 @@ async def test_모든_응답의_말풍선은_3개_이하다():
 
     for payload in (render(result), render_reason(result), render(notice), render(retry)):
         assert 1 <= len(payload["template"]["outputs"]) <= 3
+
+
+def image_body(user: str = "user-a") -> dict:
+    # 실채널에서 사진을 보냈을 때 온 구조다. 주소와 서명은 가짜다.
+    url = "https://talk.kakaocdn.net/dna/x/y/i_abc.jpg?credential=AAA&expires=1&signature=BBB"
+    body = request_body(url, user=user)
+    body["userRequest"]["params"] = {"surface": "Kakaotalk.plusfriend", "media": {"type": "image", "url": url}}
+    body["flow"] = {"trigger": {"type": "IMAGE_UPLOAD"}}
+    return body
+
+
+def test_사진을_보내면_조회하지_않고_바로_안내한다():
+    sender = RecordingCallbackSender()
+    app = create_app(orchestrator=build_fake_orchestrator(), callback_sender=sender)
+    with TestClient(app) as client:
+        response = client.post("/skill", json=image_body())
+
+    payload = response.json()
+    assert payload.get("useCallback") is not True
+    assert "사진은 아직 확인할 수 없어요" in texts(payload)[0]
+    assert sender.sent == []
+
+
+def test_트리거만_업로드여도_사진으로_본다():
+    body = image_body()
+    del body["userRequest"]["params"]["media"]
+    app = create_app(orchestrator=build_fake_orchestrator(), callback_sender=RecordingCallbackSender())
+    with TestClient(app) as client:
+        payload = client.post("/skill", json=body).json()
+    assert "사진은 아직 확인할 수 없어요" in texts(payload)[0]

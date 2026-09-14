@@ -33,3 +33,19 @@ def test_실채널_요청의_스네이크_표기_식별자도_가린다():
         assert user["properties"][key] == "***"
     for raw in ("u-1", "k-1", "p-1", "a-1"):
         assert raw not in str(masked)
+
+
+def test_서명이_붙은_사진_주소는_쿼리를_가린다():
+    # 실채널 사진 요청의 모양이다. 서명 값은 가짜다.
+    url = "https://talk.kakaocdn.net/dna/x/y/i_abc.jpg?credential=AAA&expires=1&signature=BBB"
+    body = {"userRequest": {"utterance": url, "params": {"media": {"type": "image", "url": url}}}}
+
+    masked = str(mask_body(body))
+
+    assert "AAA" not in masked and "BBB" not in masked
+    assert "https://talk.kakaocdn.net/dna/x/y/i_abc.jpg?(가림)" in masked
+
+
+def test_일반_링크의_쿼리는_그대로_남긴다():
+    url = "https://www.youtube.com/watch?v=0uEIFaWpd50"
+    assert mask_body({"utterance": url}) == {"utterance": url}
