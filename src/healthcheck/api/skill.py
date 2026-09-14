@@ -181,7 +181,16 @@ def _simple(text: str) -> dict:
 
 
 # 로그에 남기기 전에 가릴 필드 경로. 사용자 식별자는 남기지 않는다.
-_MASKED_KEYS = ("id", "botUserKey", "plusfriendUserKey", "appUserId")
+# 실채널 요청은 properties에 같은 식별자를 스네이크 표기로 한 번 더 담아 보낸다.
+_MASKED_KEYS = (
+    "id",
+    "botUserKey",
+    "plusfriendUserKey",
+    "appUserId",
+    "bot_user_key",
+    "plusfriend_user_key",
+    "app_user_id",
+)
 
 
 def mask_body(value: Any) -> Any:
