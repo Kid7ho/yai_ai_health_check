@@ -161,7 +161,7 @@ class RuleBasedClaimExtractor:
 
     def extract(self, text: str) -> ClaimSet:
         patterns = self._patterns
-        text = text or ""
+        text = _blank_reference_lines(text or "")
 
         # 의약품을 대체하라는 표현은 어디에 한 번만 나와도 거절한다.
         # 가장 위험한 유형이므로 문맥을 따지지 않는다.
@@ -176,6 +176,8 @@ class RuleBasedClaimExtractor:
         seen: set[tuple[str, str]] = set()
         disease_cure = False
         prohibited_ad = False
+        # 의료 단어가 섞인 문장에서만 주장이 나왔는지 따지기 위해 둔다.
+        medical_context = False
 
         for sentence, offset in sentences:
             # 오정보를 바로잡는 문장은 주장으로 읽지 않는다. 이 처리가 없으면
@@ -198,16 +200,24 @@ class RuleBasedClaimExtractor:
             if _contains_any(sentence, patterns.prohibited_ad):
                 prohibited_ad = True
 
-            # 의료 이야기에 흔히 나오는 단어는 주장이 실린 문장에 섞였을
-            # 때만 거절한다.
+            # 의료 이야기에 흔히 나오는 단어가 주장이 실린 문장에 섞이면 그
+            # 문장의 주장은 검증하지 않는다. 글 전체를 거절하지는 않는다.
+            # 실채널에서 공유된 홍삼 연구 소개 블로그가 "기존의 호르몬 치료나
+            # 수술적 치료는", "항생제 투여로 … 마우스 모델" 두 문장 때문에 통째로
+            # 범위 밖이 됐다. 주장이 전부 이런 문장에만 있을 때만 거절한다.
             if sentence_claims and _contains_any(sentence, patterns.out_of_scope_contextual):
-                out_of_scope = True
+                logger.debug("의료 단어가 섞인 문장의 주장은 검증하지 않는다: %s", sentence[:60])
+                medical_context = True
+                continue
 
             for claim in sentence_claims:
                 key = (claim.ingredient, claim.claimed_effect)
                 if key not in seen:
                     seen.add(key)
                     claims.append(claim)
+
+        if medical_context and not claims:
+            out_of_scope = True
 
         return ClaimSet(
             claims=tuple(claims),
@@ -291,6 +301,29 @@ class LlmClaimExtractor:
 # ─────────────────────────────────────────────────────────────
 # 내부 도구
 # ─────────────────────────────────────────────────────────────
+
+
+# 출처 목록 줄. 블로그 글 끝에 "<기사 제목>, 언론사" 형태로 이어 붙는다.
+# 기사 제목에 효능 표현이 들어 있어 여러 제목이 한 주장으로 묶였다.
+_CITATION = re.compile(r"<[^<>\n]{2,}>")
+_REFERENCE_HEAD = re.compile(r"^\s*[\[(]?\s*(?:출처|참고\s*자료|참고\s*문헌|참고|자료\s*출처|references?|sources?)\s*[\])]?\s*[:：]?", re.IGNORECASE)
+_HASHTAGS_ONLY = re.compile(r"^\s*(?:#\S+\s*){2,}$")
+
+
+def _blank_reference_lines(text: str) -> str:
+    """출처 목록과 해시태그 줄을 같은 길이의 공백으로 바꾼다.
+
+    지우지 않고 공백으로 바꾸는 이유는 주장의 span이 원문 위치를 가리키기 때문이다.
+    """
+    lines = text.split("\n")
+    for index, line in enumerate(lines):
+        if (
+            len(_CITATION.findall(line)) >= 2
+            or _REFERENCE_HEAD.match(line)
+            or _HASHTAGS_ONLY.match(line)
+        ):
+            lines[index] = " " * len(line)
+    return "\n".join(lines)
 
 
 def _sentences(text: str) -> list[tuple[str, int]]:
