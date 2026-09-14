@@ -1,0 +1,18 @@
+# 원격 빌더로 올라가는 파일을 줄인다. 키와 개인정보는 절대 올리지 않는다.
+.env
+.env.*
+!.env.example
+*.db
+*.db-wal
+*.db-shm
+*.sqlite3
+.venv/
+venv/
+.git/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+tests/
+scripts/
+*.md
+.DS_Store

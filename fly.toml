@@ -1,0 +1,41 @@
+# Fly.io 배포 설정. 키는 여기에 적지 않는다. `fly secrets`로 넣는다.
+# 앱 이름은 Fly 전체에서 고유해야 한다. 만들 때 정한 이름으로 바꾼다.
+app = "yai-health-check"
+primary_region = "nrt"
+
+[build]
+
+[env]
+  ADAPTER_MODE = "live"
+  WORKER_COUNT = "2"
+  DEBUG_UI = "0"
+  LOG_SKILL_REQUEST = "0"
+  LOG_LEVEL = "INFO"
+  ARTICLE_ENABLED = "1"
+  ASR_ENABLED = "0"
+  # 판정 기록은 볼륨에 둔다. 컨테이너 파일시스템은 배포할 때마다 초기화된다.
+  DATABASE_PATH = "/data/healthcheck.db"
+
+[[mounts]]
+  source = "healthcheck_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  # 콜백은 요청을 받은 뒤 같은 프로세스의 워커가 보낸다. 머신이 자동으로
+  # 멈추면 접수한 작업이 사라지므로 항상 한 대를 켜 둔다.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
