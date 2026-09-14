@@ -26,6 +26,8 @@ import re
 from urllib.parse import parse_qs, urlparse
 
 import httpx
+import lxml.etree
+import lxml.html
 import trafilatura
 
 from healthcheck.adapters.web.safe_http import (
@@ -113,6 +115,35 @@ UnsafeUrlError = UnsafeUrlError
 assert_safe_url = assert_safe_url
 
 
+def _naver_smart_editor_text(raw: bytes) -> str:
+    """네이버 블로그 스마트에디터 본문을 문단 단위로 뽑는다.
+
+    스마트에디터 글은 한 줄마다 짧은 문단 요소로 나뉜다. trafilatura는 이런
+    짧은 조각을 본문이 아닌 블록으로 보고 버렸다. 실채널에서 공유된 글이
+    본문 1,707자인데 제목과 페이지 메타데이터 JSON만 남았다.
+    글 모듈 하나를 한 줄로 이어 붙인다. 같은 모듈의 줄바꿈은 문장 중간이다.
+    """
+    try:
+        tree = lxml.html.fromstring(raw)
+    except (ValueError, lxml.etree.ParserError):
+        return ""
+
+    lines: list[str] = []
+    for module in tree.xpath(
+        '//*[contains(@class, "se-main-container")]'
+        '//*[contains(concat(" ", normalize-space(@class), " "), " se-module-text ")]'
+    ):
+        parts = [
+            # 빈 문단에 폭 없는 공백(U+200B)을 넣어 두므로 함께 지운다.
+            " ".join(p.text_content().replace("\u200b", " ").split())
+            for p in module.xpath('.//*[contains(@class, "se-text-paragraph")]')
+        ]
+        line = " ".join(part for part in parts if part)
+        if line:
+            lines.append(line)
+    return "\n".join(lines)
+
+
 def _as_dict(document) -> dict:
     """trafilatura 버전에 따라 결과가 dict이거나 Document 객체다."""
     if document is None:
@@ -172,6 +203,11 @@ class TrafilaturaArticleExtractor:
 
         body = _drop_boilerplate(fields.get("text") or "")
         title = str(fields.get("title") or "").strip()
+
+        if (urlparse(target).hostname or "").lower() in _NAVER_HOSTS:
+            editor_body = _drop_boilerplate(_naver_smart_editor_text(raw))
+            if editor_body:
+                body = editor_body
 
         if len(body) < MIN_TEXT_LENGTH:
             logger.info("본문이 너무 짧아 기사로 보지 않는다 url=%s 길이=%d", url, len(body))
