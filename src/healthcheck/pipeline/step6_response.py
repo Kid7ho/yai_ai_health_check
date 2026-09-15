@@ -166,8 +166,10 @@ def render(result: CheckResult, *, image_base_url: str | None = None) -> dict:
                     "imageUrl": verdict_image_url(image_base_url, label),
                     "altText": LABEL_TEXT[label],
                 },
-                "title": checked_title if checked else LABEL_TEXT[label],
-                "description": _clip(checked or _NO_CLAIM_TEXT, _MAX_BASIC_DESCRIPTION),
+                # 카카오 카드는 제목을 진한 글씨, 설명을 회색 글씨로 보여 준다. 어르신이 가장
+                # 먼저 읽어야 할 판정 대상 문장을 제목에 둔다. 제목은 50자 제한이다.
+                "title": _clip(checked, _MAX_TITLE) if checked else _NO_CLAIM_TEXT,
+                "description": _checked_caption(result) if checked else "",
                 "buttons": _buttons(),
             }
         }
@@ -326,6 +328,12 @@ def _describe(result: CheckResult) -> str:
     if checked:
         return f"{_checked_title(result)}\n{checked}"
     return _NO_CLAIM_TEXT
+
+
+def _checked_caption(result: CheckResult) -> str:
+    """이미지 카드의 회색 설명. 제목 문장이 무엇인지 알려 준다."""
+    title = _checked_title(result)
+    return "이 내용을 확인했어요" if title == _CHECKED_TITLE else title
 
 
 def _checked_title(result: CheckResult) -> str:

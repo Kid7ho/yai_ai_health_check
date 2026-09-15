@@ -38,8 +38,9 @@ async def test_이미지_주소가_있으면_라벨_이미지_카드로_답한�
 
     assert card["thumbnail"]["imageUrl"] == verdict_image_url(BASE, result.verdict.label)
     assert card["thumbnail"]["imageUrl"].startswith(f"{BASE}/static/verdict/{IMAGE_VERSION}/")
-    assert card["title"] == "확인한 내용"
-    assert "홍삼" in card["description"]
+    # 판정 대상 문장이 진한 글씨(제목)로 나간다.
+    assert "홍삼" in card["title"]
+    assert card["description"].startswith("이 내용을 확인했어요")
     assert len(card["description"]) <= 230
     assert [b["label"] for b in card["buttons"]] == ["왜 그런지 보기", "가족에게 보내기"]
 
