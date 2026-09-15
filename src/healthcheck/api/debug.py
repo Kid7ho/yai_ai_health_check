@@ -61,6 +61,7 @@ async def check(request: Request) -> dict:
         logger.exception("디버그 실행 실패")
         return {"error": f"{type(error).__name__}: {error}"}
 
+    image_base_url = getattr(request.app.state, "image_base_url", None)
     return {
         "mode": mode,
         "adapters": {
@@ -94,8 +95,8 @@ async def check(request: Request) -> dict:
         "rules_version": orchestrator.ruleset.version,
         # 카카오로 이식할 때 그대로 쓰는 페이로드
         "ack_payload": ack_response(),
-        "callback_payload": render(result),
-        "reason_payload": render_reason(result),
+        "callback_payload": render(result, image_base_url=image_base_url),
+        "reason_payload": render_reason(result, image_base_url=image_base_url),
     }
 
 

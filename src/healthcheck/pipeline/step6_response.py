@@ -11,11 +11,17 @@
   simpleText.text        최대 1000자
   textCard.title         최대 50자
   textCard.description   최대 400자
+  basicCard.title        최대 50자
+  basicCard.description  최대 230자, thumbnail 필수(2:1 또는 1:1)
   buttons                가로 2개 / 세로 3개, 라벨 14자 (가로 2개일 때는 8자)
   action                 webLink | message | phone | block | share | operator
 
 버튼 라벨 "왜 그런지 보기"가 9자라서 가로 배치의 8자 제한을 넘는다.
 그래서 buttonLayout을 vertical로 둔다. 세로 배치는 14자까지 허용한다.
+
+카카오 응답은 글자색·배경색·버튼색을 지정할 수 없다. 발표 자료 목업의 신호등 색
+머리 부분은 라벨별 이미지(basicCard thumbnail)로 대신한다. 이미지는 공개 주소에서
+내려받아야 하므로 image_base_url이 없으면 이미지 없는 textCard로 답한다.
 """
 
 from __future__ import annotations
@@ -40,6 +46,7 @@ DISCLAIMER = "이 결과는 참고용이며 진단이 아닙니다."
 _MAX_SIMPLE_TEXT = 1000
 _MAX_TITLE = 50
 _MAX_DESCRIPTION = 400
+_MAX_BASIC_DESCRIPTION = 230
 _MAX_BUTTON_LABEL = 14
 
 # 어르신이 읽을 안내 문구
@@ -75,6 +82,25 @@ _OUT_OF_SCOPE_TEXT = (
 
 _REASON_BUTTON = "왜 그런지 보기"
 _SHARE_BUTTON = "가족에게 보내기"
+_CHECKED_TITLE = "확인한 내용"
+_REASON_TITLE = "왜 그런가요"
+# 결과 카드 뒤에 붙는 말풍선. 발표 자료 목업의 흐름을 따른다.
+_FOLLOW_UP_TEXT = "다른 영상도 보내주시면\n바로 확인해 드릴게요"
+
+# 라벨별 머리 이미지. 그림을 바꾸면 버전을 올린다. 카카오가 같은 주소의 이미지를
+# 캐시해 두면 바꾼 그림이 보이지 않는다.
+IMAGE_VERSION = "v1"
+IMAGE_FILES: dict[Label, str] = {
+    Label.TRUSTWORTHY: "trustworthy",
+    Label.CAUTION: "caution",
+    Label.WARNING: "warning",
+    Label.UNKNOWN: "unknown",
+}
+
+
+def verdict_image_url(image_base_url: str, label: Label) -> str:
+    """라벨 머리 이미지의 공개 주소."""
+    return f"{image_base_url.rstrip('/')}/static/verdict/{IMAGE_VERSION}/{IMAGE_FILES[label]}.png"
 
 # 금지 표현이 발견됐을 때 대신 내보내는 문구.
 # 근거를 못 보여 주더라도 진단처럼 읽히는 문구를 내보내지는 않는다.
@@ -111,10 +137,12 @@ def ack_response() -> dict:
     return {"version": "2.0", "useCallback": True, "data": {"text": _ACK_TEXT}}
 
 
-def render(result: CheckResult) -> dict:
+def render(result: CheckResult, *, image_base_url: str | None = None) -> dict:
     """판정 결과를 카카오 응답으로 만든다.
 
     카카오 카드를 만드는 유일한 경로다. 면책 문구는 항상 붙는다.
+    카드에는 라벨과 확인한 내용만 둔다. 판정 이유(규칙표 안내)는 "왜 그런지 보기"를
+    눌렀을 때 보여 준다. 발표 자료 목업의 결과 화면과 같은 구성이다.
     """
     verdict = result.verdict
     label = verdict.label
@@ -130,6 +158,23 @@ def render(result: CheckResult) -> dict:
     if not _is_in_scope(result):
         return _wrap([_simple_text(_OUT_OF_SCOPE_TEXT)])
 
+    checked = _checked_claim_text(result)
+    follow_up = _simple_text(_FOLLOW_UP_TEXT)
+
+    if image_base_url:
+        card = {
+            "basicCard": {
+                "thumbnail": {
+                    "imageUrl": verdict_image_url(image_base_url, label),
+                    "altText": LABEL_TEXT[label],
+                },
+                "title": _CHECKED_TITLE if checked else LABEL_TEXT[label],
+                "description": _clip(checked or _NO_CLAIM_TEXT, _MAX_BASIC_DESCRIPTION),
+                "buttons": _buttons(),
+            }
+        }
+        return _wrap([card, follow_up])
+
     card = {
         "textCard": {
             "title": _clip(LABEL_TEXT[label], _MAX_TITLE),
@@ -138,32 +183,52 @@ def render(result: CheckResult) -> dict:
             "buttons": _buttons(),
         }
     }
-    return _wrap([card])
+    return _wrap([card, follow_up])
 
 
-def render_reason(result: CheckResult) -> dict:
+def render_reason(result: CheckResult, *, image_base_url: str | None = None) -> dict:
     """"왜 그런지 보기"를 눌렀을 때 보여 줄 근거.
 
-    별도 웹페이지를 만들지 않는다. 이번 단계는 말풍선으로만 답한다.
-    설명이 400자를 넘을 수 있으므로 카드가 아니라 simpleText를 쓴다.
+    별도 웹페이지를 만들지 않는다. 판정 이유는 카드로, 출처와 언급된 브랜드·역할은
+    말풍선으로 나눈다. 카드 설명은 230자 제한이라 출처 목록이 들어가지 않는다.
+    이미지 주소가 없으면 한 말풍선에 모두 담는다.
     """
     verdict = result.verdict
-    lines = [f"{LABEL_TEXT[verdict.label]}", ""]
     # 어르신용 안내를 보여 준다. 규칙표의 근거 문장은 검수용이라 보여 주지 않는다.
-    if verdict.guidance:
-        lines.append(verdict.guidance)
-    else:
-        lines.extend(reason for reason in verdict.reasons if reason)
+    reason = verdict.guidance or "\n".join(r for r in verdict.reasons if r)
 
+    details: list[str] = []
     sources = _sources(result)
     if sources:
-        lines.extend(["", "근거"])
-        lines.extend(f"· {source}" for source in sources)
-
+        details.append("근거")
+        details.extend(f"· {source}" for source in sources)
     mentions = _mentions(result)
     if mentions:
-        lines.extend(["", *mentions])
+        if details:
+            details.append("")
+        details.extend(mentions)
 
+    if image_base_url:
+        card = {
+            "basicCard": {
+                "thumbnail": {
+                    "imageUrl": verdict_image_url(image_base_url, verdict.label),
+                    "altText": LABEL_TEXT[verdict.label],
+                },
+                "title": _REASON_TITLE,
+                "description": _clip(reason or _NO_CLAIM_TEXT, _MAX_BASIC_DESCRIPTION),
+            }
+        }
+        outputs = [card]
+        if details:
+            outputs.append(_simple_text("\n".join(details)))
+        return _wrap(outputs)
+
+    lines = [f"{LABEL_TEXT[verdict.label]}", ""]
+    if reason:
+        lines.append(reason)
+    if details:
+        lines.extend(["", *details])
     return _wrap([_simple_text("\n".join(lines))])
 
 
@@ -200,14 +265,17 @@ def _guard(output: dict) -> dict:
             return _simple_text(_GUARD_FALLBACK)
         return output
 
-    if "textCard" in output:
-        card = output["textCard"]
+    for kind in ("textCard", "basicCard"):
+        if kind not in output:
+            continue
+        card = output[kind]
         violations = find_forbidden(f"{card.get('title', '')} {card.get('description', '')}")
         if violations:
             logger.error("카드 문구에 금지 표현이 있다: %s", violations)
             safe = dict(card)
+            safe["title"] = _CHECKED_TITLE if kind == "basicCard" else card.get("title", "")
             safe["description"] = _GUARD_FALLBACK
-            return {"textCard": safe}
+            return {kind: safe}
         return output
 
     return output
@@ -233,22 +301,15 @@ def _is_in_scope(result: CheckResult) -> bool:
     return result.claims is None or result.claims.in_scope
 
 
-def _describe(result: CheckResult) -> str:
-    """카드 본문. '확인한 내용'과 한 줄 근거를 담는다."""
-    lines: list[str] = []
+_NO_CLAIM_TEXT = "확인할 내용을 찾지 못했어요."
 
+
+def _describe(result: CheckResult) -> str:
+    """이미지 없는 카드 본문. '확인한 내용'만 담는다. 판정 이유는 근거 화면에 있다."""
     checked = _checked_claim_text(result)
     if checked:
-        lines.extend(["확인한 내용", checked])
-
-    headline = _headline(result)
-    if headline:
-        lines.extend(["", headline])
-
-    if not lines:
-        lines.append("확인할 내용을 찾지 못했어요.")
-
-    return "\n".join(lines)
+        return f"{_CHECKED_TITLE}\n{checked}"
+    return _NO_CLAIM_TEXT
 
 
 def _checked_claim_text(result: CheckResult) -> str:
@@ -259,16 +320,6 @@ def _checked_claim_text(result: CheckResult) -> str:
             return ""
         claim = result.claims.claims[0]
     return f"{claim.ingredient}이(가) {claim.claimed_effect}"
-
-
-def _headline(result: CheckResult) -> str:
-    """판정 근거 한 줄. 규칙표에 적힌 설명을 그대로 쓴다."""
-    # 규칙표의 '안내'를 쓴다. 이전에는 검수용 '근거' 문장이 카드에 그대로 나가
-    # "보수적 기본값입니다" 같은 설명이 어르신 화면에 보였다.
-    if result.verdict.guidance:
-        return result.verdict.guidance
-    reasons = [reason for reason in result.verdict.reasons if reason]
-    return reasons[-1] if reasons else ""
 
 
 def _mentions(result: CheckResult) -> list[str]:
@@ -331,6 +382,9 @@ __all__ = [
     "render",
     "render_reason",
     "find_forbidden",
+    "verdict_image_url",
+    "IMAGE_FILES",
+    "IMAGE_VERSION",
     "DISCLAIMER",
     "Label",
 ]

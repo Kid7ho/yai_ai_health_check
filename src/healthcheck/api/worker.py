@@ -43,7 +43,9 @@ class Worker:
         callback_sender: CallbackSender,
         repository: CheckRepository | None = None,
         last_results=None,
+        image_base_url: str | None = None,
     ) -> None:
+        self._image_base_url = image_base_url
         self._queue = queue
         self._orchestrator = orchestrator
         self._callback = callback_sender
@@ -86,7 +88,9 @@ class Worker:
             return
 
         try:
-            await self._callback.send(job.callback_url, render(result))
+            await self._callback.send(
+                job.callback_url, render(result, image_base_url=self._image_base_url)
+            )
         except Exception:
             # 콜백은 1회만 쓸 수 있어서 여기서 재시도해도 성공하지 않는 경우가 많다.
             # 판정 자체는 캐시에 남았으므로 어르신이 다시 보내면 즉시 답할 수 있다.
@@ -126,11 +130,14 @@ async def start_workers(
     count: int = 2,
     repository: CheckRepository | None = None,
     last_results=None,
+    image_base_url: str | None = None,
 ) -> list[asyncio.Task]:
     """워커 여러 개를 띄운다.
 
     개수를 늘리면 동시 처리량이 늘지만, 외부 API 호출도 함께 늘어난다.
     Liner 토큰 비용을 지원받는 구조이므로 기본값은 작게 둔다.
     """
-    worker = Worker(queue, orchestrator, callback_sender, repository, last_results)
+    worker = Worker(
+        queue, orchestrator, callback_sender, repository, last_results, image_base_url
+    )
     return [asyncio.create_task(worker.run_forever()) for _ in range(count)]

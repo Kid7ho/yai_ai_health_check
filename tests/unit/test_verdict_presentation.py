@@ -40,11 +40,15 @@ def test_모든_규칙에_짧은_안내가_있다(rule):
 
 
 def test_카드에는_검수용_근거_대신_안내가_나간다():
-    """이전에는 '반박 논문이 한 편도 없어야…' 같은 검수용 설명이 카드에 나갔다."""
+    """이전에는 '반박 논문이 한 편도 없어야…' 같은 검수용 설명이 카드에 나갔다.
+
+    안내는 결과 카드가 아니라 근거 화면에 나간다(발표 자료 목업 구성).
+    """
     verdict = load_ruleset().evaluate(
         vi(recognition="NOTIFIED", functionality_match="EXACT", supporting_papers=4, refuting_papers=1)
     )
-    description = texts(render(CheckResult(verdict=verdict)))[0]
+    description = texts(render_reason(CheckResult(verdict=verdict)))[0]
+    assert "반박 논문이 한 편도" not in texts(render(CheckResult(verdict=verdict)))[0]
 
     assert "나라가 인정한 기능성과 같고" in description
     assert "반박 논문이 한 편도" not in description

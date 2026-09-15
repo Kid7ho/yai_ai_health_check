@@ -48,6 +48,9 @@ fi
 
 echo "서버를 켭니다..."
 cd "$ROOT"
+# 카카오가 결과 카드 이미지를 내려받을 공개 주소. .env에 따로 적었으면 그 값을 쓴다.
+export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-$(env_value PUBLIC_BASE_URL)}"
+export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-https://$DOMAIN}"
 nohup .venv/bin/python -m uvicorn healthcheck.api.app:app \
   --host 127.0.0.1 --port "$PORT" --app-dir src >>"$RUN/server.log" 2>&1 &
 echo $! >"$RUN/server.pid"

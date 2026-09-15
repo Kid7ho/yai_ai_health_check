@@ -79,9 +79,11 @@ def test_면책_문구는_마지막_말풍선이다():
 
 def test_면책_문구를_끄는_인자가_없다():
     """개발자가 빠뜨릴 수 있는 선택 항목으로 두지 않는다."""
+    # 카드 머리 이미지 주소만 받는다. 면책 문구나 금지 표현 검사를 끄는 인자는 두지 않는다.
     for fn in (render, render_reason):
         params = inspect.signature(fn).parameters
-        assert list(params) == ["result"], f"{fn.__name__}에 추가 인자가 생겼습니다."
+        assert list(params) == ["result", "image_base_url"], f"{fn.__name__}에 추가 인자가 생겼습니다."
+        assert params["image_base_url"].kind is inspect.Parameter.KEYWORD_ONLY
 
 
 def test_응답을_만드는_공개_함수를_늘리지_않는다():
@@ -96,6 +98,10 @@ def test_응답을_만드는_공개_함수를_늘리지_않는다():
         "find_forbidden",
         "DISCLAIMER",
         "Label",
+        # 이미지 주소를 만드는 도구다. outputs를 조립하지 않는다.
+        "verdict_image_url",
+        "IMAGE_FILES",
+        "IMAGE_VERSION",
     }
 
 
@@ -280,10 +286,16 @@ def test_금지_표현이_섞이면_문구를_바꿔_내보낸다():
         rules_version="v0.2",
         reasons=("설명", "꾸준히 드시면 낫습니다"),
     )
-    card = render(CheckResult(verdict=verdict))["template"]["outputs"][0]["textCard"]
-
+    # 판정 이유는 근거 화면에 나간다. 이미지 카드와 말풍선 두 경로를 모두 본다.
+    card = render_reason(CheckResult(verdict=verdict), image_base_url="https://example.com")[
+        "template"
+    ]["outputs"][0]["basicCard"]
     assert "낫습니다" not in card["description"]
     assert card["description"] == "확인한 근거를 보여 드리기 어려워요."
+
+    text = render_reason(CheckResult(verdict=verdict))["template"]["outputs"][0]["simpleText"]["text"]
+    assert "낫습니다" not in text
+    assert text == "확인한 근거를 보여 드리기 어려워요."
 
 
 def test_라벨_문구_자체에_금지_표현이_없다():

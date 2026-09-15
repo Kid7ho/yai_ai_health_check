@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse
 
 from healthcheck.adapters.fake.academic import FakeAcademicSearchClient
 from healthcheck.adapters.liner.academic import LinerAcademicSearchClient
@@ -32,12 +34,16 @@ from healthcheck.adapters.inprocess_queue import InProcessJobQueue
 from healthcheck.api import debug, skill
 from healthcheck.api.auth import SkillAuth, warn_if_unprotected
 from healthcheck.config import Settings, load_settings, setup_logging
+from healthcheck.domain.labels import Label
+from healthcheck.pipeline.step6_response import IMAGE_FILES, IMAGE_VERSION, verdict_image_url
 from healthcheck.api.worker import start_workers
 from healthcheck.pipeline.orchestrator import Orchestrator
 from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
 from healthcheck.pipeline.step5_verdict import load_ruleset
 from healthcheck.ports.repository import CheckRepository
 from healthcheck.storage.memory_repo import InMemoryCheckRepository
+
+VERDICT_IMAGE_DIR = Path(__file__).resolve().parent / "static" / "verdict"
 from healthcheck.storage.sqlite_repo import SqliteCheckRepository
 
 logger = logging.getLogger(__name__)
@@ -163,8 +169,10 @@ def create_app(
     repository: CheckRepository | None = None,
     auth: SkillAuth | None = None,
     skill_path: str | None = None,
+    image_base_url: str | None = None,
 ) -> FastAPI:
     settings = load_settings()
+    image_base_url = image_base_url or settings.public_base_url
     setup_logging(settings.log_level)
     auth = (
         auth
@@ -192,8 +200,13 @@ def create_app(
             count=worker_count,
             repository=repository,
             last_results=last_results,
+            image_base_url=image_base_url,
         )
         logger.info("워커 %d개 기동. 규칙표 %s", worker_count, orchestrator.ruleset.version)
+        if image_base_url:
+            logger.info("결과 카드 이미지: %s", verdict_image_url(image_base_url, Label.TRUSTWORTHY))
+        else:
+            logger.info("PUBLIC_BASE_URL이 없어 이미지 없는 카드로 답한다")
 
         # 기동할 때 한 번 보존 기간을 정리한다. 배포 주기가 긴 환경에서는
         # scripts/purge_expired.py를 하루 한 번 돌리는 편이 낫다.
@@ -216,7 +229,9 @@ def create_app(
         repository=repository,
         auth=auth,
         last_results=last_results,
+        image_base_url=image_base_url,
     )
+    app.state.image_base_url = image_base_url
     app.state.last_results = last_results
     app.state.auth = auth
     app.state.log_skill_request = settings.log_skill_request
@@ -229,6 +244,18 @@ def create_app(
     app.state.queue = queue
     app.state.callback_sender = callback_sender
     app.include_router(skill.build_router(skill_path))
+
+    # 결과 카드 머리 이미지. 카카오가 내려받으므로 인증 없이 연다.
+    # 정해진 파일 네 개만 내보낸다. 경로 조작으로 다른 파일을 읽지 못하게 한다.
+    @app.get("/static/verdict/{version}/{name}.png", include_in_schema=False)
+    async def verdict_image(version: str, name: str) -> FileResponse:
+        if version != IMAGE_VERSION or name not in IMAGE_FILES.values():
+            raise HTTPException(status_code=404)
+        return FileResponse(
+            VERDICT_IMAGE_DIR / f"{name}.png",
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=604800"},
+        )
     warn_if_unprotected(auth, skill_path, settings.debug_ui)
 
     # 디버그 채팅 화면. 개발용이며 DEBUG_UI=0으로 끈다. live와 fake 두 조립을

@@ -97,6 +97,8 @@ class SkillServices:
     repository: CheckRepository | None = None
     auth: SkillAuth = field(default_factory=SkillAuth)
     last_results: LastResults = field(default_factory=LastResults)
+    # 결과 카드 머리 이미지의 공개 주소. 없으면 이미지 없는 카드로 답한다.
+    image_base_url: str | None = None
 
 
 async def skill(request: Request) -> dict:
@@ -137,8 +139,8 @@ async def skill(request: Request) -> dict:
         if previous is None:
             return _simple("먼저 확인하고 싶은 영상이나 글을 보내 주세요.")
         if previous.notice or previous.retryable_failure:
-            return render(previous)
-        return render_reason(previous)
+            return render(previous, image_base_url=services.image_base_url)
+        return render_reason(previous, image_base_url=services.image_base_url)
 
     share_input = step1_input.classify(utterance)
 
@@ -157,7 +159,7 @@ async def skill(request: Request) -> dict:
                 )
             except Exception:
                 logger.exception("판정 기록 저장 실패(캐시 응답)")
-        return render(cached)
+        return render(cached, image_base_url=services.image_base_url)
 
     # 기본 경로: 콜백이 없으면 비동기 처리를 할 수 없다.
     # TODO(확인필요): 오픈빌더에서 콜백 사용 설정을 켜야 callbackUrl이 온다.

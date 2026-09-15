@@ -73,6 +73,9 @@ class Settings:
     # 콜백을 보내도 되는 호스트 끝부분. 실제 카카오 콜백 주소를 확인하면 코드
     # 수정 없이 이 값만 바꾼다. 쉼표로 여러 개를 적는다.
     callback_allowed_suffixes: tuple[str, ...] = ("kakao.com", "kakaoenterprise.com")
+    # 카카오가 결과 카드 이미지를 내려받을 공개 주소. 예: https://이름.ngrok-free.dev
+    # 비워 두면 이미지 없는 카드로 답한다. scripts/server_start.sh가 채워 준다.
+    public_base_url: str | None = None
 
     # 저장소. 판정 기록과 목표 지표가 여기 쌓인다.
     database_path: str = "healthcheck.db"
@@ -167,6 +170,7 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
             for part in (os.environ.get("CALLBACK_ALLOWED_SUFFIXES") or "kakao.com,kakaoenterprise.com").split(",")
             if part.strip()
         ),
+        public_base_url=_public_url(os.environ.get("PUBLIC_BASE_URL")),
         database_path=(os.environ.get("DATABASE_PATH") or "healthcheck.db").strip(),
         text_retention_days=int(os.environ.get("TEXT_RETENTION_DAYS") or 90),
         user_key_retention_days=int(os.environ.get("USER_KEY_RETENTION_DAYS") or 30),
@@ -179,6 +183,16 @@ def _normalize_path(value: str | None) -> str:
     if not path.startswith("/"):
         path = "/" + path
     return path.rstrip("/") or "/skill"
+
+
+def _public_url(value: str | None) -> str | None:
+    """공개 주소는 https만 받는다. 카카오는 https 이미지만 안정적으로 보여 준다."""
+    value = _clean(value)
+    if value is None:
+        return None
+    if not value.startswith("https://"):
+        raise ValueError(f"PUBLIC_BASE_URL은 https://로 시작해야 합니다: {value!r}")
+    return value.rstrip("/")
 
 
 def _flag(value: str | None, default: bool) -> bool:
