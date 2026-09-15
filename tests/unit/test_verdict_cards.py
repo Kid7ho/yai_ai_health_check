@@ -54,14 +54,16 @@ async def test_결과_카드에는_판정_이유를_넣지_않는다():
         assert result.verdict.guidance not in body
 
 
-async def test_결과_카드_뒤에_다음_안내와_면책_문구가_붙는다():
+async def test_결과는_카드_하나로_보내고_면책_문구는_카드_안에_붙는다():
+    """어르신 화면에 말풍선이 쌓여 가독성이 떨어졌다. 확인 한 번에 카드 하나만 보낸다."""
     result = await result_of()
 
     for payload in (render(result), render(result, image_base_url=BASE)):
         outputs = payload["template"]["outputs"]
-        assert len(outputs) == 3
-        assert outputs[1]["simpleText"]["text"] == "다른 영상도 보내주시면\n바로 확인해 드릴게요"
-        assert outputs[-1]["simpleText"]["text"] == DISCLAIMER
+        assert len(outputs) == 1
+        card = outputs[0].get("basicCard") or outputs[0]["textCard"]
+        assert card["description"].endswith(DISCLAIMER)
+        assert "다른 영상도" not in str(payload)
 
 
 async def test_근거_화면에서_판정_이유를_보여_준다():
@@ -71,10 +73,11 @@ async def test_근거_화면에서_판정_이유를_보여_준다():
     card = outputs[0]["basicCard"]
 
     assert card["title"] == "왜 그런가요"
-    assert card["description"] == result.verdict.guidance
+    assert card["description"].startswith(result.verdict.guidance)
+    assert card["description"].endswith(DISCLAIMER)
+    assert len(card["description"]) <= 230
     assert card["thumbnail"]["imageUrl"] == verdict_image_url(BASE, result.verdict.label)
-    assert len(outputs) <= 3
-    assert outputs[-1]["simpleText"]["text"] == DISCLAIMER
+    assert len(outputs) == 1
 
 
 async def test_이미지_주소가_없으면_근거를_한_말풍선에_담는다():
@@ -82,8 +85,9 @@ async def test_이미지_주소가_없으면_근거를_한_말풍선에_담는�
 
     outputs = render_reason(result)["template"]["outputs"]
 
-    assert len(outputs) == 2
+    assert len(outputs) == 1
     assert result.verdict.guidance in outputs[0]["simpleText"]["text"]
+    assert outputs[0]["simpleText"]["text"].endswith(DISCLAIMER)
 
 
 async def test_범위_밖_안내에는_이미지와_다음_안내를_붙이지_않는다():
@@ -92,7 +96,7 @@ async def test_범위_밖_안내에는_이미지와_다음_안내를_붙이지_�
     outputs = render(result, image_base_url=BASE)["template"]["outputs"]
 
     assert all("basicCard" not in o for o in outputs)
-    assert len(outputs) == 2
+    assert len(outputs) == 1
 
 
 def test_라벨마다_이미지_파일이_있다():

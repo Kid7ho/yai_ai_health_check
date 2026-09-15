@@ -54,7 +54,7 @@ def test_카드에_원문_구절이_나간다(extractor):
         primary_claim=claims.claims[0],
     )
     card = render(result, image_base_url="https://example.com")["template"]["outputs"][0]["basicCard"]
-    assert card["description"] == "홍삼이 면역력 증진에 도움을 줄 수 있다"
+    assert card["description"].split("\n\n")[0] == "홍삼이 면역력 증진에 도움을 줄 수 있다"
     assert "이(가)" not in card["description"]
 
 
@@ -86,8 +86,11 @@ def reason_result() -> CheckResult:
 
 def test_근거에는_영어_제목_대신_편수를_보여_준다():
     for payload in (render_reason(reason_result()), render_reason(reason_result(), image_base_url="https://example.com")):
-        text = "\n".join(o["simpleText"]["text"] for o in payload["template"]["outputs"] if "simpleText" in o)
-        assert "관련 연구 2편 중 뒷받침 2편, 반박 0편" in text
+        text = "\n".join(
+            o.get("simpleText", {}).get("text") or o.get("basicCard", {}).get("description", "")
+            for o in payload["template"]["outputs"]
+        )
+        assert "2편 중 뒷받침 2편, 반박 0편" in text
         assert "immunity" not in text and "Polysaccharide" not in text
 
 

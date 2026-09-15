@@ -51,10 +51,12 @@ def kakao_request(utterance: str, *, callback_url: str | None = CALLBACK_URL) ->
 
 
 def texts_of(payload: dict) -> list[str]:
+    # 면책 문구가 카드 안에 붙으므로 카드 설명도 함께 본다.
     return [
-        output["simpleText"]["text"]
+        output.get("simpleText", {}).get("text")
+        or output.get("textCard", {}).get("description")
+        or output.get("basicCard", {}).get("description", "")
         for output in payload.get("template", {}).get("outputs", [])
-        if "simpleText" in output
     ]
 
 
@@ -170,7 +172,7 @@ async def test_콜백_응답에도_면책_문구가_들어간다():
 
     await worker.process(job_for(BLUEBERRY_URL))
 
-    assert DISCLAIMER in texts_of(sender.last.payload)
+    assert any(DISCLAIMER in t for t in texts_of(sender.last.payload))
 
 
 async def test_질병_완치_주장은_주의로_콜백된다():
@@ -202,7 +204,7 @@ async def test_범위_밖_요청은_거절_안내로_콜백된다():
 
     texts = texts_of(sender.last.payload)
     assert "의사" in texts[0]
-    assert DISCLAIMER in texts
+    assert any(DISCLAIMER in t for t in texts)
 
 
 async def test_파이프라인이_실패해도_콜백은_한_번_보낸다():
@@ -318,7 +320,7 @@ def test_캐시가_맞으면_스킬_엔드포인트가_동기로_답한다():
 
     assert "useCallback" not in body
     assert body["template"]["outputs"][0]["textCard"]["title"] == "믿을 만해요"
-    assert DISCLAIMER in texts_of(body)
+    assert any(DISCLAIMER in t for t in texts_of(body))
     assert app.state.queue.size == 0
 
 

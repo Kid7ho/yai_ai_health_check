@@ -43,10 +43,12 @@ def result(label: Label, **overrides) -> CheckResult:
 
 
 def texts_of(payload: dict) -> list[str]:
+    # 면책 문구가 카드 안에 붙으므로 카드 설명도 함께 본다.
     return [
-        output["simpleText"]["text"]
+        output.get("simpleText", {}).get("text")
+        or output.get("textCard", {}).get("description")
+        or output.get("basicCard", {}).get("description", "")
         for output in payload["template"]["outputs"]
-        if "simpleText" in output
     ]
 
 
@@ -57,24 +59,25 @@ def texts_of(payload: dict) -> list[str]:
 
 @pytest.mark.parametrize("label", list(Label))
 def test_네_라벨_모두에_면책_문구가_들어간다(label):
-    assert DISCLAIMER in texts_of(render(result(label)))
+    assert any(DISCLAIMER in t for t in texts_of(render(result(label))))
 
 
 @pytest.mark.parametrize("label", list(Label))
 def test_근거_화면에도_면책_문구가_들어간다(label):
-    assert DISCLAIMER in texts_of(render_reason(result(label)))
+    assert any(DISCLAIMER in t for t in texts_of(render_reason(result(label))))
 
 
 def test_범위_밖_거절_응답에도_면책_문구가_들어간다():
     """거절도 응답이다. 예외 경로로 빠져나가지 못한다."""
     claims = ClaimSet(claims=(), in_scope=False, disease_cure_expression=False)
-    assert DISCLAIMER in texts_of(render(result(Label.UNKNOWN, claims=claims)))
+    assert any(DISCLAIMER in t for t in texts_of(render(result(Label.UNKNOWN, claims=claims))))
 
 
-def test_면책_문구는_마지막_말풍선이다():
-    """어르신이 결과를 본 다음 마지막에 읽게 한다."""
+def test_면책_문구는_마지막_말풍선의_끝에_붙는다():
+    """어르신이 결과를 본 다음 마지막에 읽게 한다. 말풍선을 따로 늘리지 않는다."""
     outputs = render(result(Label.WARNING))["template"]["outputs"]
-    assert outputs[-1]["simpleText"]["text"] == DISCLAIMER
+    assert len(outputs) == 1
+    assert outputs[-1]["textCard"]["description"].endswith(DISCLAIMER)
 
 
 def test_면책_문구를_끄는_인자가_없다():
@@ -219,7 +222,7 @@ def test_일시적_실패는_알_수_없어요로_답하지_않는다():
     texts = texts_of(payload)
 
     assert "잠시 뒤에 다시 보내" in texts[0]
-    assert DISCLAIMER in texts
+    assert any(DISCLAIMER in t for t in texts)
     assert all("textCard" not in output for output in payload["template"]["outputs"])
 
 
@@ -258,7 +261,7 @@ def test_범위_밖_안내도_예외다():
     payload = render(result(Label.UNKNOWN, claims=claims))
 
     assert "의사" in texts_of(payload)[0]
-    assert DISCLAIMER in texts_of(payload)
+    assert any(DISCLAIMER in t for t in texts_of(payload))
 
 
 @pytest.mark.parametrize("label", list(Label))
@@ -291,11 +294,11 @@ def test_금지_표현이_섞이면_문구를_바꿔_내보낸다():
         "template"
     ]["outputs"][0]["basicCard"]
     assert "낫습니다" not in card["description"]
-    assert card["description"] == "확인한 근거를 보여 드리기 어려워요."
+    assert card["description"] == f"확인한 근거를 보여 드리기 어려워요.\n\n{DISCLAIMER}"
 
     text = render_reason(CheckResult(verdict=verdict))["template"]["outputs"][0]["simpleText"]["text"]
     assert "낫습니다" not in text
-    assert text == "확인한 근거를 보여 드리기 어려워요."
+    assert text == f"확인한 근거를 보여 드리기 어려워요.\n\n{DISCLAIMER}"
 
 
 def test_라벨_문구_자체에_금지_표현이_없다():

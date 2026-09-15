@@ -84,8 +84,6 @@ _REASON_BUTTON = "왜 그런지 보기"
 _SHARE_BUTTON = "가족에게 보내기"
 _CHECKED_TITLE = "확인한 내용"
 _REASON_TITLE = "왜 그런가요"
-# 결과 카드 뒤에 붙는 말풍선. 발표 자료 목업의 흐름을 따른다.
-_FOLLOW_UP_TEXT = "다른 영상도 보내주시면\n바로 확인해 드릴게요"
 
 # 라벨별 머리 이미지. 그림을 바꾸면 버전을 올린다. 카카오가 같은 주소의 이미지를
 # 캐시해 두면 바꾼 그림이 보이지 않는다.
@@ -160,7 +158,6 @@ def render(result: CheckResult, *, image_base_url: str | None = None) -> dict:
 
     checked = _checked_claim_text(result)
     checked_title = _checked_title(result)
-    follow_up = _simple_text(_FOLLOW_UP_TEXT)
 
     if image_base_url:
         card = {
@@ -174,7 +171,7 @@ def render(result: CheckResult, *, image_base_url: str | None = None) -> dict:
                 "buttons": _buttons(),
             }
         }
-        return _wrap([card, follow_up])
+        return _wrap([card])
 
     card = {
         "textCard": {
@@ -184,7 +181,7 @@ def render(result: CheckResult, *, image_base_url: str | None = None) -> dict:
             "buttons": _buttons(),
         }
     }
-    return _wrap([card, follow_up])
+    return _wrap([card])
 
 
 def render_reason(result: CheckResult, *, image_base_url: str | None = None) -> dict:
@@ -217,16 +214,16 @@ def render_reason(result: CheckResult, *, image_base_url: str | None = None) -> 
                     "altText": LABEL_TEXT[verdict.label],
                 },
                 "title": _REASON_TITLE,
-                "description": _clip(reason or _NO_CLAIM_TEXT, _MAX_BASIC_DESCRIPTION),
+                # 출처를 따로 말풍선으로 두지 않고 카드 안에 한두 줄로 줄여 넣는다.
+                "description": "\n\n".join(
+                    part for part in (reason or _NO_CLAIM_TEXT, _compact_sources(result)) if part
+                ),
             }
         }
         link = _paper_link(result)
         if link is not None:
             card["basicCard"]["buttons"] = [link]
-        outputs = [card]
-        if details:
-            outputs.append(_simple_text("\n".join(details)))
-        return _wrap(outputs)
+        return _wrap([card])
 
     lines = [f"{LABEL_TEXT[verdict.label]}", ""]
     if reason:
@@ -248,12 +245,27 @@ def _wrap(outputs: list[dict]) -> dict:
     표현이 섞였는지 검사한다. 이 함수를 거치지 않는 응답 경로를 만들지 않으며,
     둘 중 어느 것도 끌 수 있는 인자를 두지 않는다.
     """
-    return {
-        "version": "2.0",
-        "template": {
-            "outputs": [*(_guard(output) for output in outputs), _simple_text(DISCLAIMER)]
-        },
-    }
+    guarded = [_guard(output) for output in outputs]
+    # 면책 문구를 따로 말풍선으로 두지 않고 마지막 말풍선 안에 붙인다. 어르신 화면에
+    # 확인 한 번마다 말풍선이 여러 개 쌓여 가독성이 떨어졌다. 붙이는 곳만 바뀌었고
+    # 모든 응답에 무조건 붙는다는 점은 그대로다.
+    guarded[-1] = _with_disclaimer(guarded[-1])
+    return {"version": "2.0", "template": {"outputs": guarded}}
+
+
+def _with_disclaimer(output: dict) -> dict:
+    """말풍선 끝에 면책 문구를 붙인다. 글자 수 제한에 걸리면 본문을 줄이고 문구는 남긴다."""
+    suffix = f"\n\n{DISCLAIMER}"
+    for kind, limit in (("basicCard", _MAX_BASIC_DESCRIPTION), ("textCard", _MAX_DESCRIPTION)):
+        if kind in output:
+            card = dict(output[kind])
+            body = _clip(card.get("description", ""), limit - len(suffix))
+            card["description"] = f"{body}{suffix}" if body else DISCLAIMER
+            return {kind: card}
+    if "simpleText" in output:
+        body = _clip(output["simpleText"]["text"], _MAX_SIMPLE_TEXT - len(suffix))
+        return {"simpleText": {"text": f"{body}{suffix}" if body else DISCLAIMER}}
+    return output
 
 
 def _guard(output: dict) -> dict:
@@ -418,6 +430,30 @@ def _sources(result: CheckResult) -> list[str]:
 
 
 _PAPER_BUTTON = "연구 자세히 보기"
+
+
+def _compact_sources(result: CheckResult) -> str:
+    """근거 카드에 들어갈 짧은 출처. 카드 설명이 230자라 핵심만 남긴다."""
+    lines: list[str] = []
+    mfds = result.mfds
+    if mfds is not None and not mfds.lookup_failed:
+        if mfds.recognition in ("INDIVIDUAL", "NOTIFIED"):
+            lines.append("식약처: 인정된 기능성 원료")
+        elif mfds.recognition == "NOT_RECOGNIZED":
+            lines.append("식약처: 이 효능은 인정되지 않음")
+    academic = result.academic
+    if academic is not None and not academic.lookup_failed:
+        if academic.papers:
+            lines.append(
+                f"연구: {len(academic.papers)}편 중 뒷받침 {academic.supporting}편, 반박 {academic.refuting}편"
+            )
+        else:
+            lines.append("연구: 관련 연구를 찾지 못함")
+    claims = result.claims
+    if claims is not None and claims.authority_roles:
+        # 권위를 빌리는 글인지 알아볼 수 있게 남긴다. 실제 인물인지는 확인하지 않는다.
+        lines.append(f"언급된 역할: {', '.join(claims.authority_roles[:2])} (확인 안 함)")
+    return "\n".join(lines)
 
 
 def _paper_link(result: CheckResult) -> dict | None:

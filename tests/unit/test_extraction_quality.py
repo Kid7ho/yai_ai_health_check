@@ -141,7 +141,7 @@ async def test_로그인이_필요한_곳은_조회하지_않고_이유를_안�
     texts = [o["simpleText"]["text"] for o in render(result)["template"]["outputs"] if "simpleText" in o]
     assert site in texts[0]
     assert "복사해서 보내" in texts[0]
-    assert DISCLAIMER in texts
+    assert any(DISCLAIMER in t for t in texts)
     assert all(find_forbidden(text) == [] for text in texts)
 
 

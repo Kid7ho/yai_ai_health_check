@@ -163,7 +163,7 @@ def test_안내_응답에도_면책_문구가_붙고_금지_표현이_없다():
     texts = texts_of(render(result))
 
     assert "영상 하나의 링크" in texts[0]
-    assert DISCLAIMER in texts
+    assert any(DISCLAIMER in t for t in texts)
     assert all(find_forbidden(text) == [] for text in texts)
 
 

@@ -91,7 +91,7 @@ def test_근거_화면에_브랜드와_역할을_보여_준다():
 
 def test_근거_화면_표시에도_면책과_금지_표현_검사가_적용된다():
     texts = texts_of(render_reason(result_with(("정관장",), ("의사",))))
-    assert DISCLAIMER in texts
+    assert any(DISCLAIMER in t for t in texts)
     assert all(find_forbidden(text) == [] for text in texts)
 
 

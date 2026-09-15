@@ -51,7 +51,7 @@ async def test_근거_버튼을_누르면_직전_결과의_근거를_돌려준�
         body = client.post("/skill", json=request_body(REASON)).json()
 
     assert texts(body) == texts(render_reason(result))
-    assert DISCLAIMER in texts(body)
+    assert any(DISCLAIMER in t for t in texts(body))
     assert app.state.queue.size == 0
 
 

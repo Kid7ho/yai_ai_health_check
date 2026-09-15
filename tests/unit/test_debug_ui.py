@@ -60,11 +60,10 @@ def test_카카오_페이로드를_그대로_보여_준다(monkeypatch):
 
     assert body["ack_payload"]["useCallback"] is True
     texts = [
-        output["simpleText"]["text"]
+        output.get("simpleText", {}).get("text") or output.get("textCard", {}).get("description", "")
         for output in body["callback_payload"]["template"]["outputs"]
-        if "simpleText" in output
     ]
-    assert DISCLAIMER in texts
+    assert any(DISCLAIMER in t for t in texts)
 
 
 def test_유튜브_링크도_받는다(monkeypatch):
