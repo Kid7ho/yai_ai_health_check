@@ -13,8 +13,11 @@ primary_region = "nrt"
   LOG_LEVEL = "INFO"
   ARTICLE_ENABLED = "1"
   ASR_ENABLED = "0"
-  # 판정 기록은 볼륨에 둔다. 컨테이너 파일시스템은 배포할 때마다 초기화된다.
+  # 판정 기록과 식약처 사본은 볼륨에 둔다. 컨테이너 파일시스템은 배포할 때마다 초기화된다.
   DATABASE_PATH = "/data/healthcheck.db"
+  MFDS_SNAPSHOT_PATH = "/data/mfds_i0040.json"
+  # 결과 카드 이미지를 카카오가 내려받을 주소. 앱 이름을 바꾸면 함께 바꾼다.
+  PUBLIC_BASE_URL = "https://yai-health-check.fly.dev"
 
 [[mounts]]
   source = "healthcheck_data"

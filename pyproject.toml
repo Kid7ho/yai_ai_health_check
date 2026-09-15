@@ -10,6 +10,9 @@ dependencies = [
     "httpx>=0.27",
     "youtube-transcript-api>=1.0",
     "trafilatura>=2.0",
+    # 식약처 API 제한 시간(한국 시간 09~19시) 계산에 쓴다. 슬림 컨테이너 이미지에
+    # 시간대 데이터가 없어도 Asia/Seoul을 읽을 수 있게 한다.
+    "tzdata>=2024.1",
 ]
 
 [project.optional-dependencies]
