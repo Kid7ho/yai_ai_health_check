@@ -155,6 +155,18 @@ pytest / Docker / 규칙표는 코드가 아닌 YAML / 의존성 관리는 uv.
 6. **발표 자료 13페이지 "② 내용 추출 — 자막 · 음성"** 문구에 음성 인식이 들어 있다.
    MVP 범위와 다르므로 발표 문구 수정이 필요하다.
 
+## 운영 서버 — Fly.io 도쿄 (2026-09-15 배포)
+
+- 주소 `https://yai-health-check.fly.dev`, 스킬 경로 `/skill`. 머신 1대(shared-cpu-1x 512MB, nrt),
+  볼륨 `healthcheck_data` 1GB를 `/data`에 붙여 판정 DB와 식약처 사본을 둔다
+- 비밀값(LINER_API_KEY, MFDS_API_KEY, SKILL_AUTH_TOKEN, GEMINI_API_KEY)은 `fly secrets`에 있다. 파일에 적지 않는다
+- 배포: `fly deploy --app yai-health-check --ha=false --remote-only`. 머신은 반드시 1대다
+  (작업 큐, Liner 초당 2건 제한, 직전 결과가 프로세스 안에 있다)
+- 실측: **도쿄 머신에서 유튜브 자막이 차단된다(RequestBlocked).** 자막이 막히면 Gemini로 넘어가므로
+  모든 영상이 Gemini로 처리되고 무료 한도(하루 8시간 분량)를 그만큼 쓴다. 식품안전나라 API는 도쿄에서도
+  접속되며 같은 09~19시 제한을 받는다
+- 맥북 + ngrok(`scripts/server_start.sh`)은 예비로 남긴다
+
 ## 자막 IP 차단 — 배포 전 반드시 정해야 한다
 
 YouTube는 클라우드 제공자 IP를 대부분 차단한다. 개발 중 10여 건을 연달아
