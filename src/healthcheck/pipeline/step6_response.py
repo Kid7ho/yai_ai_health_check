@@ -219,6 +219,9 @@ def render_reason(result: CheckResult, *, image_base_url: str | None = None) -> 
                 "description": _clip(reason or _NO_CLAIM_TEXT, _MAX_BASIC_DESCRIPTION),
             }
         }
+        link = _paper_link(result)
+        if link is not None:
+            card["basicCard"]["buttons"] = [link]
         outputs = [card]
         if details:
             outputs.append(_simple_text("\n".join(details)))
@@ -319,7 +322,24 @@ def _checked_claim_text(result: CheckResult) -> str:
         if result.claims is None or not result.claims.claims:
             return ""
         claim = result.claims.claims[0]
-    return f"{claim.ingredient}이(가) {claim.claimed_effect}"
+    if claim.statement:
+        return claim.statement
+    return f"{claim.ingredient}{_subject_particle(claim.ingredient)} {claim.claimed_effect}"
+
+
+# 받침 여부. 숫자로 끝나는 이름("오메가3")은 읽는 소리로 본다.
+_DIGIT_HAS_FINAL = {"0": True, "1": True, "2": False, "3": True, "4": False,
+                    "5": False, "6": True, "7": True, "8": True, "9": False}
+
+
+def _subject_particle(word: str) -> str:
+    """이/가를 고른다. 판단할 수 없으면 '이(가)'로 둔다."""
+    last = word.strip()[-1:] if word.strip() else ""
+    if "가" <= last <= "힣":
+        return "이" if (ord(last) - ord("가")) % 28 else "가"
+    if last in _DIGIT_HAS_FINAL:
+        return "이" if _DIGIT_HAS_FINAL[last] else "가"
+    return "이(가)"
 
 
 def _mentions(result: CheckResult) -> list[str]:
@@ -349,7 +369,12 @@ def _sources(result: CheckResult) -> list[str]:
     mfds = result.mfds
     if mfds is not None and not mfds.lookup_failed:
         if mfds.recognition in ("INDIVIDUAL", "NOTIFIED"):
-            label = "개별인정형" if mfds.recognition == "INDIVIDUAL" else "고시형"
+            # "고시형·개별인정형"은 어르신에게 낯선 행정 용어다.
+            label = (
+                "개별 심사로 인정된 원료"
+                if mfds.recognition == "INDIVIDUAL"
+                else "나라가 정한 기능성 원료"
+            )
             sources.append(f"식품의약품안전처 건강기능식품 기능성 원료인정 현황 ({label})")
             if mfds.functionality_text:
                 sources.append(f"인정된 기능성: {mfds.functionality_text}")
@@ -363,10 +388,31 @@ def _sources(result: CheckResult) -> list[str]:
 
     academic = result.academic
     if academic is not None and not academic.lookup_failed:
-        for paper in academic.papers[:3]:
-            sources.append(paper.title)
+        # 영어 논문 제목은 어르신이 읽을 수 없다. 편수로 요약하고 원문은 링크 버튼으로 연다.
+        if academic.papers:
+            sources.append(
+                f"관련 연구 {len(academic.papers)}편 "
+                f"(뒷받침 {academic.supporting}편, 반박 {academic.refuting}편)"
+            )
+        else:
+            sources.append("관련 연구를 찾지 못했어요")
 
     return sources
+
+
+_PAPER_BUTTON = "연구 자세히 보기"
+
+
+def _paper_link(result: CheckResult) -> dict | None:
+    """근거 화면의 연구 원문 링크 버튼. 뒷받침·반박 논문을 먼저 연다."""
+    academic = result.academic
+    if academic is None or academic.lookup_failed:
+        return None
+    papers = sorted(academic.papers, key=lambda p: p.stance == "NEUTRAL")
+    for paper in papers:
+        if paper.url.startswith(("https://", "http://")):
+            return {"action": "webLink", "label": _PAPER_BUTTON, "webLinkUrl": paper.url}
+    return None
 
 
 def _clip(text: str, limit: int) -> str:

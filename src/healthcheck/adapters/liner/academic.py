@@ -70,6 +70,37 @@ def _load_query_terms(path: Path | str = DEFAULT_ALIASES_PATH) -> tuple[dict, di
     return raw.get("영문명") or {}, raw.get("효능_대상_영문") or {}
 
 
+# 제목에서 효능을 찾을 때 뺄 일반어. "vascular function"이 "immune function"에 걸렸다.
+_GENERIC_EFFECT_WORDS = frozenset(
+    {"health", "function", "quality", "performance", "movement", "absorption", "strength", "disease", "tract"}
+)
+
+
+@lru_cache(maxsize=2)
+def _load_title_expressions(path: Path | str = DEFAULT_ALIASES_PATH) -> dict[str, tuple[str, ...]]:
+    raw = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+    table = raw.get("효능_제목_표현") or {}
+    return {str(k).lower(): tuple(str(v).lower() for v in values or ()) for k, values in table.items()}
+
+
+def _word_in(word: str, text: str) -> bool:
+    """3글자 이하는 단어 전체로, 그보다 길면 앞 5글자로 찾는다."""
+    if len(word) <= 3:
+        return re.search(rf"\b{re.escape(word)}\b", text) is not None
+    return word[:_STEM_LENGTH] in text
+
+
+def effect_in_title(title: str, effect: str) -> bool:
+    """제목이 주장 효능을 다루는가. 초록은 보지 않는다."""
+    title = title.lower()
+    effect = effect.lower().strip()
+    expressions = _load_title_expressions().get(effect)
+    if not expressions:
+        words = [w for w in effect.split() if w not in _GENERIC_EFFECT_WORDS] or effect.split()
+        expressions = (" ".join(words),)
+    return any(all(_word_in(word, title) for word in expression.split()) for expression in expressions)
+
+
 @lru_cache(maxsize=2)
 def _load_stance_terms(
     path: Path | str = DEFAULT_STANCE_PATH,
@@ -115,10 +146,14 @@ def is_relevant(paper_title: str, description: str | None, ingredient: str, effe
     세어졌다. 그래서 두 가지를 확인한다.
 
       1. 제조법·특허 문헌이 아닌가
-      2. 주장의 효능 대상이 제목이나 초록에 실제로 나오는가
+      2. 주장의 효능 대상이 제목에 실제로 나오는가
 
     2번이 특히 중요하다. 검색어에 효능을 넣어도 Liner는 성분만 맞는 문헌을
     돌려준다. 효능이 언급되지 않은 문헌은 그 효능에 대한 근거가 아니다.
+
+    효능은 제목에서만 찾는다(v0.10). 초록까지 보면 "Rg3 홍삼이 고혈압 쥐의 혈관
+    기능을 개선" 논문이 초록의 면역 언급 때문에 면역력 주장의 뒷받침으로 세어졌다.
+    같은 뜻의 다른 표기는 rules/ingredient_aliases.yaml의 효능_제목_표현에 둔다.
     """
     refute_terms, support_terms, excluded_terms = _load_stance_terms()
     text = f"{paper_title} {description or ''}".lower()
@@ -130,12 +165,9 @@ def is_relevant(paper_title: str, description: str | None, ingredient: str, effe
     if not effect:
         return True
 
-    # 'immune function'처럼 두 단어면 한 단어만 맞아도 관련으로 본다.
-    # 또 논문 제목은 'immune'을 'immunity'로 쓰는 등 변형이 많으므로
-    # 앞 5글자만 잘라 부분 문자열로 찾는다. immune/immunity, diabetes/diabetic,
-    # hypertension/hypertensive가 같은 줄기로 묶인다.
-    stems = [word[:_STEM_LENGTH] for word in effect.lower().split() if len(word) > 3]
-    if not any(stem in text for stem in stems):
+    # 논문 제목은 'immune'을 'immunity'로 쓰는 등 변형이 많으므로 앞 5글자로 찾는다.
+    # immune/immunity, diabetes/diabetic, hypertension/hypertensive가 같은 줄기로 묶인다.
+    if not effect_in_title(paper_title, effect):
         return False
 
     # 성분도 제목이나 초록에 나와야 한다. 효능만 같고 다른 성분을 다룬 논문을

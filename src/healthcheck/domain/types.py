@@ -110,6 +110,9 @@ class Claim:
     span: tuple[int, int]
     # 성분명 사전에 없는 표기를 그대로 보존한다. 사전 보강 작업의 입력이 된다.
     raw_ingredient: str | None = None
+    # 어르신에게 보여 줄 원문 구절. "홍삼이 면역력 증진에 도움을 줄 수 있다"처럼
+    # 성분부터 효능 표현이 끝나는 곳까지다. 검증에는 쓰지 않는다.
+    statement: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

@@ -252,7 +252,7 @@ class RuleBasedClaimExtractor:
             return []
 
         targets = _find_first_each(sentence, patterns.effect_targets)
-        intensity, effect_pos = _find_intensity(sentence, patterns.effect_by_intensity)
+        intensity, effect_pos, effect_end = _find_intensity(sentence, patterns.effect_by_intensity)
 
         # 효능 표현이 없으면 주장이 아니다. 성분과 신체 부위가 같은 문장에 나왔을
         # 뿐이다. 실제 영상 자막에서 "홍삼 / 눈", "홍삼 / 뼈"처럼 주장이 아닌 짝이
@@ -268,6 +268,8 @@ class RuleBasedClaimExtractor:
                 continue
             start = position
             end = position + len(raw_name)
+            starts = [position, effect_pos] + ([target[1]] if target else [])
+            statement = _statement(sentence, min(starts), max(effect_end, end))
             claims.append(
                 Claim(
                     ingredient=standard,
@@ -275,6 +277,7 @@ class RuleBasedClaimExtractor:
                     intensity=intensity,
                     span=(offset + start, offset + end),
                     raw_ingredient=raw_name if raw_name != standard else None,
+                    statement=statement or None,
                 )
             )
         return claims
@@ -489,17 +492,62 @@ def _find_first_each(sentence: str, needles: tuple[str, ...]) -> list[tuple[str,
 
 def _find_intensity(
     sentence: str, by_intensity: tuple[tuple[Intensity, tuple[str, ...]], ...]
-) -> tuple[Intensity, int | None]:
-    """표현 강도와 그 표현이 나온 위치.
+) -> tuple[Intensity, int | None, int]:
+    """표현 강도, 그 강도의 표현이 처음 나온 위치, 마지막 표현이 끝나는 위치.
 
     강도가 센 것부터 본다. 효능 표현이 하나도 없으면 추측으로 둔다.
+    끝 위치는 보여 줄 구절에만 쓴다. "면역력 증진에 도움을"은 '증진'과 '도움'이
+    함께 걸리므로 뒤쪽 '도움'까지 담아야 뜻이 끊기지 않는다.
     """
     for intensity, expressions in by_intensity:
-        positions = [sentence.find(expression) for expression in expressions]
-        positions = [p for p in positions if p >= 0]
-        if positions:
-            return intensity, min(positions)
-    return "UNCERTAIN", None
+        found = [(sentence.find(e), len(e)) for e in expressions]
+        found = [(p, n) for p, n in found if p >= 0]
+        if found:
+            position = min(p for p, _ in found)
+            # 같은 절(문장부호 전)에 있는 표현까지만 담는다. 쉼표 뒤의 다른 이야기로
+            # 구절이 늘어나지 않게 한다.
+            stops = [i for i in range(position, len(sentence)) if sentence[i] in _STATEMENT_STOP]
+            limit = stops[0] if stops else len(sentence)
+            return intensity, position, max(p + n for p, n in found if p < limit)
+    return "UNCERTAIN", None, 0
+
+
+# 효능 표현 뒤로 몇 어절까지 보여 줄지. "도움을 / 줄 / 수 / 있다"를 담는다.
+_STATEMENT_TAIL_WORDS = 3
+_STATEMENT_MAX = 60
+_STATEMENT_STOP = ".!?,;\n"
+
+
+def _statement(sentence: str, start: int, effect_end: int) -> str:
+    """어르신에게 보여 줄 원문 구절. 성분부터 효능 표현 뒤 몇 어절까지다.
+
+    이전에는 "홍삼이(가) 면역력 증진에"처럼 조사를 붙여 만든 문구에 효능 표현
+    끝이 잘려 나갔다. 원문을 그대로 쓰면 조사도 맞고 뜻도 온전하다.
+    """
+    end = effect_end
+    # 효능 표현이 든 어절의 끝까지 간다.
+    while end < len(sentence) and not sentence[end].isspace() and sentence[end] not in _STATEMENT_STOP:
+        end += 1
+    for _ in range(_STATEMENT_TAIL_WORDS):
+        if end >= len(sentence) or sentence[end] in _STATEMENT_STOP:
+            break
+        next_end = end
+        while next_end < len(sentence) and sentence[next_end].isspace():
+            next_end += 1
+        while (
+            next_end < len(sentence)
+            and not sentence[next_end].isspace()
+            and sentence[next_end] not in _STATEMENT_STOP
+        ):
+            next_end += 1
+        if next_end == end:
+            break
+        end = next_end
+
+    text = " ".join(sentence[start:end].split()).strip(" ,·")
+    if len(text) > _STATEMENT_MAX:
+        text = text[: _STATEMENT_MAX - 1].rstrip() + "…"
+    return text
 
 
 def _nearest(targets: list[tuple[str, int]], position: int) -> tuple[str, int] | None:

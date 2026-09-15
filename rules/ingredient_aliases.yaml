@@ -206,3 +206,58 @@ version: v0
   긴장 완화: relaxation
   갑상선: thyroid
   치아: dental health
+
+# ────────────────────────────────────────────────────────────────────
+# 효능_제목_표현 — 논문이 이 효능을 다루는지 판단할 때 제목에서 찾는 표현
+#
+# 초록에만 효능 단어가 있는 논문은 근거로 세지 않는다. 실측에서 "Rg3 홍삼이
+# 고혈압 쥐의 혈관 기능을 개선"한 논문이 초록의 면역 언급 때문에 면역력 주장의
+# 뒷받침으로 세어졌다. 제목만 보면 같은 뜻의 다른 표기(blood pressure와
+# hypertension)를 놓치므로 여기 적은 표현 중 하나라도 제목에 있으면 관련으로 본다.
+# 한 표현 안의 단어는 모두 있어야 한다. 4글자 이상 단어는 앞 5글자로 찾고
+# 3글자 이하(eye, gut)는 단어 전체로 찾는다.
+# 목록에 없는 효능은 health·function 같은 일반어를 뺀 단어가 모두 있어야 한다.
+# ⚠ 개발자 판단이다. 자문의 검수 대상이다.
+# ────────────────────────────────────────────────────────────────────
+효능_제목_표현:
+  antioxidant: [antioxidant, oxidative]
+  arthritis: [arthritis, joint]
+  blood circulation: [blood circulation, blood flow, circulation, fluidity]
+  blood glucose: [blood glucose, glycemic, diabetes, insulin]
+  blood pressure: [blood pressure, hypertension]
+  body fat: [body fat, obesity, adiposity]
+  bone health: [bone, osteoporosis]
+  bowel movement: [bowel, constipation, defecation]
+  calcium absorption: [calcium absorption]
+  cancer: [cancer, tumor, carcinoma]
+  cataract: [cataract]
+  cholesterol: [cholesterol, hyperlipidemia, dyslipidemia]
+  cognitive function: [cognitive, memory, dementia]
+  dementia: [dementia, alzheimer, cognitive]
+  dental health: [dental, periodontal, gingival]
+  diabetes: [diabetes, glycemic, blood glucose]
+  exercise performance: [exercise, athletic, endurance]
+  eye health: [eye, macular, retina, vision, visual]
+  fatigue: [fatigue]
+  gastric health: [gastric, stomach]
+  gut health: [gut, intestinal, bowel, microbiota]
+  heart disease: [heart, cardiovascular, coronary]
+  hepatitis: [hepatitis]
+  hypertension: [hypertension, blood pressure]
+  immune function: [immune]
+  inflammation: [inflammation]
+  joint health: [joint, arthritis, cartilage]
+  liver health: [liver, hepatic]
+  memory: [memory, cognitive]
+  menopause: [menopause]
+  muscle strength: [muscle, sarcopenia]
+  osteoporosis: [osteoporosis, bone]
+  prostate: [prostate]
+  relaxation: [relaxation, anxiety, stress]
+  skin health: [skin, dermal]
+  sleep quality: [sleep, insomnia]
+  stress: [stress, anxiety]
+  stroke: [stroke]
+  thyroid: [thyroid]
+  triglyceride: [triglyceride]
+  urinary tract: [urinary]
