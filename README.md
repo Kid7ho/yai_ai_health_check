@@ -219,3 +219,17 @@ tests/
 ```
 
 세션 맥락과 설계 제약은 [CLAUDE.md](CLAUDE.md)에 정리해 두었다.
+
+## 서버 켜고 끄기 (맥북 + ngrok 고정 주소)
+
+자동 실행은 하지 않는다. 켠 순간부터 카카오 요청을 받고, 끄거나 컴퓨터를 끄면 닫힌다.
+
+```bash
+scripts/server_start.sh   # 켜기. 터미널을 닫아도 계속 돈다
+scripts/server_stop.sh    # 끄기. 대기 중인 요청이 있으면 몇 건인지 알려 준다
+```
+
+- 사전 준비: `brew install ngrok`, `ngrok config add-authtoken <토큰>`, `.env`에 `NGROK_DOMAIN=배정주소.ngrok-free.dev`
+- 켜 있는 동안 잠자기를 막는다(`caffeinate`). 덮개를 닫으면 잠들 수 있으니 열어 둔다
+- 기록과 pid는 `.run/`에 남는다(커밋 안 함)
+- ngrok 무료 플랜은 월 2만 요청 한도가 있다
