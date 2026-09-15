@@ -26,6 +26,9 @@ TEST_ENV = {
     "DEBUG_UI": "1",
     "LOG_SKILL_REQUEST": "0",
     "ASR_ENABLED": "0",
+    # 개발자 .env의 Gemini 키로 실제 호출하지 않게 막는다.
+    "GEMINI_API_KEY": "",
+    "GEMINI_VIDEO_ENABLED": "0",
     "ARTICLE_ENABLED": "1",
     # 테스트가 실제 DB 파일을 만들지 않게 한다.
     "DATABASE_PATH": ":memory:",

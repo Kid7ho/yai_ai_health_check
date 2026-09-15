@@ -52,6 +52,11 @@ class Settings:
     # 음성 인식할 최대 길이(초). 0이면 영상 전체. 길면 그만큼 오래 걸린다.
     asr_max_seconds: int = 300
 
+    # 자막이 없는 영상을 Gemini 영상 이해로 옮길지. 키가 있으면 기본으로 켠다.
+    gemini_api_key: str | None = field(default=None, repr=False)
+    gemini_video_enabled: bool = True
+    gemini_model: str = "gemini-3.5-flash-lite"
+
     # 기사·블로그 링크에서 본문을 뽑을지.
     article_enabled: bool = True
 
@@ -110,6 +115,7 @@ class Settings:
             "mfds_api_key": "설정됨" if self.has_mfds_key else "없음",
             "rules_path": str(self.rules_path),
             "youtube_proxy": "설정됨" if self.has_youtube_proxy else "없음",
+            "gemini_api_key": "설정됨" if self.gemini_api_key else "없음",
             "skill_auth_token": "설정됨" if self.has_skill_token else "없음",
             "skill_path": self.skill_path,
         }
@@ -163,6 +169,9 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         asr_model_size=(os.environ.get("ASR_MODEL_SIZE") or "small").strip(),
         asr_max_seconds=int(os.environ.get("ASR_MAX_SECONDS") or 300),
         article_enabled=_flag(os.environ.get("ARTICLE_ENABLED"), True),
+        gemini_api_key=_clean(os.environ.get("GEMINI_API_KEY")),
+        gemini_video_enabled=_flag(os.environ.get("GEMINI_VIDEO_ENABLED"), True),
+        gemini_model=(os.environ.get("GEMINI_MODEL") or "gemini-3.5-flash-lite").strip(),
         log_level=(os.environ.get("LOG_LEVEL") or "INFO").strip().upper(),
         log_skill_request=_flag(os.environ.get("LOG_SKILL_REQUEST"), False),
         skill_auth_header=(os.environ.get("SKILL_AUTH_HEADER") or "X-Skill-Token").strip(),

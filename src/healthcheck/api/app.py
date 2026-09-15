@@ -22,6 +22,7 @@ from healthcheck.adapters.web.article import TrafilaturaArticleExtractor
 from healthcheck.adapters.web.links import HttpLinkResolver
 from healthcheck.adapters.youtube.asr import WhisperAsrTranscriber
 from healthcheck.adapters.youtube.fallback import CaptionsThenAsrExtractor
+from healthcheck.adapters.youtube.gemini import GeminiVideoTranscriber
 from healthcheck.adapters.youtube.titled import TitledTranscriptExtractor, YouTubeTitleFetcher
 from healthcheck.adapters.youtube.transcript import YouTubeTranscriptExtractor
 from healthcheck.adapters.fake.article import FakeArticleExtractor
@@ -97,6 +98,14 @@ def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
     if live:
         transcript = YouTubeTranscriptExtractor.from_settings(settings)
         logger.info("자막 추출: 유튜브 실제 호출 (한국어 자막만)")
+        # 자막이 없으면 Gemini로 소리와 화면 글자를 옮긴다. 서버가 영상을 내려받지
+        # 않으므로 유튜브 IP 차단과 무관하고, Whisper보다 빠르고 정확했다.
+        if settings.gemini_video_enabled and settings.gemini_api_key:
+            transcript = CaptionsThenAsrExtractor(
+                transcript,
+                GeminiVideoTranscriber(settings.gemini_api_key, model=settings.gemini_model),
+            )
+            logger.info("자막 없는 영상: Gemini 영상 이해 (%s)", settings.gemini_model)
         if settings.asr_enabled:
             # 자막이 없을 때만 음성 인식으로 넘어간다. 자막이 1초면 끝나는
             # 일을 분 단위 작업으로 대신할 이유가 없다.

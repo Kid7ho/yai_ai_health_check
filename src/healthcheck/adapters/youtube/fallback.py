@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 
+from healthcheck.adapters.youtube.transcript import TranscriptFetchError
 from healthcheck.domain.types import ExtractedContent
 from healthcheck.ports.audio import AudioTranscriber
 from healthcheck.ports.transcript import TranscriptExtractor
@@ -39,6 +40,10 @@ class CaptionsThenAsrExtractor:
     async def _try_asr(self, video_id: str, reraise: Exception | None = None) -> ExtractedContent:
         try:
             return await self._asr.transcribe(video_id)
+        except TranscriptFetchError:
+            # 대체 경로의 일시적 실패(Gemini 한도 초과 등)도 올린다. 제목만으로 답하면
+            # 얕은 판정이 캐시에 굳고, 한도가 풀려도 다시 옮기지 않는다.
+            raise
         except Exception as error:
             logger.warning("음성 인식도 실패 video=%s: %s", video_id, error)
             # 자막 쪽 실패가 일시적(차단)이었다면 그 예외를 올려 준다.
