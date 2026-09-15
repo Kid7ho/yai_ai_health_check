@@ -65,8 +65,12 @@
 
 - id: gold-109
   input: "강황이 관절 건강에 도움을 줄 수 있습니다"
-  expected: TRUSTWORTHY
-  reason: 커큐민이 관절 건강으로 개별인정을 받았다.
+  expected: CAUTION
+  reason: >-
+    커큐민이 관절 건강으로 개별인정을 받았지만 논문이 뒷받침 2편·반박 2편으로 갈린다.
+    믿을 만해요는 뒷받침이 반박의 두 배 이상일 때만 준다(R-041 조심하세요).
+  # v0.10에서 TRUSTWORTHY를 CAUTION으로 고쳤다(2026-09-16 사용자 결정). 이전에 믿을 만해요가
+  # 나온 것은 "Health Benefits of Curcumin"처럼 관절과 무관한 논문을 뒷받침으로 세었기 때문이다.
 
 - id: gold-110
   input: "마늘을 먹으면 고혈압이 낫는다고 합니다"
