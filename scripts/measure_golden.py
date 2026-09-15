@@ -11,6 +11,8 @@ pytest의 골든 러너와 역할이 다르다. 러너는 판정입력이 적힌
 사용법
     python scripts/measure_golden.py                 # 실제 API
     python scripts/measure_golden.py --mode fake     # 토큰 안 씀
+    python scripts/measure_golden.py --mode replay   # 녹화한 API 응답으로 (기본값, 결과가 흔들리지 않음)
+    python scripts/measure_golden.py --mode record   # 실제 API를 불러 녹화를 새로 만든다 (19시~9시)
     python scripts/measure_golden.py --only gold-114
 """
 
@@ -28,6 +30,9 @@ import yaml  # noqa: E402
 
 from healthcheck.api.app import build_fake_orchestrator, build_orchestrator  # noqa: E402
 from healthcheck.config import load_settings  # noqa: E402
+
+# 녹화한 학술·식약처 응답. API 키는 들어 있지 않다.
+RECORDING_PATH = Path(__file__).resolve().parents[1] / "tests" / "golden" / "recordings.json"
 from healthcheck.pipeline import step1_input  # noqa: E402
 
 GOLDEN_DIR = Path(__file__).resolve().parents[1] / "tests" / "golden"
@@ -47,13 +52,30 @@ def load_cases(only: str | None) -> list[dict]:
 
 async def main() -> int:
     parser = argparse.ArgumentParser(description="골든셋 정확도를 측정한다.")
-    parser.add_argument("--mode", choices=["live", "fake"], default="live")
+    parser.add_argument("--mode", choices=["replay", "record", "live", "fake"], default="replay")
+    parser.add_argument("--force", action="store_true", help="식약처 제한 시간에도 녹화한다")
     parser.add_argument("--only", help="케이스 하나만 돌린다")
     args = parser.parse_args()
 
-    orchestrator = (
-        build_orchestrator(load_settings()) if args.mode == "live" else build_fake_orchestrator()
-    )
+    transport = None
+    if args.mode in ("replay", "record"):
+        from healthcheck.adapters.mfds.snapshot import in_restricted_hours
+        from healthcheck.testing.replay import replay_orchestrator
+
+        if args.mode == "record":
+            if in_restricted_hours() and not args.force:
+                print("식약처 API가 09시~19시에 막혀 녹화하면 오류 응답이 저장됩니다. 19시 이후에 실행하세요.")
+                return 2
+            settings = load_settings()
+            orchestrator, transport = replay_orchestrator(
+                RECORDING_PATH, "record", liner_key=settings.liner_api_key or "", mfds_key=settings.mfds_api_key or ""
+            )
+        else:
+            orchestrator, transport = replay_orchestrator(RECORDING_PATH, "replay")
+    else:
+        orchestrator = (
+            build_orchestrator(load_settings()) if args.mode == "live" else build_fake_orchestrator()
+        )
 
     cases = load_cases(args.only)
     print(f"골든 케이스 {len(cases)}건 / 모드 {args.mode} / 규칙표 {orchestrator.ruleset.version}")
@@ -99,6 +121,10 @@ async def main() -> int:
             f"{mark} {case['id']:9s} 기대 {expected:12s} 실제 {actual:12s} {row['rule']:7s} "
             f"{case['input'][:40]}"
         )
+
+    if transport is not None and args.mode == "record":
+        transport.save()
+        print(f"\n녹화 저장: {RECORDING_PATH} ({len(transport.used)}건)")
 
     total = len(cases)
     print()

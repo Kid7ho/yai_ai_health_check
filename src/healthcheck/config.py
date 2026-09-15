@@ -85,6 +85,10 @@ class Settings:
     # 식약처 개별인정형(I-0040) 로컬 사본. API가 09시~19시에 막혀 조회는 사본에서 한다.
     mfds_snapshot_path: Path = PROJECT_ROOT / "data" / "mfds_i0040.json"
 
+    # 콜백 유효 시간 시험. "콜백시험 70"을 보내면 70초 뒤 콜백을 보내 받아지는지 기록한다.
+    # 카카오 문서가 유효 시간을 1분과 5분으로 다르게 적어 실측하려고 둔다. 시험이 끝나면 끈다.
+    callback_probe_enabled: bool = False
+
     # 저장소. 판정 기록과 목표 지표가 여기 쌓인다.
     database_path: str = "healthcheck.db"
     # 개인정보 보존 기간(일). README의 저장 데이터 표와 같은 값이다.
@@ -183,6 +187,7 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
             if part.strip()
         ),
         public_base_url=_public_url(os.environ.get("PUBLIC_BASE_URL")),
+        callback_probe_enabled=_flag(os.environ.get("CALLBACK_PROBE_ENABLED"), False),
         mfds_snapshot_path=Path(
             os.environ.get("MFDS_SNAPSHOT_PATH") or PROJECT_ROOT / "data" / "mfds_i0040.json"
         ),

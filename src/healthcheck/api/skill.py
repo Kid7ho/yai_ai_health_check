@@ -12,6 +12,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 import uuid
@@ -125,6 +126,19 @@ async def skill(request: Request) -> dict:
     callback_url = _dig(body, "userRequest", "callbackUrl")
     user_key = _dig(body, "userRequest", "user", "id")
 
+    # 콜백 유효 시간 시험. 설정으로 켰을 때만 동작한다.
+    if getattr(request.app.state, "callback_probe_enabled", False):
+        match = _PROBE.match(utterance.strip())
+        if match and callback_url:
+            delay = min(int(match.group(1)), _PROBE_MAX_SECONDS)
+            task = asyncio.create_task(
+                _probe_callback(request.app.state.callback_sender, callback_url, delay)
+            )
+            _PROBE_TASKS.add(task)
+            task.add_done_callback(_PROBE_TASKS.discard)
+            logger.warning("콜백 유효 시간 시험 접수 delay=%d초", delay)
+            return ack_response()
+
     # 사진. 실채널에서 사진을 보내면 utterance에 카카오 CDN 서명 주소가 오고
     # params.media.type이 image다. 링크로 처리하면 서버가 사진을 내려받고
     # '알 수 없어요'를 돌려준다. 이미지 판독은 범위 밖이므로 조회 없이 안내한다.
@@ -205,6 +219,25 @@ _MASKED_KEYS = (
     "plusfriend_user_key",
     "app_user_id",
 )
+
+
+_PROBE = re.compile(r"^콜백시험\s+(\d{1,3})$")
+_PROBE_MAX_SECONDS = 290
+_PROBE_TASKS: set[asyncio.Task] = set()
+
+
+async def _probe_callback(sender, callback_url: str, delay: int) -> None:
+    """delay초 뒤 콜백을 보내고 받아졌는지 기록한다. 판정 결과가 아니므로 카드를 만들지 않는다."""
+    await asyncio.sleep(delay)
+    payload = {
+        "version": "2.0",
+        "template": {"outputs": [{"simpleText": {"text": f"콜백 시험: {delay}초 뒤에 보낸 메시지입니다."}}]},
+    }
+    try:
+        await sender.send(callback_url, payload)
+        logger.warning("콜백 유효 시간 시험 결과 delay=%d초 성공", delay)
+    except Exception as error:
+        logger.warning("콜백 유효 시간 시험 결과 delay=%d초 실패: %s", delay, error)
 
 
 def _is_media_upload(body: Any) -> bool:

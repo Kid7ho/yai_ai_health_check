@@ -23,6 +23,8 @@ from __future__ import annotations
 import hashlib
 import logging
 import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import httpx
 
@@ -39,6 +41,10 @@ DEFAULT_TIMEOUT = 90.0
 # 자동 생성 자막(0.65)보다 높고 사람이 올린 자막(0.9)보다 낮다. 측정에서 자동 자막보다
 # 정확했지만, 모델이 받아 적는 방식이라 없는 말을 넣을 위험이 남아 있다.
 GEMINI_CONFIDENCE = 0.75
+# 429를 받으면 이 시간 동안 부르지 않는다. 한도가 찬 상태에서 계속 부르면 요청만 버린다.
+RATE_LIMIT_COOLDOWN = 600.0
+_KST = ZoneInfo("Asia/Seoul")
+
 # 이보다 짧으면 옮긴 내용이 없다고 본다.
 MIN_TEXT_LENGTH = 10
 
@@ -79,6 +85,17 @@ class GeminiVideoTranscriber:
         self._client = client
         self._owns_client = client is None
         self.call_count = 0
+        self._limited_until = 0.0
+        self._usage: dict[str, int | str] = _fresh_usage()
+
+    def usage(self) -> dict:
+        """오늘(한국 시간) 사용량. 무료 등급 하루 한도를 넘기 전에 알아채려고 둔다."""
+        self._roll_day()
+        return {**self._usage, "limited_now": time.monotonic() < self._limited_until}
+
+    def _roll_day(self) -> None:
+        if self._usage["date"] != _today():
+            self._usage = _fresh_usage()
 
     async def transcribe(self, video_id: str) -> ExtractedContent:
         body = {
@@ -95,10 +112,15 @@ class GeminiVideoTranscriber:
             "generationConfig": {"temperature": 0, "mediaResolution": "MEDIA_RESOLUTION_LOW"},
         }
 
+        self._roll_day()
+        if time.monotonic() < self._limited_until:
+            raise GeminiVideoError("Gemini 한도 초과로 호출을 잠시 멈춘 상태다")
+
         if self._client is None:
             self._client = httpx.AsyncClient()
             self._owns_client = True
         self.call_count += 1
+        self._usage["calls"] += 1
 
         started = time.perf_counter()
         try:
@@ -112,7 +134,17 @@ class GeminiVideoTranscriber:
             raise GeminiVideoError(f"Gemini 통신 오류: {type(error).__name__}") from error
         elapsed = time.perf_counter() - started
 
-        if response.status_code == 429 or response.status_code >= 500:
+        if response.status_code == 429:
+            self._limited_until = time.monotonic() + RATE_LIMIT_COOLDOWN
+            self._usage["rate_limited"] += 1
+            logger.warning(
+                "Gemini 한도 초과. %.0f초간 호출을 멈춘다. 오늘 호출 %s건: %s",
+                RATE_LIMIT_COOLDOWN,
+                self._usage["calls"],
+                _error_message(response),
+            )
+            raise GeminiVideoError(f"Gemini 응답 429: {_error_message(response)}")
+        if response.status_code >= 500:
             raise GeminiVideoError(f"Gemini 응답 {response.status_code}: {_error_message(response)}")
         if response.status_code != 200:
             # 비공개 영상, 지원하지 않는 영상 같은 경우다. 다시 해도 같으므로 내용 없음으로 본다.
@@ -131,6 +163,8 @@ class GeminiVideoTranscriber:
 
         text = _text_of(data)
         usage = data.get("usageMetadata") or {}
+        self._usage["input_tokens"] += int(usage.get("promptTokenCount") or 0)
+        self._usage["output_tokens"] += int(usage.get("candidatesTokenCount") or 0)
         logger.info(
             "Gemini 영상 전사 video=%s %.1f초 입력토큰=%s 출력토큰=%s 글자수=%d",
             video_id,
@@ -156,6 +190,14 @@ class GeminiVideoTranscriber:
         if self._client is not None and self._owns_client:
             await self._client.aclose()
             self._client = None
+
+
+def _today() -> str:
+    return datetime.now(_KST).date().isoformat()
+
+
+def _fresh_usage() -> dict[str, int | str]:
+    return {"date": _today(), "calls": 0, "input_tokens": 0, "output_tokens": 0, "rate_limited": 0}
 
 
 def _text_of(data: dict) -> str:

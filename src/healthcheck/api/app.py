@@ -227,12 +227,18 @@ def create_app(
 
         # 기동할 때 한 번 보존 기간을 정리한다. 배포 주기가 긴 환경에서는
         # scripts/purge_expired.py를 하루 한 번 돌리는 편이 낫다.
-        try:
-            purged = await repository.purge_expired()
-            if any(purged.values()):
-                logger.info("보존 기간 만료 정리: %s", purged)
-        except Exception:
-            logger.exception("보존 기간 정리 실패")
+        async def purge_forever() -> None:
+            # 서버를 오래 켜 두면 기동 때 한 번으로는 부족하다. 하루에 한 번 정리한다.
+            while True:
+                try:
+                    purged = await repository.purge_expired()
+                    if any(purged.values()):
+                        logger.info("보존 기간 만료 정리: %s", purged)
+                except Exception:
+                    logger.exception("보존 기간 정리 실패")
+                await asyncio.sleep(24 * 3600)
+
+        tasks.append(asyncio.create_task(purge_forever()))
         try:
             yield
         finally:
@@ -249,6 +255,9 @@ def create_app(
         image_base_url=image_base_url,
     )
     app.state.image_base_url = image_base_url
+    app.state.callback_probe_enabled = settings.callback_probe_enabled
+    if settings.callback_probe_enabled:
+        logger.warning("콜백 유효 시간 시험이 켜져 있다. 시험이 끝나면 CALLBACK_PROBE_ENABLED를 끈다.")
     app.state.last_results = last_results
     app.state.auth = auth
     app.state.log_skill_request = settings.log_skill_request
@@ -312,6 +321,7 @@ def create_app(
             "rules_version": orchestrator.ruleset.version,
             "queued": queue.size,
             "transcript_blocked": blocked,
+            "gemini": _gemini_usage(orchestrator.transcript),
             "mfds_snapshot": (
                 orchestrator.mfds.snapshot_info()
                 if hasattr(orchestrator.mfds, "snapshot_info")
@@ -320,6 +330,20 @@ def create_app(
         }
 
     return app
+
+
+def _gemini_usage(extractor, depth: int = 0) -> dict | None:
+    """추출기 조립 안쪽의 Gemini 전사기를 찾아 오늘 사용량을 돌려준다."""
+    if extractor is None or depth > 4:
+        return None
+    usage = getattr(extractor, "usage", None)
+    if callable(usage):
+        return usage()
+    for name in ("_inner", "_captions", "_asr"):
+        found = _gemini_usage(getattr(extractor, name, None), depth + 1)
+        if found is not None:
+            return found
+    return None
 
 
 _settings = load_settings()
