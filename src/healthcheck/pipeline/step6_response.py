@@ -159,6 +159,7 @@ def render(result: CheckResult, *, image_base_url: str | None = None) -> dict:
         return _wrap([_simple_text(_OUT_OF_SCOPE_TEXT)])
 
     checked = _checked_claim_text(result)
+    checked_title = _checked_title(result)
     follow_up = _simple_text(_FOLLOW_UP_TEXT)
 
     if image_base_url:
@@ -168,7 +169,7 @@ def render(result: CheckResult, *, image_base_url: str | None = None) -> dict:
                     "imageUrl": verdict_image_url(image_base_url, label),
                     "altText": LABEL_TEXT[label],
                 },
-                "title": _CHECKED_TITLE if checked else LABEL_TEXT[label],
+                "title": checked_title if checked else LABEL_TEXT[label],
                 "description": _clip(checked or _NO_CLAIM_TEXT, _MAX_BASIC_DESCRIPTION),
                 "buttons": _buttons(),
             }
@@ -311,8 +312,22 @@ def _describe(result: CheckResult) -> str:
     """이미지 없는 카드 본문. '확인한 내용'만 담는다. 판정 이유는 근거 화면에 있다."""
     checked = _checked_claim_text(result)
     if checked:
-        return f"{_CHECKED_TITLE}\n{checked}"
+        return f"{_checked_title(result)}\n{checked}"
     return _NO_CLAIM_TEXT
+
+
+def _checked_title(result: CheckResult) -> str:
+    """판정한 것이 영상·글 전체가 아니라 그 안의 한 문장임을 밝힌다.
+
+    "무릎 관절 건강" 영상에서 "칼슘·비타민D가 뼈 건강에 도움"을 판정해 믿을 만해요가
+    나갔다. 제목만 보고 영상 전체가 믿을 만하다고 받아들이지 않게 한다.
+    """
+    source = result.content.source if result.content is not None else None
+    if source == "article":
+        return "글 속 이 내용을 확인했어요"
+    if source in (None, "text"):
+        return _CHECKED_TITLE
+    return "영상 속 이 내용을 확인했어요"
 
 
 def _checked_claim_text(result: CheckResult) -> str:
@@ -390,9 +405,11 @@ def _sources(result: CheckResult) -> list[str]:
     if academic is not None and not academic.lookup_failed:
         # 영어 논문 제목은 어르신이 읽을 수 없다. 편수로 요약하고 원문은 링크 버튼으로 연다.
         if academic.papers:
+            # 찬반을 판단할 수 없는 논문도 편수에 들어간다. "9편 (뒷받침 4편)"은
+            # 합이 맞지 않아 보여서 "중"을 붙인다.
             sources.append(
-                f"관련 연구 {len(academic.papers)}편 "
-                f"(뒷받침 {academic.supporting}편, 반박 {academic.refuting}편)"
+                f"관련 연구 {len(academic.papers)}편 중 "
+                f"뒷받침 {academic.supporting}편, 반박 {academic.refuting}편"
             )
         else:
             sources.append("관련 연구를 찾지 못했어요")

@@ -87,7 +87,7 @@ def reason_result() -> CheckResult:
 def test_근거에는_영어_제목_대신_편수를_보여_준다():
     for payload in (render_reason(reason_result()), render_reason(reason_result(), image_base_url="https://example.com")):
         text = "\n".join(o["simpleText"]["text"] for o in payload["template"]["outputs"] if "simpleText" in o)
-        assert "관련 연구 2편 (뒷받침 2편, 반박 0편)" in text
+        assert "관련 연구 2편 중 뒷받침 2편, 반박 0편" in text
         assert "immunity" not in text and "Polysaccharide" not in text
 
 
@@ -135,3 +135,25 @@ def test_초록에만_효능이_있는_논문은_근거가_아니다():
 )
 def test_제목에서_같은_뜻의_표기까지_찾는다(title, effect, expected):
     assert effect_in_title(title, effect) is expected
+
+
+@pytest.mark.parametrize(
+    ("source", "title"),
+    [("gemini", "영상 속 이 내용을 확인했어요"), ("title_only", "영상 속 이 내용을 확인했어요"),
+     ("article", "글 속 이 내용을 확인했어요"), (None, "확인한 내용")],
+)
+def test_영상이나_글_전체가_아니라_그_안의_문장을_판정했다고_밝힌다(extractor, source, title):
+    """실측: '무릎 관절 건강' 영상에서 칼슘·뼈 건강 문장을 판정해 믿을 만해요가 나갔다."""
+    from healthcheck.domain.types import ExtractedContent
+
+    claims = extractor.extract("칼슘이 뼈 건강에 도움이 됩니다")
+    result = CheckResult(
+        verdict=Verdict(label=Label.TRUSTWORTHY, rule_id="R-040", rules_version="t", reasons=()),
+        claims=claims,
+        primary_claim=claims.claims[0],
+        content=ExtractedContent(text="x", has_transcript=True, confidence=0.75, source=source),
+    )
+    card = render(result, image_base_url="https://example.com")["template"]["outputs"][0]["basicCard"]
+    assert card["title"] == title
+    text_card = render(result)["template"]["outputs"][0]["textCard"]
+    assert text_card["description"].startswith(title)
