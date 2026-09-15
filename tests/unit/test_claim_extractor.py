@@ -278,3 +278,31 @@ def test_체험기가_질병_완치를_말하면_질병_표현으로_잡힌다(e
     result = extractor.extract("저는 홍삼 먹고 당뇨가 나았습니다")
     assert result.prohibited_ad_expression is False
     assert result.disease_cure_expression is True
+
+
+# ── 긴 글: 성분·효능 대상·효능 표현의 거리 ────────────────────
+
+
+def test_한_문장에_여러_이야기가_있으면_가까운_짝만_주장으로_본다(extractor):
+    """실측(헬스조선 기사): '관절염 환자 79명이 40개월 동안 하루 4g의 동결건조 블루베리
+    분말을'이 효능 문구로 잡혀 식약처 대조와 학술 검색어가 엉뚱해졌다."""
+    text = "관절염 환자 79명이 40개월 동안 하루 4g의 동결건조 블루베리 분말을 먹었더니 통증이 줄었다."
+
+    claims = extractor.extract(text).claims
+
+    for claim in claims:
+        assert len(claim.claimed_effect) <= 30
+        assert "79명" not in claim.claimed_effect
+
+
+def test_효능_대상이_없으면_주장으로_세지_않는다(extractor):
+    """'몸에 좋다'만으로는 무엇에 좋다는 것인지 검증할 수 없다."""
+    assert extractor.extract("홍삼이 몸에 아주 좋습니다").claims == ()
+
+
+def test_효능_문구는_효능_대상부터_담는다(extractor):
+    claim = extractor.extract("오메가3 지방산은 관절 근골격계 통증과 뻣뻣함을 줄이는 데 좋다").claims[0]
+
+    assert claim.ingredient == "오메가3"
+    assert claim.claimed_effect.startswith("관절")
+    assert len(claim.claimed_effect) <= 30

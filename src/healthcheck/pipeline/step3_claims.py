@@ -252,24 +252,30 @@ class RuleBasedClaimExtractor:
             return []
 
         targets = _find_first_each(sentence, patterns.effect_targets)
-        intensity, effect_pos, effect_end = _find_intensity(sentence, patterns.effect_by_intensity)
-
         # 효능 표현이 없으면 주장이 아니다. 성분과 신체 부위가 같은 문장에 나왔을
         # 뿐이다. 실제 영상 자막에서 "홍삼 / 눈", "홍삼 / 뼈"처럼 주장이 아닌 짝이
         # 10건 가까이 잡혔다. 질병 치료 표현은 별도로 문장 전체에서 잡는다.
-        if effect_pos is None:
+        effects = _effect_matches(sentence, patterns.effect_by_intensity)
+        if not effects:
             return []
 
         claims: list[Claim] = []
         for standard, raw_name, position in ingredients:
-            target = _nearest(targets, position)
-            effect_text = _effect_text(sentence, target, effect_pos)
+            pair = _best_pair(position, targets, effects)
+            if pair is None:
+                # 문장에 효능 표현은 있지만 이 성분에서 너무 멀다. 긴 기사 한 문장에
+                # 여러 이야기가 들어 있는 경우다.
+                continue
+            intensity, target, effect = pair
+            effect_text = _effect_text(sentence, target, effect)
             if not effect_text:
                 continue
             start = position
             end = position + len(raw_name)
-            starts = [position, effect_pos] + ([target[1]] if target else [])
-            statement = _statement(sentence, min(starts), max(effect_end, end))
+            starts = [position, effect[0]] + ([target[1]] if target else [])
+            # 보여 줄 구절은 같은 절에 있는 효능 표현 끝까지 담는다. "면역력 증진에
+            # 도움을"처럼 표현이 두 개면 뒤쪽까지 담아야 뜻이 끊기지 않는다.
+            statement = _statement(sentence, min(starts), max(end, _clause_effect_end(sentence, effect, effects)))
             claims.append(
                 Claim(
                     ingredient=standard,
@@ -557,21 +563,78 @@ def _nearest(targets: list[tuple[str, int]], position: int) -> tuple[str, int] |
     return min(targets, key=lambda item: abs(item[1] - position))
 
 
+# 성분·효능 대상·효능 표현이 문장 안에서 너무 멀면 한 주장이 아니다. 긴 기사 한 문장에
+# 여러 이야기가 들어 있어 "관절염 환자 79명이 40개월 동안 하루 4g의 동결건조 블루베리
+# 분말을"이 효능 문구로 잡혔다(2026-09-16 실측).
+_MAX_TARGET_TO_EFFECT = 40
+_MAX_INGREDIENT_TO_EFFECT = 80
+_MAX_EFFECT_TEXT = 30
+
+
+def _effect_matches(
+    sentence: str, by_intensity: tuple[tuple[Intensity, tuple[str, ...]], ...]
+) -> list[tuple[Intensity, int, int]]:
+    """문장에 있는 효능 표현 전부. (강도, 시작, 끝)"""
+    found: list[tuple[Intensity, int, int]] = []
+    for intensity, expressions in by_intensity:
+        for expression in expressions:
+            position = sentence.find(expression)
+            if position >= 0:
+                found.append((intensity, position, position + len(expression)))
+    return found
+
+
+def _best_pair(
+    ingredient_pos: int,
+    targets: list[tuple[str, int]],
+    effects: list[tuple[Intensity, int, int]],
+) -> tuple[Intensity, tuple[str, int] | None, tuple[int, int]] | None:
+    """이 성분과 짝지을 (효능 대상, 효능 표현). 가까운 짝을 고른다.
+
+    효능 대상(질병명·신체기능)이 붙어 있어야 주장으로 본다. 대상 없이 "몸에 좋다"만
+    있는 문장은 무엇에 좋다는 것인지 검증할 수 없어 주장으로 세지 않는다.
+    """
+    best: tuple[tuple[int, int], tuple] | None = None
+    for intensity, start, end in effects:
+        if abs(start - ingredient_pos) > _MAX_INGREDIENT_TO_EFFECT:
+            continue
+        near = [t for t in targets if abs(t[1] - start) <= _MAX_TARGET_TO_EFFECT]
+        if not near:
+            continue
+        target = min(near, key=lambda t: abs(t[1] - start))
+        score = (abs(target[1] - start), abs(start - ingredient_pos))
+        if best is None or score < best[0]:
+            best = (score, (intensity, target, (start, end)))
+    return best[1] if best else None
+
+
+def _clause_effect_end(
+    sentence: str, chosen: tuple[int, int], effects: list[tuple[Intensity, int, int]]
+) -> int:
+    """고른 효능 표현과 같은 절에 있는 표현 중 가장 뒤쪽 끝."""
+    stops = [i for i in range(chosen[0], len(sentence)) if sentence[i] in _STATEMENT_STOP]
+    limit = stops[0] if stops else len(sentence)
+    return max(end for _, start, end in effects if chosen[0] <= start < limit)
+
+
 def _effect_text(
-    sentence: str, target: tuple[str, int] | None, effect_pos: int | None
+    sentence: str, target: tuple[str, int] | None, effect: tuple[int, int]
 ) -> str:
-    """주장 효능 문구. 효능 대상부터 효능 표현까지의 원문을 잘라 쓴다."""
-    if target is None:
-        return ""
-    start = target[1]
-    end = start + len(target[0])
-    if effect_pos is not None:
-        start = min(start, effect_pos)
-        end = max(end, effect_pos)
-        # 효능 표현의 끝까지 포함하도록 어절 경계까지 늘린다.
-        boundary = sentence.find(" ", end)
-        end = len(sentence) if boundary < 0 else boundary
-    return sentence[start:end].strip(" ,·")
+    """주장 효능 문구. 효능 대상부터 효능 표현 끝까지의 원문을 잘라 쓴다.
+
+    길면 효능 대상부터로 줄인다. 이 문구는 식약처 기능성 문구 대조와 학술 검색어를
+    만드는 데 쓰이므로, 숫자와 실험 설명이 섞이면 검증이 엉뚱해진다.
+    """
+    start = min(effect[0], target[1]) if target else effect[0]
+    end = effect[1]
+    # 효능 표현이 든 어절 끝까지 늘린다.
+    while end < len(sentence) and not sentence[end].isspace() and sentence[end] not in _STATEMENT_STOP:
+        end += 1
+
+    text = " ".join(sentence[start:end].split()).strip(" ,·")
+    if len(text) > _MAX_EFFECT_TEXT and target is not None and target[1] > start:
+        text = " ".join(sentence[target[1]:end].split()).strip(" ,·")
+    return text[:_MAX_EFFECT_TEXT].strip(" ,·")
 
 
 # ─────────────────────────────────────────────────────────────

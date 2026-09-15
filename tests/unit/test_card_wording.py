@@ -42,8 +42,8 @@ def test_구절은_문장부호에서_끊고_60자를_넘지_않는다(extractor
     text = "홍삼이 면역력 증진에 도움을 줄 수 있다, 그리고 " + "아주 " * 40 + "좋습니다."
     statement = extractor.extract(text).claims[0].statement
     assert statement == "홍삼이 면역력 증진에 도움을 줄 수 있다"
-    long = extractor.extract("홍삼이 " + "정말 " * 30 + "면역력 증진에 도움을 줍니다").claims[0].statement
-    assert len(long) <= 60
+    # 성분에서 80자 넘게 떨어진 효능 표현은 같은 주장으로 보지 않는다.
+    assert extractor.extract("홍삼이 " + "정말 " * 30 + "면역력 증진에 도움을 줍니다").claims == ()
 
 
 def test_카드에_원문_구절이_나간다(extractor):
