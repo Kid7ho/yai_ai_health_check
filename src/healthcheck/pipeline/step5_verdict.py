@@ -101,6 +101,9 @@ class Rule:
     rationale: str
     # 어르신에게 보여 줄 짧은 안내. 검수용 rationale과 따로 둔다.
     guidance: str = ""
+    # 식약처 조회가 실패한 상황을 위해 만든 규칙인가. 이 규칙의 판정은 조회 실패여도
+    # '잠시 뒤에 다시'로 바꾸지 않고 그대로 보여 준다(캐시는 하지 않는다).
+    usable_without_mfds: bool = False
 
     @property
     def uses_evidence(self) -> bool:
@@ -109,6 +112,8 @@ class Rule:
         기본 규칙(조건 없음)도 근거가 부족해서 떨어진 것일 수 있으므로 포함한다.
         근거 조회가 실패했을 때 이 규칙으로 나온 판정은 믿을 수 없다.
         """
+        if self.usable_without_mfds:
+            return False
         if not self.conditions:
             return True
         return bool(set(self.conditions) & EVIDENCE_CONDITIONS)
@@ -299,6 +304,7 @@ def load_ruleset(path: Path | str = DEFAULT_RULES_PATH) -> RuleSet:
                 label=label,
                 rationale=str(entry.get("근거", "")).strip(),
                 guidance=str(entry.get("안내", "")).strip(),
+                usable_without_mfds=bool(entry.get("식약처_조회실패_판정", False)),
             )
         )
 
@@ -347,8 +353,9 @@ def build_verdict_input(
     """④까지의 결과를 규칙 엔진이 보는 평평한 구조로 옮긴다.
 
     외부 조회가 실패했을 때 값을 낙관적으로 채우지 않는다.
-    조회 실패는 recognition=UNKNOWN으로 떨어지고, 그러면 어느 규칙에도
-    맞지 않아 R-999가 UNKNOWN을 돌려준다. 의도한 동작이다.
+    조회 실패는 recognition=UNKNOWN으로 떨어진다. 식약처를 확인하지 못했으므로
+    믿을 만해요는 나오지 않는다. 논문 근거만으로 낼 수 있는 경고 쪽 판정은
+    R-090·R-091이 맡고, 나머지는 R-999가 UNKNOWN을 돌려준다.
     """
     quality = _transcript_quality(content, thresholds)
 

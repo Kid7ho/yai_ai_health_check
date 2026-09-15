@@ -444,6 +444,8 @@ def _compact_sources(result: CheckResult) -> str:
     """근거 카드에 들어갈 짧은 출처. 카드 설명이 230자라 핵심만 남긴다."""
     lines: list[str] = []
     mfds = result.mfds
+    if mfds is not None and mfds.lookup_failed:
+        lines.append("식약처: 지금 확인하지 못함")
     if mfds is not None and not mfds.lookup_failed:
         if mfds.recognition in ("INDIVIDUAL", "NOTIFIED"):
             lines.append("식약처: 인정된 기능성 원료")
