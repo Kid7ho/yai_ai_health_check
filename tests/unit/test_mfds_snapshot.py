@@ -178,3 +178,33 @@ async def test_받기에_실패하면_이전_사본을_그대로_쓴다(tmp_path
     assert source.snapshot_info()["rows"] == 1
     assert load_snapshot(path).rows == (ROW_BP,)
     assert (await source.lookup(GARLIC_BP)).recognition == "INDIVIDUAL"
+
+
+async def test_API는_한_번에_하나씩_부르고_같은_성분은_한_번만_받는다():
+    """실측: 한 기사에서 블루베리 주장 2건을 동시에 조회해 INFO-500으로 거절됐다."""
+    import asyncio
+
+    in_flight = 0
+    calls: list[str] = []
+
+    async def handler(request):
+        nonlocal in_flight
+        in_flight += 1
+        calls.append(str(request.url))
+        try:
+            if in_flight > 1:
+                body = {"I-0040": {"RESULT": {"CODE": "INFO-500", "MSG": "현재 접속 중인 인증키입니다."}}}
+                return httpx.Response(200, json=body)
+            await asyncio.sleep(0.05)
+            body = {"I-0040": {"total_count": "1", "row": [ROW_BP], "RESULT": {"CODE": "INFO-000"}}}
+            return httpx.Response(200, json=body)
+        finally:
+            in_flight -= 1
+
+    source = FoodSafetyKoreaDataSource("k", client=client_for(handler))
+    other = Claim(ingredient="마늘", claimed_effect="혈압 개선에 도움을", intensity="SUGGESTIVE", span=(0, 2))
+
+    first, second = await asyncio.gather(source.lookup(GARLIC_BP), source.lookup(other))
+
+    assert first.recognition == second.recognition == "INDIVIDUAL"
+    assert len(calls) == 1

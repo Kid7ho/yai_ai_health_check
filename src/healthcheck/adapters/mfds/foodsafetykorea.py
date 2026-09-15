@@ -134,6 +134,11 @@ class FoodSafetyKoreaDataSource:
         self.call_count = 0
         self._cache: dict[tuple[str, str, str], tuple[float, MfdsEvidence]] = {}
         self.cache_hits = 0
+        # 식품안전나라는 같은 인증키로 동시에 들어온 요청을 "INFO-500: 현재 접속 중인
+        # 인증키입니다"로 거절한다(2026-09-15 실측, 한 기사에서 주장 2건을 동시에 조회).
+        # API 호출은 한 번에 하나씩 보내고, 같은 성분의 인정 건은 한 번만 받는다.
+        self._api_lock = asyncio.Lock()
+        self._rows_cache: dict[str, tuple[float, list[dict]]] = {}
         self._snapshot_path = Path(snapshot_path) if snapshot_path else None
         self._snapshot: Snapshot | None = (
             load_snapshot(self._snapshot_path) if self._snapshot_path else None
@@ -259,6 +264,22 @@ class FoodSafetyKoreaDataSource:
         )
 
     async def _fetch_rows(self, ingredient: str) -> list[dict]:
+        async with self._api_lock:
+            cached = self._rows_cache.get(ingredient)
+            if cached and time.monotonic() - cached[0] < CACHE_TTL:
+                return cached[1]
+            try:
+                rows = await self._fetch_rows_once(ingredient)
+            except MfdsLookupError as error:
+                # 다른 프로세스나 사본 받기와 겹쳐 거절됐을 수 있다. 한 번만 다시 시도한다.
+                if "INFO-500" not in str(error):
+                    raise
+                await asyncio.sleep(1.0)
+                rows = await self._fetch_rows_once(ingredient)
+            self._rows_cache[ingredient] = (time.monotonic(), rows)
+            return rows
+
+    async def _fetch_rows_once(self, ingredient: str) -> list[dict]:
         url = (
             f"{self._base_url}/{self._api_key}/{SERVICE_ID}/json/1/{MAX_ROWS}"
             f"/APLC_RAWMTRL_NM={quote(ingredient)}"
@@ -318,13 +339,14 @@ class FoodSafetyKoreaDataSource:
                 return False
 
         try:
-            snapshot = await download_snapshot(
-                self._ensure_client(),
-                api_key=self._api_key,
-                base_url=self._base_url,
-                service_id=SERVICE_ID,
-                now=now,
-            )
+            async with self._api_lock:
+                snapshot = await download_snapshot(
+                    self._ensure_client(),
+                    api_key=self._api_key,
+                    base_url=self._base_url,
+                    service_id=SERVICE_ID,
+                    now=now,
+                )
             save_snapshot(self._snapshot_path, snapshot)
         except (SnapshotError, OSError) as error:
             logger.warning("식약처 사본을 새로 받지 못해 이전 사본을 쓴다: %s", error)
