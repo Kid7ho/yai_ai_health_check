@@ -7,6 +7,7 @@ API 키가 모두 승인 대기 중이라 기본값은 Fake다. 키가 준비되
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -83,8 +84,10 @@ def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
             logger.warning("ADAPTER_MODE=live이지만 LINER_API_KEY가 없어 Fake를 씁니다")
 
     if live and settings.has_mfds_key:
-        mfds = FoodSafetyKoreaDataSource(settings.mfds_api_key)
-        logger.info("식약처: 식품안전나라 오픈API 실제 호출")
+        mfds = FoodSafetyKoreaDataSource(
+            settings.mfds_api_key, snapshot_path=settings.mfds_snapshot_path
+        )
+        logger.info("식약처: 식품안전나라 개별인정형 사본 우선, 없으면 오픈API")
     else:
         mfds = FakeMfdsDataSource()
         if live:
@@ -203,6 +206,11 @@ def create_app(
             image_base_url=image_base_url,
         )
         logger.info("워커 %d개 기동. 규칙표 %s", worker_count, orchestrator.ruleset.version)
+
+        # 식약처 사본을 서버가 켜져 있는 동안 확인한다. 제한 없는 시간에만 받는다.
+        refresh = getattr(orchestrator.mfds, "run_snapshot_refresh", None)
+        if refresh is not None:
+            tasks.append(asyncio.create_task(refresh()))
         if image_base_url:
             logger.info("결과 카드 이미지: %s", verdict_image_url(image_base_url, Label.TRUSTWORTHY))
         else:
@@ -295,6 +303,11 @@ def create_app(
             "rules_version": orchestrator.ruleset.version,
             "queued": queue.size,
             "transcript_blocked": blocked,
+            "mfds_snapshot": (
+                orchestrator.mfds.snapshot_info()
+                if hasattr(orchestrator.mfds, "snapshot_info")
+                else None
+            ),
         }
 
     return app

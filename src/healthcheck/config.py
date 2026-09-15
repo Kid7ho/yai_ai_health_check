@@ -77,6 +77,9 @@ class Settings:
     # 비워 두면 이미지 없는 카드로 답한다. scripts/server_start.sh가 채워 준다.
     public_base_url: str | None = None
 
+    # 식약처 개별인정형(I-0040) 로컬 사본. API가 09시~19시에 막혀 조회는 사본에서 한다.
+    mfds_snapshot_path: Path = PROJECT_ROOT / "data" / "mfds_i0040.json"
+
     # 저장소. 판정 기록과 목표 지표가 여기 쌓인다.
     database_path: str = "healthcheck.db"
     # 개인정보 보존 기간(일). README의 저장 데이터 표와 같은 값이다.
@@ -171,6 +174,9 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
             if part.strip()
         ),
         public_base_url=_public_url(os.environ.get("PUBLIC_BASE_URL")),
+        mfds_snapshot_path=Path(
+            os.environ.get("MFDS_SNAPSHOT_PATH") or PROJECT_ROOT / "data" / "mfds_i0040.json"
+        ),
         database_path=(os.environ.get("DATABASE_PATH") or "healthcheck.db").strip(),
         text_retention_days=int(os.environ.get("TEXT_RETENTION_DAYS") or 90),
         user_key_retention_days=int(os.environ.get("USER_KEY_RETENTION_DAYS") or 30),

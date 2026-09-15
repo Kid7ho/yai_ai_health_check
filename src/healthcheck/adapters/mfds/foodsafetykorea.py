@@ -8,6 +8,9 @@
           APLC_RAWMTRL_NM, FNCLTY_CN, DAY_INTK_CN, IFTKN_ATNT_MATR_CN
   RESULT.CODE INFO-000 정상 / INFO-200 데이터 없음 / INFO-100 인증키 무효
 
+낮 시간(09시~19시) API 제한 때문에 개별인정형은 로컬 사본(snapshot.py)에서
+먼저 찾는다. 사본이 없을 때만 API를 직접 부른다.
+
 I-0040은 개별인정형 원료만 담는다. 고시형 원료(홍삼, 프로바이오틱스 등)는
 건강기능식품 공전이 출처이고 API로 제공되지 않으므로
 rules/notified_ingredients.yaml을 먼저 조회한다. 그 파일은 아직 검수 전
@@ -20,6 +23,7 @@ ad_violation_hit을 항상 False로 둔다. 그래서 지금은 R-020과 R-030�
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from functools import lru_cache
@@ -29,6 +33,14 @@ from urllib.parse import quote
 import httpx
 import yaml
 
+from healthcheck.adapters.mfds.snapshot import (
+    Snapshot,
+    SnapshotError,
+    download_snapshot,
+    in_restricted_hours,
+    load_snapshot,
+    save_snapshot,
+)
 from healthcheck.domain.types import Claim, MatchLevel, MfdsEvidence
 
 logger = logging.getLogger(__name__)
@@ -109,6 +121,7 @@ class FoodSafetyKoreaDataSource:
         timeout: float = DEFAULT_TIMEOUT,
         client: httpx.AsyncClient | None = None,
         notified_path: Path | str = DEFAULT_NOTIFIED_PATH,
+        snapshot_path: Path | str | None = None,
     ) -> None:
         if not api_key:
             raise ValueError("MFDS_API_KEY가 없습니다. .env를 확인하세요.")
@@ -121,6 +134,20 @@ class FoodSafetyKoreaDataSource:
         self.call_count = 0
         self._cache: dict[tuple[str, str, str], tuple[float, MfdsEvidence]] = {}
         self.cache_hits = 0
+        self._snapshot_path = Path(snapshot_path) if snapshot_path else None
+        self._snapshot: Snapshot | None = (
+            load_snapshot(self._snapshot_path) if self._snapshot_path else None
+        )
+        if self._snapshot is not None:
+            logger.info(
+                "식약처 개별인정형 사본 사용: %d건, 받은 시각 %s",
+                len(self._snapshot.rows),
+                self._snapshot.fetched_at.isoformat(timespec="minutes"),
+            )
+        elif self._snapshot_path is not None:
+            logger.warning(
+                "식약처 사본이 없다. 사본을 받기 전까지 API를 직접 부르며 09시~19시에는 실패한다."
+            )
 
     async def lookup(self, claim: Claim) -> MfdsEvidence:
         key = (claim.ingredient, claim.claimed_effect, claim.intensity)
@@ -177,7 +204,10 @@ class FoodSafetyKoreaDataSource:
         # 나왔다. 인정 여부는 성분 하나가 아니라 (성분, 효능) 쌍에 대한 것이므로,
         # 어떤 인정 건도 주장 효능을 다루지 않으면 그 효능에 대해서는 미인정으로
         # 보는 편이 정확하다. 판정 결과가 바뀌는 변경이라 자문의 검수 후 적용한다.
-        rows = await self._fetch_rows(claim.ingredient)
+        if self._snapshot is not None:
+            rows = self._snapshot.search(claim.ingredient)
+        else:
+            rows = await self._fetch_rows(claim.ingredient)
         if not rows:
             return MfdsEvidence(
                 recognition="NOT_RECOGNIZED",
@@ -258,6 +288,62 @@ class FoodSafetyKoreaDataSource:
 
         rows = payload.get("row") or []
         return [row for row in rows if isinstance(row, dict)]
+
+    # ── 로컬 사본 ────────────────────────────────────────────────
+
+    def snapshot_info(self) -> dict | None:
+        """상태 확인용 요약. 사본을 쓰지 않는 설정이면 None이다."""
+        if self._snapshot_path is None:
+            return None
+        if self._snapshot is None:
+            return {"rows": 0, "fetched_at": None, "stale": True}
+        return {
+            "rows": len(self._snapshot.rows),
+            "fetched_at": self._snapshot.fetched_at.isoformat(timespec="seconds"),
+            "stale": self._snapshot.is_stale(),
+        }
+
+    async def refresh_snapshot(self, *, force: bool = False, now=None) -> bool:
+        """사본이 없거나 하루가 지났으면 새로 받는다. 받았으면 True다.
+
+        제한 시간에는 부르지 않는다. 불러도 ERROR-503만 받는다.
+        실패하면 이전 사본을 그대로 쓴다.
+        """
+        if self._snapshot_path is None:
+            return False
+        if not force:
+            if self._snapshot is not None and not self._snapshot.is_stale(now):
+                return False
+            if in_restricted_hours(now):
+                return False
+
+        try:
+            snapshot = await download_snapshot(
+                self._ensure_client(),
+                api_key=self._api_key,
+                base_url=self._base_url,
+                service_id=SERVICE_ID,
+                now=now,
+            )
+            save_snapshot(self._snapshot_path, snapshot)
+        except (SnapshotError, OSError) as error:
+            logger.warning("식약처 사본을 새로 받지 못해 이전 사본을 쓴다: %s", error)
+            return False
+
+        self._snapshot = snapshot
+        # 인정 현황이 바뀌었을 수 있으므로 조회 캐시를 비운다.
+        self._cache.clear()
+        logger.info("식약처 사본 갱신: %d건", len(snapshot.rows))
+        return True
+
+    async def run_snapshot_refresh(self, interval_seconds: float = 1800) -> None:
+        """서버가 켜져 있는 동안 주기적으로 사본을 확인한다. 앱 수명주기가 취소한다."""
+        while True:
+            try:
+                await self.refresh_snapshot()
+            except Exception:
+                logger.exception("식약처 사본 확인 중 오류")
+            await asyncio.sleep(interval_seconds)
 
     def _ensure_client(self) -> httpx.AsyncClient:
         if self._client is None:
