@@ -593,16 +593,20 @@ def _best_pair(
 
     효능 대상(질병명·신체기능)이 붙어 있어야 주장으로 본다. 대상 없이 "몸에 좋다"만
     있는 문장은 무엇에 좋다는 것인지 검증할 수 없어 주장으로 세지 않는다.
+
+    대상이 표현 앞에 있는 짝을 먼저 본다. 한국어는 "면역력 저하를 개선하고"처럼
+    대상이 앞에 오므로, 뒤쪽 대상과 짝지으면 "개선하고"만 남아 뜻이 사라진다.
     """
-    best: tuple[tuple[int, int], tuple] | None = None
+    best: tuple[tuple[int, int, int], tuple] | None = None
     for intensity, start, end in effects:
         if abs(start - ingredient_pos) > _MAX_INGREDIENT_TO_EFFECT:
             continue
         near = [t for t in targets if abs(t[1] - start) <= _MAX_TARGET_TO_EFFECT]
         if not near:
             continue
-        target = min(near, key=lambda t: abs(t[1] - start))
-        score = (abs(target[1] - start), abs(start - ingredient_pos))
+        before = [t for t in near if t[1] <= start]
+        target = min(before or near, key=lambda t: abs(t[1] - start))
+        score = (0 if before else 1, abs(target[1] - start), abs(start - ingredient_pos))
         if best is None or score < best[0]:
             best = (score, (intensity, target, (start, end)))
     return best[1] if best else None
@@ -626,7 +630,8 @@ def _effect_text(
     만드는 데 쓰이므로, 숫자와 실험 설명이 섞이면 검증이 엉뚱해진다.
     """
     start = min(effect[0], target[1]) if target else effect[0]
-    end = effect[1]
+    # 대상이 표현 뒤에 있으면("개선하고 면역 기능") 대상까지 담아야 뜻이 통한다.
+    end = max(effect[1], target[1] + len(target[0])) if target else effect[1]
     # 효능 표현이 든 어절 끝까지 늘린다.
     while end < len(sentence) and not sentence[end].isspace() and sentence[end] not in _STATEMENT_STOP:
         end += 1

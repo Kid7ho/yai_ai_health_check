@@ -306,3 +306,17 @@ def test_효능_문구는_효능_대상부터_담는다(extractor):
     assert claim.ingredient == "오메가3"
     assert claim.claimed_effect.startswith("관절")
     assert len(claim.claimed_effect) <= 30
+
+
+def test_효능_대상이_표현_앞에_있는_짝을_먼저_고른다(extractor):
+    """실측(헬스조선 홍삼 기사): 뒤쪽 대상과 짝지어 '개선하고'만 남았다."""
+    text = "홍삼이 노화로 인한 면역력 저하를 개선하고 면역 기능을 건강하게 유지하는데 도움을 준다"
+
+    assert extractor.extract(text).claims[0].claimed_effect == "면역력 저하를 개선하고"
+
+
+def test_제목_줄에서도_대상과_표현을_붙여_읽는다(extractor):
+    """'혈전 억제·면역력 개선'에서 '억제·면역력'이 효능 문구로 잡혔다."""
+    text = "홍삼, 미국서도 효능 입증… 혈전 억제·면역력 개선 효과 밝혀져"
+
+    assert extractor.extract(text).claims[0].claimed_effect == "면역력 개선"
