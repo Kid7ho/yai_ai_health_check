@@ -21,3 +21,31 @@
 - {url: "https://www.youtube.com/watch?v=CeSXjD468uI", 종류: 유튜브, 유형: c, 제목: "여주 나쁜 콜레스테롤 낮추고 혈당 조절을 돕는"}
 - {url: "https://www.youtube.com/shorts/fEMZtslU0_A", 종류: 유튜브, 유형: b, 제목: "강황 커큐민"}
 - {url: "https://www.youtube.com/watch?v=A-9OcHGP9jE", 종류: 유튜브, 유형: a, 제목: "장 건강 지킴이 유산균, 바로 알기"}
+
+# ── 2차 수집(2026-09-17): 허위·과장 광고와 관문 규칙 검증용 ─────────────────
+# 유형: A 허위·과장 광고 / B 질병 치료·완치 / C 약·치료 대체 권유 / D 질병 예방 / E 체험기·권위 호소 / F 부당광고 적발 보도
+- {url: "https://blog.naver.com/volcano5/224400300395", 종류: 블로그, 유형: A, 제목: "프로폴리스 vs 로얄젤리 진짜 효능의 배신"}
+- {url: "https://blog.naver.com/bitcoin-game/224228019032", 종류: 블로그, 유형: A, 제목: "신비의 영약 산삼과 기적의 성분 사포닌"}
+- {url: "https://blog.naver.com/20_lab/224217415925", 종류: 블로그, 유형: A, 제목: "오메가3 대신 이것 처방하는 충격적 이유"}
+- {url: "https://blog.naver.com/jojoharu1000/224407306998", 종류: 블로그, 유형: A, 제목: "손가락 관절통증 싹 잡는 일본 관절약"}
+- {url: "https://www.youtube.com/watch?v=slNxwv8U79g", 종류: 유튜브, 유형: A, 제목: "강력한 천연 항생제 그린 프로폴리스"}
+- {url: "https://www.youtube.com/watch?v=sz3sYqA516E", 종류: 유튜브, 유형: A, 제목: "이거 하나만 드시면 바로 없어집니다"}
+- {url: "https://blog.naver.com/charns77/110166423778", 종류: 블로그, 유형: B, 제목: "당뇨병완치사례 여주"}
+- {url: "https://blog.naver.com/mywso1/224346672054", 종류: 블로그, 유형: B, 제목: "당뇨 완치 환자들이 먹은 이것"}
+- {url: "https://www.youtube.com/watch?v=zwac3GNY5jI", 종류: 유튜브, 유형: B, 제목: "암세포를 죽이는 마늘의 항암 효과"}
+- {url: "https://www.youtube.com/watch?v=IR4LckiUgdk", 종류: 유튜브, 유형: B, 제목: "이 음료를 한잔 마시면 암이 사라집니다"}
+- {url: "https://www.youtube.com/watch?v=4O3FpJhOhHs", 종류: 유튜브, 유형: B, 제목: "관절염이 싹 사라지는 놀라운 음식"}
+- {url: "https://blog.naver.com/ays3258/224154434162", 종류: 블로그, 유형: C, 제목: "혈압약 끊고 싶다면 이것 매일 드세요"}
+- {url: "https://blog.naver.com/cna058/224349296475", 종류: 블로그, 유형: C, 제목: "류마티스 환자를 농락하는 업체들을 고발합니다", 비고: "광고 문구를 인용해 비판하는 글"}
+- {url: "https://www.youtube.com/watch?v=EpK_FN1YVts", 종류: 유튜브, 유형: C, 제목: "당뇨약 대신 처방하는 천연 식물 인슐린 여주"}
+- {url: "https://www.youtube.com/watch?v=OT8-MWDdI0M", 종류: 유튜브, 유형: C, 제목: "혈압약 끊을 수 있다"}
+- {url: "https://blog.naver.com/o11954533o4/224400327245", 종류: 블로그, 유형: D, 제목: "암세포가 무서워 벌벌 떠는 항암 효과 1등 식재료"}
+- {url: "https://blog.naver.com/senior_labs/224402365562", 종류: 블로그, 유형: D, 제목: "블루베리 황반변성 치매 예방"}
+- {url: "https://www.youtube.com/watch?v=hP56tSw_1J8", 종류: 유튜브, 유형: D, 제목: "치매 예방하고 염증까지 싹 사라집니다"}
+- {url: "https://www.youtube.com/watch?v=8FTg94I1x2s", 종류: 유튜브, 유형: D, 제목: "마늘과 함께 먹으면 암 발생률 67% 감소"}
+- {url: "https://blog.naver.com/2ke6ksahb30c/224338699047", 종류: 블로그, 유형: E, 제목: "철갑상어 콘드로이친 직접 써본 솔직 사용기"}
+- {url: "https://blog.naver.com/o11954533o4/224400313905", 종류: 블로그, 유형: E, 제목: "신경과 의사들이 매일 챙겨 먹는 치매 예방 슈퍼푸드"}
+- {url: "https://www.youtube.com/watch?v=6uuOd2MUogA", 종류: 유튜브, 유형: E, 제목: "약사가 실제 섭취 중인 당뇨병을 없애주는 영양제"}
+- {url: "https://www.youtube.com/watch?v=ICQqxdLK_3I", 종류: 유튜브, 유형: E, 제목: "약사가 알려주는 강황 커큐민을 꼭 먹어야 하는 이유"}
+- {url: "https://www.munhwa.com/article/11554165", 종류: 기사, 유형: F, 제목: "AI 의사 등 활용 건강기능식품 부당광고 16곳 적발"}
+- {url: "https://www.sedaily.com/article/20054380", 종류: 기사, 유형: F, 제목: "식약처, 허위광고 업체 21곳 적발"}

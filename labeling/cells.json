@@ -1064,5 +1064,305 @@
   "service_rule": "R-999",
   "content_source": null,
   "claims": []
+ },
+ {
+  "id": "link-21",
+  "service_label": "WARNING",
+  "service_rule": "R-031",
+  "content_source": "article",
+  "claims": [
+   {
+    "row": "미인정",
+    "grade": "뒷받침 우세",
+    "service_label": "WARNING",
+    "service_rule": "R-031"
+   }
+  ]
+ },
+ {
+  "id": "link-22",
+  "service_label": "WARNING",
+  "service_rule": "R-031",
+  "content_source": "article",
+  "claims": []
+ },
+ {
+  "id": "link-23",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-001",
+  "content_source": "article",
+  "claims": []
+ },
+ {
+  "id": "link-24",
+  "service_label": "CAUTION",
+  "service_rule": "R-071",
+  "content_source": "article",
+  "claims": [
+   {
+    "row": "미인정",
+    "grade": "엇갈림",
+    "service_label": "CAUTION",
+    "service_rule": "R-071"
+   },
+   {
+    "row": "미인정",
+    "grade": "뒷받침 우세",
+    "service_label": "CAUTION",
+    "service_rule": "R-070"
+   },
+   {
+    "row": "미인정",
+    "grade": "뒷받침 우세",
+    "service_label": "CAUTION",
+    "service_rule": "R-070"
+   }
+  ]
+ },
+ {
+  "id": "link-25",
+  "service_label": "WARNING",
+  "service_rule": "R-031",
+  "content_source": null,
+  "claims": []
+ },
+ {
+  "id": "link-26",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-999",
+  "content_source": null,
+  "claims": []
+ },
+ {
+  "id": "link-27",
+  "service_label": "WARNING",
+  "service_rule": "R-021",
+  "content_source": "article",
+  "claims": [
+   {
+    "row": "미인정",
+    "grade": "근거 부족",
+    "service_label": "WARNING",
+    "service_rule": "R-021"
+   },
+   {
+    "row": "인정+효능 일부 일치",
+    "grade": "뒷받침 우세",
+    "service_label": "WARNING",
+    "service_rule": "R-021"
+   }
+  ]
+ },
+ {
+  "id": "link-28",
+  "service_label": "CAUTION",
+  "service_rule": "R-071",
+  "content_source": "article",
+  "claims": [
+   {
+    "row": "미인정",
+    "grade": "뒷받침 우세",
+    "service_label": "CAUTION",
+    "service_rule": "R-071"
+   }
+  ]
+ },
+ {
+  "id": "link-29",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-999",
+  "content_source": null,
+  "claims": []
+ },
+ {
+  "id": "link-30",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-999",
+  "content_source": null,
+  "claims": []
+ },
+ {
+  "id": "link-31",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-001",
+  "content_source": null,
+  "claims": []
+ },
+ {
+  "id": "link-32",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-001",
+  "content_source": "article",
+  "claims": []
+ },
+ {
+  "id": "link-33",
+  "service_label": "TRUSTWORTHY",
+  "service_rule": "R-040",
+  "content_source": "article",
+  "claims": [
+   {
+    "row": "인정+효능 일치",
+    "grade": "뒷받침 우세",
+    "service_label": "TRUSTWORTHY",
+    "service_rule": "R-040"
+   }
+  ]
+ },
+ {
+  "id": "link-34",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-001",
+  "content_source": null,
+  "claims": []
+ },
+ {
+  "id": "link-35",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-001",
+  "content_source": null,
+  "claims": []
+ },
+ {
+  "id": "link-36",
+  "service_label": "CAUTION",
+  "service_rule": "R-070",
+  "content_source": "article",
+  "claims": [
+   {
+    "row": "미인정",
+    "grade": "뒷받침 우세",
+    "service_label": "CAUTION",
+    "service_rule": "R-070"
+   },
+   {
+    "row": "미인정",
+    "grade": "뒷받침 우세",
+    "service_label": "CAUTION",
+    "service_rule": "R-070"
+   },
+   {
+    "row": "미인정",
+    "grade": "뒷받침 우세",
+    "service_label": "CAUTION",
+    "service_rule": "R-070"
+   }
+  ]
+ },
+ {
+  "id": "link-37",
+  "service_label": "CAUTION",
+  "service_rule": "R-070",
+  "content_source": "article",
+  "claims": [
+   {
+    "row": "미인정",
+    "grade": "근거 부족",
+    "service_label": "CAUTION",
+    "service_rule": "R-070"
+   },
+   {
+    "row": "미인정",
+    "grade": "근거 부족",
+    "service_label": "CAUTION",
+    "service_rule": "R-070"
+   }
+  ]
+ },
+ {
+  "id": "link-38",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-999",
+  "content_source": null,
+  "claims": []
+ },
+ {
+  "id": "link-39",
+  "service_label": "CAUTION",
+  "service_rule": "R-070",
+  "content_source": null,
+  "claims": [
+   {
+    "row": "미인정",
+    "grade": "뒷받침 우세",
+    "service_label": "CAUTION",
+    "service_rule": "R-070"
+   },
+   {
+    "row": "미인정",
+    "grade": "엇갈림",
+    "service_label": "CAUTION",
+    "service_rule": "R-071"
+   },
+   {
+    "row": "미인정",
+    "grade": "뒷받침 우세",
+    "service_label": "CAUTION",
+    "service_rule": "R-070"
+   }
+  ]
+ },
+ {
+  "id": "link-40",
+  "service_label": "TRUSTWORTHY",
+  "service_rule": "R-040",
+  "content_source": "article",
+  "claims": [
+   {
+    "row": "인정+효능 일치",
+    "grade": "뒷받침 우세",
+    "service_label": "TRUSTWORTHY",
+    "service_rule": "R-040"
+   }
+  ]
+ },
+ {
+  "id": "link-41",
+  "service_label": "CAUTION",
+  "service_rule": "R-070",
+  "content_source": "article",
+  "claims": [
+   {
+    "row": "미인정",
+    "grade": "근거 부족",
+    "service_label": "CAUTION",
+    "service_rule": "R-070"
+   }
+  ]
+ },
+ {
+  "id": "link-42",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-999",
+  "content_source": null,
+  "claims": []
+ },
+ {
+  "id": "link-43",
+  "service_label": "CAUTION",
+  "service_rule": "R-050",
+  "content_source": null,
+  "claims": [
+   {
+    "row": "인정+효능 일부 일치",
+    "grade": "뒷받침 우세",
+    "service_label": "CAUTION",
+    "service_rule": "R-050"
+   }
+  ]
+ },
+ {
+  "id": "link-44",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-999",
+  "content_source": "article",
+  "claims": []
+ },
+ {
+  "id": "link-45",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-999",
+  "content_source": "article",
+  "claims": []
  }
 ]

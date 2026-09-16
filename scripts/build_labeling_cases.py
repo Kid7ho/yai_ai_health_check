@@ -470,6 +470,12 @@ def main() -> int:
     if not args.reset:
         cases, cells, added = merge_published(cases, cells)
         print(f"기존 사례 유지, 새 사례 {added}건 추가")
+    # 번역은 표시용이라 고정한 사례에도 새로 채운다. 발췌 문장 자체는 바꾸지 않는다.
+    for case in cases:
+        for claim in case["claims"]:
+            for paper in claim.get("papers", []):
+                excerpt_info = paper.get("excerpt") or {}
+                excerpt_info["ko"] = [_translations().get(s, "") for s in excerpt_info.get("sentences", [])]
     (DIR / "cases.json").write_text(json.dumps(cases, ensure_ascii=False, indent=1), encoding="utf-8")
     (DIR / "cells.json").write_text(json.dumps(cells, ensure_ascii=False, indent=1), encoding="utf-8")
     # 시트 HTML에 사례를 넣는다. </script>가 끼어 스크립트가 끊기지 않게 '</'를 가린다.
