@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import re
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -24,6 +25,8 @@ from healthcheck.adapters.mfds.snapshot import (
     save_snapshot,
 )
 from healthcheck.domain.types import Claim
+
+NOTIFIED_FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "notified_minimal.yaml"
 
 KST = ZoneInfo("Asia/Seoul")
 NIGHT = datetime(2026, 9, 15, 21, 0, tzinfo=KST)
@@ -119,7 +122,7 @@ async def test_사본이_있으면_API를_부르지_않고_판정한다(tmp_path
     save_snapshot(path, Snapshot(fetched_at=datetime.now(timezone.utc), rows=(ROW_LIVER, ROW_BP)))
     calls: list[str] = []
     source = FoodSafetyKoreaDataSource(
-        "k", client=client_for(paged_handler([], calls, code="ERROR-503")), snapshot_path=path
+        "k", notified_path=NOTIFIED_FIXTURE, client=client_for(paged_handler([], calls, code="ERROR-503")), snapshot_path=path
     )
 
     evidence = await source.lookup(GARLIC_BP)
@@ -137,7 +140,8 @@ async def test_사본이_없으면_API를_직접_부른다(tmp_path):
         body = {"I-0040": {"total_count": "1", "row": [ROW_BP], "RESULT": {"CODE": "INFO-000"}}}
         return httpx.Response(200, json=body)
 
-    source = FoodSafetyKoreaDataSource("k", client=client_for(handler), snapshot_path=tmp_path / "none.json")
+    source = FoodSafetyKoreaDataSource(
+        "k", notified_path=NOTIFIED_FIXTURE, client=client_for(handler), snapshot_path=tmp_path / "none.json")
 
     evidence = await source.lookup(GARLIC_BP)
 
@@ -147,7 +151,8 @@ async def test_사본이_없으면_API를_직접_부른다(tmp_path):
 
 async def test_제한_시간에는_사본을_받지_않는다(tmp_path):
     calls: list[str] = []
-    source = FoodSafetyKoreaDataSource("k", client=client_for(paged_handler(rows(3), calls)), snapshot_path=tmp_path / "m.json")
+    source = FoodSafetyKoreaDataSource(
+        "k", notified_path=NOTIFIED_FIXTURE, client=client_for(paged_handler(rows(3), calls)), snapshot_path=tmp_path / "m.json")
 
     assert await source.refresh_snapshot(now=DAY.astimezone(timezone.utc)) is False
     assert calls == []
@@ -161,7 +166,8 @@ async def test_하루가_지나지_않은_사본은_다시_받지_않는다(tmp_
     fetched = NIGHT.astimezone(timezone.utc)
     save_snapshot(path, Snapshot(fetched_at=fetched, rows=(ROW_BP,)))
     calls: list[str] = []
-    source = FoodSafetyKoreaDataSource("k", client=client_for(paged_handler(rows(3), calls)), snapshot_path=path)
+    source = FoodSafetyKoreaDataSource(
+        "k", notified_path=NOTIFIED_FIXTURE, client=client_for(paged_handler(rows(3), calls)), snapshot_path=path)
 
     assert await source.refresh_snapshot(now=fetched + timedelta(hours=5)) is False
     assert calls == []
@@ -172,7 +178,8 @@ async def test_받기에_실패하면_이전_사본을_그대로_쓴다(tmp_path
     path = tmp_path / "m.json"
     old = NIGHT.astimezone(timezone.utc) - timedelta(days=2)
     save_snapshot(path, Snapshot(fetched_at=old, rows=(ROW_BP,)))
-    source = FoodSafetyKoreaDataSource("k", client=client_for(paged_handler([], [], code="ERROR-503")), snapshot_path=path)
+    source = FoodSafetyKoreaDataSource(
+        "k", notified_path=NOTIFIED_FIXTURE, client=client_for(paged_handler([], [], code="ERROR-503")), snapshot_path=path)
 
     assert await source.refresh_snapshot(now=NIGHT.astimezone(timezone.utc)) is False
     assert source.snapshot_info()["rows"] == 1
@@ -201,7 +208,8 @@ async def test_API는_한_번에_하나씩_부르고_같은_성분은_한_번만
         finally:
             in_flight -= 1
 
-    source = FoodSafetyKoreaDataSource("k", client=client_for(handler))
+    source = FoodSafetyKoreaDataSource(
+        "k", notified_path=NOTIFIED_FIXTURE, client=client_for(handler))
     other = Claim(ingredient="마늘", claimed_effect="혈압 개선에 도움을", intensity="SUGGESTIVE", span=(0, 2))
 
     first, second = await asyncio.gather(source.lookup(GARLIC_BP), source.lookup(other))

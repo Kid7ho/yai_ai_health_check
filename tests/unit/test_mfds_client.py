@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import httpx
 import pytest
 
@@ -11,6 +13,8 @@ from healthcheck.adapters.mfds.foodsafetykorea import (
     match_level,
 )
 from healthcheck.domain.types import Claim
+
+NOTIFIED_FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "notified_minimal.yaml"
 
 GARLIC = Claim(ingredient="마늘", claimed_effect="혈압을 낮추는 데 좋다고", intensity="SUGGESTIVE", span=(0, 2))
 GINSENG = Claim(ingredient="홍삼", claimed_effect="면역력 증진에 도움을", intensity="SUGGESTIVE", span=(0, 2))
@@ -40,6 +44,7 @@ ROW_BP = {
 
 
 def source_with(handler, **kwargs) -> FoodSafetyKoreaDataSource:
+    kwargs.setdefault("notified_path", NOTIFIED_FIXTURE)
     return FoodSafetyKoreaDataSource(
         "test-key", client=httpx.AsyncClient(transport=httpx.MockTransport(handler)), **kwargs
     )

@@ -51,18 +51,23 @@
 
 - id: gold-004
   input: "마늘이 혈압을 낮추는 데 좋다고 합니다"
-  expected: CAUTION
-  expected_rule: R-070
-  reason: 뒷받침 연구는 있으나 국가가 기능성을 인정한 원료가 아니다. 믿을 만하다고 말할 수 없다.
+  expected: TRUSTWORTHY
+  expected_rule: R-040
+  reason: >-
+    마늘은 고시형 원료이고 인정 문구에 혈압조절이 있다(식약처 I2710). 뒷받침 연구가 반박의 두 배 이상이다.
+  # v0.12에서 CAUTION을 TRUSTWORTHY로 고쳤다(2026-09-17 사용자 결정). 이전에는 손 초안이
+  # 마늘을 기능성 원료가 아니라고 봐서 미인정으로 판정했다.
+  # 남는 질문: 주장은 '낮추다', 인정 문구는 '조절'이다. 인정 범위보다 넓은 주장(PARTIAL)으로
+  # 볼지는 자문의 판단이 필요하다.
   판정입력:
     in_scope: true
     transcript_quality: ok
     disease_cure_expression: false
     ad_violation_hit: false
-    recognition: NOT_RECOGNIZED
-    functionality_match: NOT_APPLICABLE
-    supporting_papers: 2
-    refuting_papers: 0
+    recognition: NOTIFIED
+    functionality_match: EXACT
+    supporting_papers: 7
+    refuting_papers: 2
 
 - id: gold-005
   input: "당뇨약 끊고 이 즙만 드시면 인슐린 안 맞아도 됩니다"
@@ -81,17 +86,17 @@
 
 - id: gold-006
   input: "마늘이 혈압을 낮추는 데 좋다고 합니다"
-  expected: CAUTION
-  expected_rule: R-071
+  expected: TRUSTWORTHY
+  expected_rule: R-040
   reason: >-
-    뒷받침 연구가 여러 편이지만 반박 연구도 있고 국가 인정 원료가 아니다.
-    실제 Liner 검색 결과가 뒷받침 7편 반박 2편이었다.
+    고시형 인정 문구(혈압조절)와 일치하고, 실제 Liner 검색 결과가 뒷받침 7편 반박 2편이라
+    뒷받침이 반박의 두 배 이상이다. v0.12에서 CAUTION을 고쳤다(gold-004 참고).
   판정입력:
     in_scope: true
     transcript_quality: ok
     disease_cure_expression: false
     ad_violation_hit: false
-    recognition: NOT_RECOGNIZED
-    functionality_match: NOT_APPLICABLE
+    recognition: NOTIFIED
+    functionality_match: EXACT
     supporting_papers: 7
     refuting_papers: 2

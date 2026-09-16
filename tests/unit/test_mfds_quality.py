@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import httpx
 
-from healthcheck.adapters.mfds.foodsafetykorea import FoodSafetyKoreaDataSource
+from healthcheck.adapters.mfds.foodsafetykorea import DEFAULT_NOTIFIED_PATH, FoodSafetyKoreaDataSource
 from healthcheck.domain.types import Claim
+
+NOTIFIED_FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "notified_minimal.yaml"
 
 
 def claim(ingredient: str, effect: str) -> Claim:
@@ -16,8 +20,10 @@ def payload(rows):
     return {"I-0040": {"total_count": str(len(rows)), "row": rows, "RESULT": {"CODE": "INFO-000"}}}
 
 
-def source_with(handler) -> FoodSafetyKoreaDataSource:
-    return FoodSafetyKoreaDataSource("test-key", client=httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+def source_with(handler, notified_path=NOTIFIED_FIXTURE) -> FoodSafetyKoreaDataSource:
+    return FoodSafetyKoreaDataSource(
+        "test-key", client=httpx.AsyncClient(transport=httpx.MockTransport(handler)), notified_path=notified_path
+    )
 
 
 def row(name: str, functionality: str, number: str = "2020-1") -> dict:
@@ -33,7 +39,7 @@ async def test_칼슘의_뼈_건강_주장은_고시형_인정과_일치한다()
     def handler(request):  # pragma: no cover
         raise AssertionError("고시형 영양성분에 API를 호출했다")
 
-    evidence = await source_with(handler).lookup(claim("칼슘", "뼈 건강에 도움을"))
+    evidence = await source_with(handler, DEFAULT_NOTIFIED_PATH).lookup(claim("칼슘", "뼈 건강에 도움을"))
 
     assert evidence.recognition == "NOTIFIED"
     assert evidence.match_level == "EXACT"
@@ -41,14 +47,14 @@ async def test_칼슘의_뼈_건강_주장은_고시형_인정과_일치한다()
 
 async def test_비타민C의_면역력_주장은_인정_범위_밖이다():
     """비타민C의 고시형 기능성에는 면역이 없다. 다른 기능성으로 인정받았다는 사실만 남긴다."""
-    evidence = await source_with(lambda r: httpx.Response(500)).lookup(claim("비타민C", "면역력에 도움을"))
+    evidence = await source_with(lambda r: httpx.Response(500), DEFAULT_NOTIFIED_PATH).lookup(claim("비타민C", "면역력에 도움을"))
 
     assert evidence.recognition == "NOT_RECOGNIZED"
     assert evidence.other_recognitions
 
 
 async def test_아연의_면역_기능_주장은_인정과_일치한다():
-    evidence = await source_with(lambda r: httpx.Response(500)).lookup(claim("아연", "면역 기능에 도움을"))
+    evidence = await source_with(lambda r: httpx.Response(500), DEFAULT_NOTIFIED_PATH).lookup(claim("아연", "면역 기능에 도움을"))
     assert evidence.match_level == "EXACT"
 
 
