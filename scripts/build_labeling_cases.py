@@ -287,19 +287,24 @@ def build(results: list[dict]) -> tuple[list[dict], list[dict], dict]:
         result = item["result"]
         if item["group"] == "실제 링크":
             # 실제 링크는 칸을 가리지 않고 모두 넣는다. 주장이 여럿이면 주장마다 칸을 적는다.
-            if not result.claim_checks:
-                skipped["실제 링크 주장 없음"] += 1
-                continue
             text = result.content.text if result.content else ""
             case_id = f"link-{len(link_cases) + 1:02d}"
-            link_cases.append(
+            # 주장이 없어도 넣는다. 관문 규칙(범위 밖·질병 치료·금지 광고)에서 멈췄거나 주장을 놓친 경우를
+            # 팀원이 원문을 보고 판단한다. 이런 사례는 주장 대신 원문 앞부분을 보여 준다.
+            views = [claim_view(check, text) for check in result.claim_checks] or [
                 {
-                    "id": case_id,
-                    "source": "실제 링크",
-                    "input": item["input"],
-                    "claims": [claim_view(check, text) for check in result.claim_checks],
+                    "noClaim": True,
+                    "ingredient": "",
+                    "effect": "",
+                    "intensity": "",
+                    "statement": "",
+                    "context": " ".join(text.split())[:600] + ("…" if len(text) > 600 else ""),
+                    "mfds": None,
+                    "papers": [],
+                    "svcCount": None,
                 }
-            )
+            ]
+            link_cases.append({"id": case_id, "source": "실제 링크", "input": item["input"], "claims": views})
             link_cells.append(
                 {
                     "id": case_id,
@@ -406,9 +411,54 @@ def build(results: list[dict]) -> tuple[list[dict], list[dict], dict]:
     return cases, cells, {"counts": counts, "skipped": dict(skipped), "pool": {f"{r}/{g}": len(v) for (r, g), v in pool.items()}}
 
 
+def case_key(case: dict) -> str:
+    """사례의 변하지 않는 식별 값. 같은 문장·링크라도 조회 실패 가정 사례는 따로 센다."""
+    return f"{case['source']}|{case['input']}"
+
+
+def merge_published(cases: list[dict], cells: list[dict]) -> tuple[list[dict], list[dict], int]:
+    """이미 내보낸 사례는 번호와 내용을 그대로 두고 새 사례만 뒤에 붙인다.
+
+    팀원 분류는 사례 번호(lab-001)와 주장 순서로 저장된다. 후보를 늘리거나 추출 코드를 고친 뒤
+    다시 만들면 번호가 밀리거나 주장이 바뀌어, 이미 한 분류가 다른 사례에 붙거나 사라진다.
+    그래서 한 번 내보낸 사례는 고정한다. 이번 선정에서 빠진 사례도 지우지 않는다.
+    """
+    path = DIR / "cases.json"
+    if not path.is_file():
+        return cases, cells, len(cases)
+    published = json.loads(path.read_text(encoding="utf-8"))
+    published_cells = json.loads((DIR / "cells.json").read_text(encoding="utf-8")) if (DIR / "cells.json").is_file() else []
+    known = {case_key(case) for case in published}
+    width = {"lab": 3, "link": 2}
+    next_number = {prefix: 0 for prefix in width}
+    for case in published:
+        prefix, number = case["id"].split("-", 1)
+        next_number[prefix] = max(next_number.get(prefix, 0), int(number))
+
+    cells_by_id = {cell["id"]: cell for cell in cells}
+    merged_cases, merged_cells = list(published), list(published_cells)
+    added = 0
+    for case in cases:
+        if case_key(case) in known:
+            continue
+        prefix = case["id"].split("-", 1)[0]
+        next_number[prefix] = next_number.get(prefix, 0) + 1
+        new_id = f"{prefix}-{next_number[prefix]:0{width.get(prefix, 3)}d}"
+        cell = dict(cells_by_id.get(case["id"], {}), id=new_id)
+        merged_cases.append(dict(case, id=new_id))
+        merged_cells.append(cell)
+        added += 1
+    return merged_cases, merged_cells, added
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="분류 시트 사례를 만든다.")
     parser.add_argument("--mode", choices=["record", "replay"], default="replay")
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="이미 내보낸 사례를 버리고 처음부터 만든다. 팀원 분류가 시작된 뒤에는 쓰지 않는다",
+    )
     args = parser.parse_args()
     logging.disable(logging.WARNING)
 
@@ -417,6 +467,9 @@ def main() -> int:
     # 녹화 직후에도 재생으로 만든다. 시트에 들어가는 근거가 녹화 파일과 정확히 같아야 한다.
     results = asyncio.run(run("replay"))
     cases, cells, summary = build(results)
+    if not args.reset:
+        cases, cells, added = merge_published(cases, cells)
+        print(f"기존 사례 유지, 새 사례 {added}건 추가")
     (DIR / "cases.json").write_text(json.dumps(cases, ensure_ascii=False, indent=1), encoding="utf-8")
     (DIR / "cells.json").write_text(json.dumps(cells, ensure_ascii=False, indent=1), encoding="utf-8")
     # 시트 HTML에 사례를 넣는다. </script>가 끼어 스크립트가 끊기지 않게 '</'를 가린다.

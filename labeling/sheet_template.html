@@ -44,6 +44,12 @@ a{color:var(--accent)}
 .tabs button{border:0;background:transparent;padding:6px 14px;border-radius:8px;font-weight:600;color:var(--ink-2)}
 .tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .08)}
 .me{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px 4px 4px;font-weight:600}
+.me .me-prog{font-size:12px;font-weight:600;color:var(--ink-2);background:var(--surface-2);border-radius:999px;padding:1px 8px}
+.slots .prog{font-family:var(--mono);font-size:11px;color:var(--ink-2)}
+.slots .bar{width:100%;height:4px;margin-top:4px}
+.team{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.team .member{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:120px;font-size:13px}
+.team .member b{display:block}
 .me .avatar{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:12px}
 .mode{font-size:12px;color:var(--ink-3)}
 .mode.shared::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--trust);margin-right:6px;vertical-align:1px}
@@ -288,6 +294,8 @@ function myDoc(cs, create) {
 const isRecognized = c => !!c.mfds && (c.mfds.recognition === "개별인정" || c.mfds.recognition === "고시형");
 function stepDone(c, d, step) {
   if (!d) return false;
+  // 주장을 뽑지 못한 사례는 판정만 받는다.
+  if (c.noClaim && step !== "label") return true;
   if (step === "claim") return !!d.extraction;
   if (step === "mfds") return !isRecognized(c) || !!d.match;
   if (step === "papers") return d.skipPapers || c.papers.length === 0 || c.papers.every((_, i) => d.stances[i]);
@@ -295,11 +303,18 @@ function stepDone(c, d, step) {
   return false;
 }
 function claimDone(c, d) {
+  if (c.noClaim) return !!(d && d.label);
   if (!d || !d.extraction) return false;
   if (d.extraction === "WRONG") return true;
   return stepDone(c, d, "mfds") && !!d.label;
 }
 function caseDone(cs, doc) { return !!doc && !!doc.missingClaim && cs.claims.every((c, i) => claimDone(c, doc.claims[i])); }
+// 팀원별 진행: 전체 사례 중 모든 주장의 판정을 마친 사례 수.
+function progressOf(slot) {
+  let done = 0;
+  CASES.forEach(cs => { if (caseDone(cs, state.labels[keyOf(cs.id, slot)])) done++; });
+  return done;
+}
 function caseStarted(doc) { return !!doc && (!!doc.missingClaim || doc.claims.some(x => x.extraction || x.label || x.match)); }
 
 // ── 공유 저장 ──
@@ -430,7 +445,8 @@ function renderTop() {
   $("tab-agg").setAttribute("aria-selected", String(state.view === "agg"));
   const me = $("me");
   const name = state.me ? (state.members[state.me]?.name || slotTitle(state.me)) : "팀원 선택";
-  me.innerHTML = `<span class="avatar">${esc(state.me ? name.slice(0, 1) : "?")}</span><span>${esc(name)}</span>`;
+  me.innerHTML = `<span class="avatar">${esc(state.me ? name.slice(0, 1) : "?")}</span><span>${esc(name)}</span>`
+    + (state.me ? `<span class="me-prog mono">${progressOf(state.me)} / ${CASES.length}</span>` : "");
 }
 const slotTitle = s => "팀원 " + s.slice(1);
 
@@ -453,7 +469,7 @@ function renderRail() {
     const first = cs.claims[0];
     return `<li><button data-act="goto-case" data-val="${i}" aria-current="${i === state.caseIdx}">
       <span class="dot ${st}" aria-hidden="true"></span><span class="cid">${esc(cs.id)} · 주장 ${cs.claims.length}</span>
-      <span class="ctext">${esc(first.ingredient)} — ${esc(cs.input)}</span></button></li>`;
+      <span class="ctext">${esc(first.noClaim ? "주장 없음" : first.ingredient)} — ${esc(cs.input)}</span></button></li>`;
   }).join("");
   const opts = CASES.map((cs, i) => `<option value="${i}" ${i === state.caseIdx ? "selected" : ""}>${esc(cs.id)} · ${esc(cs.input.slice(0, 30))}</option>`).join("");
   rail.innerHTML = `
@@ -475,7 +491,7 @@ function renderCase() {
   const source = isUrl ? `<a href="${esc(cs.input.trim())}" target="_blank" rel="noopener">${esc(cs.input)}</a>` : esc(cs.input);
 
   const claimTabs = cs.claims.map((x, i) => `<button role="tab" aria-selected="${i === state.claimIdx}" data-act="goto-claim" data-val="${i}">
-      주장 ${i + 1} · ${esc(x.ingredient)}${doc && claimDone(x, doc.claims[i]) ? ' <span class="check">✓ 완료</span>' : ""}</button>`).join("");
+      ${x.noClaim ? "주장 없음" : `주장 ${i + 1} · ${esc(x.ingredient)}`}${doc && claimDone(x, doc.claims[i]) ? ' <span class="check">✓ 완료</span>' : ""}</button>`).join("");
 
   const steps = STEPS.map(s => {
     const optional = s.k === "papers";
@@ -515,6 +531,11 @@ function renderCase() {
 function panel(cs, c, d) {
   const wrong = d?.extraction === "WRONG";
   const wrongNote = wrong && state.step !== "claim" ? `<div class="callout">② 주장 확인에서 '틀림'을 고르셨어요. 이 주장은 판정표 수정에 쓰지 않으므로 나머지 단계는 건너뛰어도 됩니다.</div>` : "";
+  if (c.noClaim && state.step !== "label") {
+    return `<h3>서비스가 검증할 주장을 뽑지 않은 사례</h3>
+      <p class="hint">서비스가 이 글에서 성분과 효능이 짝지어진 주장을 찾지 못했거나, 주장을 보기 전에 멈췄어요. ② ③ ④는 건너뛰고 ⑤ 판정에서 원문을 보고 어르신에게 어떻게 알릴지 골라 주세요. 놓친 주장이 있으면 위의 '있음'에 적어 주세요.</p>
+      ${c.context ? `<div class="official"><small>가져온 본문 앞부분</small>${esc(c.context)}</div>` : `<p class="hint">본문을 가져오지 못했어요. 링크를 열어 확인해 주세요.</p>`}`;
+  }
   if (state.step === "claim") {
     return `<h3>서비스가 원문에서 뽑은 주장</h3>
       <p class="quote">“${esc(c.statement || `${c.ingredient} ${c.effect}`)}”</p>
@@ -618,7 +639,7 @@ function aggView() {
       const dist = n ? LABELS.map(l => counts[l.v] ? `<i class="${l.c}" style="width:${counts[l.v] / n * 100}%"></i>` : "").join("") : "";
       const reasons = entries.map(x => `<li><b>${esc(x.doc.name || slotTitle(x.doc.slot))}</b> — ${x.d.extraction === "WRONG" ? `주장 추출 틀림${x.d.extractionNote ? ": " + esc(x.d.extractionNote) : ""}` : `${esc(LABEL_OF[x.d.label]?.t || "")}${x.d.match ? ` · 문구 ${esc({ EXACT: "일치", PARTIAL: "일부 일치", MISMATCH: "다름" }[x.d.match])}` : ""}${x.d.reason ? ": " + esc(x.d.reason) : ""}`}</li>`).join("");
       rows.push(`<tr>
-        <td><div class="mono" style="font-size:12px;color:var(--ink-3)">${esc(cs.id)} · 주장 ${i + 1}</div><div>${esc(c.statement || c.ingredient + " " + c.effect)}</div>
+        <td><div class="mono" style="font-size:12px;color:var(--ink-3)">${esc(cs.id)} · 주장 ${i + 1}</div><div>${esc(c.noClaim ? "(주장 없음) " + cs.input : (c.statement || c.ingredient + " " + c.effect))}</div>
           <div class="hint">${esc(c.mfds ? c.mfds.recognition : "식약처 조회 없음")} · 논문 ${c.papers.length}편</div></td>
         ${unlocked ? `<td><div class="dist">${dist}</div><div class="legend">${LABELS.filter(l => counts[l.v]).map(l => `<span>${l.t} ${counts[l.v]}</span>`).join("")}${wrong ? `<span>추출 틀림 ${wrong}</span>` : ""}</div></td>
           <td><span class="status ${status}">${statusText}</span></td>
@@ -637,6 +658,7 @@ function aggView() {
         ${state.mode === "local" ? `<button class="btn" data-act="import">팀원 결과 파일 합치기</button>` : ""}
       </div>
     </div>
+    <div class="team" aria-label="팀원별 진행">${SLOTS.map(sl => { const n = progressOf(sl); return `<div class="member"><b>${esc(state.members[sl]?.name || slotTitle(sl))}</b><span class="mono">${n} / ${CASES.length}</span><div class="bar"><i style="width:${n / CASES.length * 100}%"></i></div></div>`; }).join("")}</div>
     <p class="hint" style="margin:0 0 12px">확정 후보는 이름을 등록한 팀원 ${total}명 중 ${need}명 이상이 같은 라벨을 고른 주장입니다. 모두 답했는데 그보다 갈리면 교수님께 질문할 목록에 올립니다.</p>
     <div class="table-wrap"><table>
       <thead><tr><th style="width:38%">주장</th><th>판정 분포</th><th>상태</th><th>이유</th></tr></thead>
@@ -653,7 +675,7 @@ function renderDialog() {
   root.innerHTML = `<div class="overlay"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
     <h2 id="dlg-title">누구인지 골라 주세요</h2>
     <p class="hint">팀원마다 번호 하나를 씁니다. 다른 사람의 번호를 고르면 그 사람의 분류를 덮어씁니다.</p>
-    <div class="slots">${SLOTS.map(s => `<button data-act="pick-slot" data-val="${s}" ${pressed(pick === s)}><b>${s.slice(1)}</b>${esc(state.members[s]?.name || "비어 있음")}</button>`).join("")}</div>
+    <div class="slots">${SLOTS.map(s => { const n = progressOf(s); return `<button data-act="pick-slot" data-val="${s}" ${pressed(pick === s)}><b>${s.slice(1)}</b>${esc(state.members[s]?.name || "비어 있음")}<span class="prog">${n} / ${CASES.length}</span><span class="bar" aria-hidden="true"><i style="width:${n / CASES.length * 100}%"></i></span></button>`; }).join("")}</div>
     <label class="field" for="member-name">이름<input id="member-name" autocomplete="off" placeholder="예: 홍길동" value="${esc(keepName ?? cur)}"></label>
     <ul class="guide">
       <li>① 원문 → ② 주장 → ③ 식약처 → ④ 논문 → ⑤ 판정 순서로 봅니다.</li>
@@ -728,7 +750,7 @@ document.addEventListener("click", async ev => {
   else if (act === "set-stance") { const i = b.dataset.idx; if (d.stances[i] === val) delete d.stances[i]; else d.stances[i] = val; }
   else return;
   persist(cs);
-  renderRail(); renderCase();
+  renderTop(); renderRail(); renderCase();
 });
 
 document.addEventListener("input", ev => {

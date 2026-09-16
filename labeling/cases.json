@@ -35,8 +35,8 @@
         "프로바이오틱스가 조현병 환자의 배변 활동과 대사 인자에 미치는 영향을 조사하기 위해, 우리는 2개월 이상 변비로 인해 스트렙토코커스 패칼리스(Streptococcus faecalis) 2×10⁸ CFU/일, 바실러스 메센테리쿠스(Bacillus mesentericus) 1×10⁷ CFU/일, 클로스트리디움 부티리쿰(Clostridium butyricum) 5×10⁷ CFU/일이 포함된 복합 프로바이오틱스를 투여받은 조현병 입원 환자들을 대상으로 후향적 의무기록 조사를 수행했다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -62,8 +62,8 @@
         "분포 빈도의 중간 지점(사분위수 범위)에서 위약과 비피도박테리움 간에 통계적 차이는 없었으나, 빈도 분포의 양쪽 끝(즉, 15사분위수 미만: 변비, 81사분위수 초과: 설사)에서는 유의한 차이(p < 0.05)가 관찰되었으며, 비피도박테리움 투여군은 각각의 경우에서 배변 습관이 정상화되는 것을 경험했다. 표: 다양한 기저치에서의 기저치 대비 변화 비교 결론: 프로바이오틱스 B. 인판티스 35624(B. infantis 35624)는 기저 시점에 설사 또는 변비가 있는 과민성 대장 증후군(IBS) 환자에서 변비 환자의 배변 횟수를 늘리고 설사 환자의 배변 횟수를 줄임으로써 배변 습관을 정상화했다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -87,8 +87,8 @@
         "염증성 장질환에서의 세균총"
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -114,8 +114,8 @@
         "우리는 동물 모델에서 프로바이오틱스를 사용한 최근 연구 결과를 보고하며, 여기서 만성 염증성 장질환, 주머니염(pouchitis), 궤양성 대장염 치료에 대한 유망한 효과가 관찰되었다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -139,8 +139,8 @@
         "그러나 두 논문 모두 통증, 변비, 배변 빈도, 고창의 일반적인 증점에 초점을 맞추었다. 결론: 표 1의 결과 전체에 걸쳐 개선의 양의 상관관계가 나타났다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -164,8 +164,8 @@
         "한 메타 분석에 따르면 프로바이오틱스는 설사 기간과 배변 빈도를 모두 줄였다. 염증성 장 질환에서 프로바이오틱스의 가치는 환자들이 기존의 주류 약물 치료를 계속해야 하기 때문에 평가하기 더 어렵다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -189,8 +189,8 @@
         "건강한 장내 세균총은 예를 들어 사이토카인에 대한 영향을 통해 이러한 발달에 중요한 역할을 한다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -212,8 +212,8 @@
         "과민성 대장 증후군(IBS)의 병인은 다원성인 것으로 생각되며, 장 운동성 변화, 소장 세균 과증식, 미세 염증, 내장 과민성을 포함한 여러 요인이 잠재적으로 역할을 할 수 있다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -267,8 +267,8 @@
         "칼슘 섭취량과 골량 사이에 유의한 관련성이 있으므로, 더 많은 칼슘 섭취를 권장해야 한다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -293,8 +293,8 @@
         "골대사의 생화학적 표지자는 더 짧은 기간(4주 초과) 동안 식이 칼슘의 전반적인 생체 이용률을 예측하는 데 사용될 수 있으나, 변동 계수가 높아 일부 식이 중재 연구에는 적절하지 않을 수 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -315,8 +315,8 @@
         "뼈 건강을 위한 칼슘 섭취의 이점은 매우 명확하지만, 특히 심혈관(CV) 위험은 논란이 되어 왔다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -341,8 +341,8 @@
         "비타민 D와 칼슘이 충분하지 않으면, 아동기에 뼈가 제대로 형성되지 않을 수 있으며 성인기에는 골밀도가 감소하고 뼈가 약해져 쉽게 부러질 수 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -367,8 +367,8 @@
         "본 논문은 최근 인간을 대상으로 한 연구에서 수집된 원 데이터를 포함하여, 칼슘이 풍부한 광천수에 함유된 칼슘의 생체 이용률과 뼈 건강에 미치는 영향을 평가한 연구들을 검토하는 것을 목표로 한다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -393,8 +393,8 @@
         "종합해 볼 때, 문헌들은 여성의 평생에 걸친 고카페인 섭취 패턴이 칼슘 및 뼈 대사에 부정적인 영향을 미치는 데 기여하며, 특히 칼슘 섭취가 부족할 때 골손실 또는 골절 위험과 상관관계가 있음을 보여주는 경향을 나타낸다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -419,8 +419,8 @@
         "뼈 건강을 위한 가장 중요한 식이 요법적 요인은 칼슘이며, 영국의 경우 이는 주로 유제품(45%)과 곡물 기반 식품(27%)에서 얻어진다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -445,8 +445,8 @@
         "성인에서의 지속적이고 충분한 이누린 보충은 칼슘 대사와 골밀도에 긍정적인 효과가 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -467,8 +467,8 @@
         "칼슘과 비타민 D는 비타민 K, 마그네슘, 구리, 아연, 비타민 C와 같은 다른 영양소들과 함께 최적의 뼈 건강을 위해 모두 중요하다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -521,8 +521,8 @@
         "많은 연구에서 충분한 비타민 D 섭취가 뼈의 양을 늘리고 낙상 및 골절 위험을 줄일 수 있음이 밝혀졌다."
        ],
        "terms": [
-        "osteo",
         "vitam",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -547,8 +547,8 @@
         "많은 연구에서 충분한 비타민 D 섭취가 뼈의 양을 늘리고 낙상 및 골절 위험을 줄일 수 있음이 밝혀졌다."
        ],
        "terms": [
-        "osteo",
         "vitam",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -573,8 +573,8 @@
         "EU 국가, 스위스, 영국의 '국제골다공증재단' 통계에 따르면, 2019년 50세 이상 골다공증 추정 환자 수는 3,200명(오탈자 원문 반영: 32 million은 3,200만이므로 의미 유지)이며, 그중 2,550만 명이 여성, 650만 명이 남성으로, 여성이 골다공증에 더 취약하다는 결론을 도출했다."
        ],
        "terms": [
-        "osteo",
         "vitam",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -599,8 +599,8 @@
         "골다공증에 대한 비타민 D 치료의 전망은 비타민 D의 주어진 형태뿐만 아니라 유전체 수준에서 개입하도록 설계된 가능한 미래 형태에 대해서도 비타민 D 수용체에 대한 통찰력을 요구할 수 있다."
        ],
        "terms": [
-        "osteo",
         "vitam",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -621,8 +621,8 @@
         "비타민 D 결핍과 부족은 전 세계적인 문제이다. 이는 골다공증과 낙상 모두로 인해 근육 약화, 낙상 및 골절을 유발할 수 있다. 비타민 D와 칼슘 보충은 낙상, 골다공증 및 골절에 대한 효과적인 예방 조치이다. 중국인에 있어 25(OH)D의 최적 혈청 수치와 적절한 비타민 D 섭취량을 파악하는 것이 중요해졌다."
        ],
        "terms": [
-        "osteo",
         "vitam",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -647,8 +647,8 @@
         "이 활동의 결과는 골다공증 예방을 위한 영양 요구량을 충족하는 측면에서 지역사회가 활용할 수 있는 비타민 D를 포함한 칼슘 섭취 준비 형태이며, 이를 통해 공중 보건이 향상된다."
        ],
        "terms": [
-        "osteo",
         "vitam",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -673,8 +673,8 @@
         "배경: 골다공증 병인에서 비타민 D의 역할 장내 칼슘 흡수는 연령이 증가함에 따라 감소하며, 이러한 감소는 골다공증 환자에서 특히 두드러진다(3)."
        ],
        "terms": [
-        "osteo",
         "vitam",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -699,8 +699,8 @@
         "연령, 성별, 가구 소득은 골다공증 진단 보고 확률과 관련이 있었다."
        ],
        "terms": [
-        "osteo",
         "vitam",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -725,8 +725,8 @@
         "대장 H. pylori 균주들과 골다공증/비타민 D 결핍 사이의 두드러진 연관성은, 이 균주들이 최근 수십 년 동안 골다공증 및 비타민 D 결핍 문제에 상당한 영향을 미칠 수 있음을 나타낸다."
        ],
        "terms": [
-        "osteo",
         "vitam",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1102,9 +1102,9 @@
         "이 글의 주요 목적은 특히 중추 피로 및 활성 산소 저항, 당대사 및 젖산 대사 수용, 그리고 Hb 함량의 영향 측면에서 고려인삼의 항피로 효과를 검토하는 것이다."
        ],
        "terms": [
-        "fatig",
+        "panax",
         "ginse",
-        "panax"
+        "fatig"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -1128,9 +1128,9 @@
         "고찰: 본 연구 결과는 인삼(Panax ginseng) 열수 추출물이 항피로 및 면역 증강 활성을 모두 나타낸다는 것을 확인해 준다."
        ],
        "terms": [
-        "fatig",
+        "panax",
         "ginse",
-        "panax"
+        "fatig"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -1150,9 +1150,9 @@
         "본 연구는 지린성 인삼 올리고펩타이드의 항피로 효과를 조사했다. SPF 등급의 336마리 수컷 ICR 쥐를 무작위로 대조군, 유청 프로틴군, 그리고 각각 0.125, 0.250, 0.500, 1.000, 2.000 g/kg 용량의 지린성 인삼 올리고펩타이드 투여군 등 7개 그룹으로 나누었다. 30일 동안 식이 투여 후, 수영 실험을 통해 부하 수영 시간을 측정했다. 자동 생화학 분석기를 사용하여 혈중 요소 질소(blood urea nitrogen) 함량과 젖산 탈수소효소(lactic dehydrogenase) 활성을 측정했다. 자외선 분광광도계를 이용하여 쥐의 혈중 젖산(lactic acid) 수준을 검출하였고, 키트에 따라 쥐의 간 글리코겐을 측정했다. 위 지표들과 관련하여 대조군과 유청 프로틴군 사이에 유의한 차이는 없었다. 유청 프로틴군과 비교하여, 지린성 인삼 올리고펩타이드는 쥐의 부하 수영 시간을 유의하게 증가시키고, 혈중 요소 질소 및 젖산 함량을 감소시키며, 젖산 탈수소효소의 활성을 향상시키고, 간 글리코겐 함량을 증가시킬 수 있었다. 따라서 지린성 인삼 올리고펩타이드는 쥐에서 우수한 항피로 효과를 가진다는 결론을 내린다."
        ],
        "terms": [
-        "fatig",
+        "panax",
         "ginse",
-        "panax"
+        "fatig"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -1174,9 +1174,9 @@
         "인삼의 항피로 작용은 치료받은 동물들이 수영에서 더 큰 지구력을 나타냈다는 사실에 의해 입증되었다."
        ],
        "terms": [
-        "fatig",
+        "panax",
         "ginse",
-        "panax"
+        "fatig"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -1200,9 +1200,9 @@
         "결론: 인삼은 피로에 대한 유망한 치료법이다."
        ],
        "terms": [
-        "fatig",
+        "panax",
         "ginse",
-        "panax"
+        "fatig"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -1254,9 +1254,9 @@
         "연구자들은 마늘과 콜레스테롤 저하 간의 관계를 조사한 38개의 연구를 확인했으며, 그중 13개가 포함 기준을 충족했다."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1281,9 +1281,9 @@
         "따라서 마늘과 마늘 정제는 고콜레스테롤 식이에서 콜레스테롤 감소 및 동맥경화증의 발생률과 강도를 줄이는 데 유익한 효과가 있다고 결론지을 수 있다."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1308,9 +1308,9 @@
         "Pittler , and Edzard Ernst Garlic for Total Cholesterol Reduction Clare Stevinson , Max H."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1335,9 +1335,9 @@
         "생마늘은 혈중 콜레스테롤 수치가 정상 범위 내에 있더라도 이를 낮추기 위해 매일 섭취하는 것이 권장될 수 있다."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1360,9 +1360,9 @@
         "콜레스테롤과 함께 마늘 오일을 보충한 것은 고콜레스테롤혈증을 유의하게 억제하고, 조직 콜레스테롤을 감소시키며, 대동맥의 죽상경화성 변화를 최소화했다."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1385,9 +1385,9 @@
         "이 임상시험에서 연구자들은 LDL 콜레스테롤 수치가 130–190 mg/dL이고 중성지방 수치가 … 인 성인 192명을 무작위로 배정했다."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1412,9 +1412,9 @@
         "결과는 마늘과 야생 마늘을 충분한 양으로 섭취할 경우 주로 콜레스테롤 합성을 억제하여 혈청 콜레스테롤 수치를 낮출 수 있으며, 이 효과는 황을 함유한 티오설피네이트(thiosulfinates), 아조엔(ajoenes), 다이티인(dithiines) 계열의 여러 화합물 혼합물에서 비롯된다는 것을 보여준다."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1439,9 +1439,9 @@
         "Pittler , and Edzard Ernst Garlic for Total Cholesterol Reduction Larry D."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1466,9 +1466,9 @@
         "따라서 용매 추출물 및 조추출물 상태로 여겨졌던 추출된 오일이 혈중 콜레스테롤 수치의 상승을 효과적으로 예방하는 것으로 밝혀졌다."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1521,13 +1521,13 @@
         "따라서 인간에게 500~600 mg/day의 장기간 차 카테킨 투여는 흡수가 저해될 수 있는 지용성 비타민과 음료의 종류에 관계없이 다양한 혈청 및 혈장 지표에 영향을 미치지 않으면서 체지방을 줄이는 것으로 보인다."
        ],
        "terms": [
-        "catec",
         "obesi",
+        "catec",
         "green",
         "adipo",
         "body",
-        "fat",
-        "tea"
+        "tea",
+        "fat"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -1551,13 +1551,13 @@
         "이러한 결과는 차 카테킨의 섭취가 체지방 축적에 유익함을 보여준다."
        ],
        "terms": [
-        "catec",
         "obesi",
+        "catec",
         "green",
         "adipo",
         "body",
-        "fat",
-        "tea"
+        "tea",
+        "fat"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -1579,13 +1579,13 @@
         "결론 고지방 식사 중 갈로일 모이어티가 풍부한 녹차 음료를 섭취하는 것은 중등도 비만 성인의 체지방을 감소시킨다."
        ],
        "terms": [
-        "catec",
         "obesi",
+        "catec",
         "green",
         "adipo",
         "body",
-        "fat",
-        "tea"
+        "tea",
+        "fat"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -1637,8 +1637,8 @@
         "이 한방 제품은 만성 전립선염 치료에도 사용되어 왔으나 현재 그 효능에 대한 증거는 없다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1663,8 +1663,8 @@
         "쏘팔메토의 이러한 사용 수준과 전립선암 발생 위험 [위험비(HR) = 0.95; 95% 신뢰구간 = 0.74–1.23] 사이에는 연관성이 발견되지 않았으며, 사용 빈도나 기간의 증가와도 연관성이 없었다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1689,8 +1689,8 @@
         "결론 본 연구에서 쏘팔메토는 양성 전립선 비대증의 증상이나 객관적 지표를 개선하지 못했다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1715,8 +1715,8 @@
         "결론: 본 연구에서 쏘팔메토는 양성 전립선 비대증의 증상이나 객관적 지표를 개선하지 못했다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1741,8 +1741,8 @@
         "이 모든 결과는 쏘팔메토(Saw Palmetto)가 전립선암 환자 치료에 유용할 수 있음을 시사한다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1763,8 +1763,8 @@
         "Purpose: We tested the effects of a saw palmetto herbal blend in men with symptomatic benign prostatic hyperplasia (BPH) via a randomized, placebo controlled trial.Materials and Methods: We randomized 44 men 45 to 80 years old with symptomatic BPH into a trial of a saw palmetto herbal blend versus placebo.End points included routine clinical measures (symptom score, uroflowmetry and post-void residual urine volume), blood chemistry studies (prostate specific antigen, sex hormones and multiphasic analysis), prostate volumetrics by magnetic resonance imaging, and prostate biopsy for zonal tissue morphometry and semiquantitative histology studies.Results: Saw palmetto herbal blend and placebo groups had improved clinical parameters with a slight advantage in the saw palmetto group (not statistically significant).Neither prostate specific antigen nor prostate volume changed from baseline.Prostate epithelial contraction was noted, especially in the transition zone, where percent epithelium decreased from 17.8% at baseline to 10.7% after 6 months of saw palmetto herbal blend (p Ͻ0.01).Histological studies showed that the percent of atrophic glands increased from 25.2% to 40.9% after treatment with saw palmetto herbal blend (p Ͻ0.01).The mechanism of action appeared to be nonhormonal but it was not identified by tissue studies of apoptosis, cellular proliferation, angiogenesis, growth factors or androgen receptor expression.We noted no adverse effects of saw palmetto herbal blend.When the study was no longer blinded, 41 men elected to continue therapy in an open label extension.Conclusions: Saw palmetto herbal blend appears to be a safe, highly desirable option for men with moderately symptomatic BPH.The secondary outcome measures of clinical effect in our study were only slightly better for saw palmetto herbal blend than placebo (not statistically significant).However, saw palmetto herbal blend therapy was associated with epithelial contraction, especially in the transition zone (p Ͻ0.01), indicating a possible mechanism of action underlying the clinical significance detected in other studies."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1785,8 +1785,8 @@
         "양성 전립선 비대증(BPH)은 40대 남성의 8%, 70대 남성의 60%, 80대 이상 남성의 90%에게 영향을 미치는 흔한 건강 문제이다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1835,8 +1835,8 @@
         "목적: 골다공증 예방을 위한 칼슘 제제의 합리적인 사용을 제안한다. 방법: 칼슘 제제와 골다공증의 관계를 논의하고 국내 칼슘 제제를 평가한다. 결과 결론: 칼슘 대사 장애는 골다공증을 유발하는 중요한 요인이며, 칼슘 보충이 골다공증 예방 및 치료의 주요 조치로 여겨지나, 다다익선이라는 널리 퍼진 칼슘 보충 개념은 부적절하다. 칼슘 보충제의 합리적인 선택은 제제의 특성과 환자 상태를 기반으로 해야 한다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1861,8 +1861,8 @@
         "결론 칼슘 보충제, 합리적인 식단, 단백질과 소금의 균형 잡힌 섭취는 골밀도 저하를 예방할 수 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1887,8 +1887,8 @@
         "비타민 D와의 적응증이 폐경기 골다공증에서는 아직 명확하지 않지만, 골다공증의 예방과 치료에 칼슘 사용을 뒷받침하는 충분한 데이터가 있으며, 주로 노인 환자에서 칼슘을 비타민 D와 병용하여 골다공증의 예방과 치료에 널리 사용된다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1913,8 +1913,8 @@
         "일반적으로 골다공증이 있는 여성의 비타민 D 보충은 칼슘 흡수와 소변으로의 칼슘 배출을 증가시키며, 칼슘의 전반적인 체내 보유량에는 영향을 미치지 않는다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1939,8 +1939,8 @@
         "그러나 청소년기, 임신 및 수유기와 같은 높은 생리학적 요구 기간 동안 적절하지는 않지만 매우 낮지는 않은 습관적인 칼슘 섭취가 뼈 건강에 미치는 장기적인 영향은 여전히 크게 알려져 있지 않다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1961,8 +1961,8 @@
         "미국 식품의약국(FDA)은 칼슘과 골다공증 위험 감소 간의 관계에 대한 건강 강조 표시를 승인하는 라벨링 규정을 개정하여 비타민 D를 포함시키고 있음으로써, 칼슘과 골다공증에 대한 강조 표시에 더해 칼슘 및 비타민 D와 골다공증에 대한 추가적인 강조 표시를 할 수 있도록 하고; 골다공증 발생의 특정 위험 인자로 성별, 인종, 연령을 강조 표시 목록에 포함해야 하는 요건을 없애며; 강조 표시가 골다공증의 위험이 일반 미국 인구에게 동등하게 적용된다고 진술하거나 암시하지 않아야 하며 골다공증 발생의 특별한 위험이 있는 인구를 식별해야 한다는 요건을 없애고; 칼슘이 골다공증의 위험을 줄이는 기전을 강조 표시가 식별해야 하는 요건을 없애는 대신 선택 사항으로 만들며; 식품이 관습적으로 소비되는 1회 제공량당 또는 총 1일 권장 보충제 섭취량당 400 mg 이상의 칼슘을 함유할 때 권장 1일 섭취량의 200퍼센트(칼슘 2,000 밀리그램(mg))를 초과하는 총 식이 섭취량은 뼈 건강에 추가적인 이점이 없다는 진술을 강조 표시가 포함해야 하는 요건을 없애며; 두 건강 강조 표시 중 어느 곳에서든 신체 활동의 필요성에 대한 언급을 필수 사항이 아닌 선택 사항으로 허용하고 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -1987,8 +1987,8 @@
         "결론: 칼슘 보충제는 골다공증 예방에 일정한 효과가 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2013,8 +2013,8 @@
         "일부 환자에서 관찰된 47Ca의 흡수 저하와 고칼슘뇨증이 골다공증의 특징으로 여겨지는 골 흡수 증가의 원인인지 결과인지는 데이터로 déterminer(결정)할 수 없었다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2067,8 +2067,8 @@
         "이 한방 제품은 만성 전립선염 치료에도 사용되어 왔으나 현재 그 효능에 대한 증거는 없다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2093,8 +2093,8 @@
         "쏘팔메토의 이러한 사용 수준과 전립선암 발생 위험 [위험비(HR) = 0.95; 95% 신뢰구간 = 0.74–1.23] 사이에는 연관성이 발견되지 않았으며, 사용 빈도나 기간의 증가와도 연관성이 없었다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2119,8 +2119,8 @@
         "결론 본 연구에서 쏘팔메토는 양성 전립선 비대증의 증상이나 객관적 지표를 개선하지 못했다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2145,8 +2145,8 @@
         "결론: 본 연구에서 쏘팔메토는 양성 전립선 비대증의 증상이나 객관적 지표를 개선하지 못했다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2171,8 +2171,8 @@
         "이 모든 결과는 쏘팔메토(Saw Palmetto)가 전립선암 환자 치료에 유용할 수 있음을 시사한다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2193,8 +2193,8 @@
         "Purpose: We tested the effects of a saw palmetto herbal blend in men with symptomatic benign prostatic hyperplasia (BPH) via a randomized, placebo controlled trial.Materials and Methods: We randomized 44 men 45 to 80 years old with symptomatic BPH into a trial of a saw palmetto herbal blend versus placebo.End points included routine clinical measures (symptom score, uroflowmetry and post-void residual urine volume), blood chemistry studies (prostate specific antigen, sex hormones and multiphasic analysis), prostate volumetrics by magnetic resonance imaging, and prostate biopsy for zonal tissue morphometry and semiquantitative histology studies.Results: Saw palmetto herbal blend and placebo groups had improved clinical parameters with a slight advantage in the saw palmetto group (not statistically significant).Neither prostate specific antigen nor prostate volume changed from baseline.Prostate epithelial contraction was noted, especially in the transition zone, where percent epithelium decreased from 17.8% at baseline to 10.7% after 6 months of saw palmetto herbal blend (p Ͻ0.01).Histological studies showed that the percent of atrophic glands increased from 25.2% to 40.9% after treatment with saw palmetto herbal blend (p Ͻ0.01).The mechanism of action appeared to be nonhormonal but it was not identified by tissue studies of apoptosis, cellular proliferation, angiogenesis, growth factors or androgen receptor expression.We noted no adverse effects of saw palmetto herbal blend.When the study was no longer blinded, 41 men elected to continue therapy in an open label extension.Conclusions: Saw palmetto herbal blend appears to be a safe, highly desirable option for men with moderately symptomatic BPH.The secondary outcome measures of clinical effect in our study were only slightly better for saw palmetto herbal blend than placebo (not statistically significant).However, saw palmetto herbal blend therapy was associated with epithelial contraction, especially in the transition zone (p Ͻ0.01), indicating a possible mechanism of action underlying the clinical significance detected in other studies."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2215,8 +2215,8 @@
         "양성 전립선 비대증(BPH)은 40대 남성의 8%, 70대 남성의 60%, 80대 이상 남성의 90%에게 영향을 미치는 흔한 건강 문제이다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2269,8 +2269,8 @@
         "이 한방 제품은 만성 전립선염 치료에도 사용되어 왔으나 현재 그 효능에 대한 증거는 없다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2295,8 +2295,8 @@
         "쏘팔메토의 이러한 사용 수준과 전립선암 발생 위험 [위험비(HR) = 0.95; 95% 신뢰구간 = 0.74–1.23] 사이에는 연관성이 발견되지 않았으며, 사용 빈도나 기간의 증가와도 연관성이 없었다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2321,8 +2321,8 @@
         "결론 본 연구에서 쏘팔메토는 양성 전립선 비대증의 증상이나 객관적 지표를 개선하지 못했다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2347,8 +2347,8 @@
         "결론: 본 연구에서 쏘팔메토는 양성 전립선 비대증의 증상이나 객관적 지표를 개선하지 못했다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2373,8 +2373,8 @@
         "이 모든 결과는 쏘팔메토(Saw Palmetto)가 전립선암 환자 치료에 유용할 수 있음을 시사한다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2395,8 +2395,8 @@
         "Purpose: We tested the effects of a saw palmetto herbal blend in men with symptomatic benign prostatic hyperplasia (BPH) via a randomized, placebo controlled trial.Materials and Methods: We randomized 44 men 45 to 80 years old with symptomatic BPH into a trial of a saw palmetto herbal blend versus placebo.End points included routine clinical measures (symptom score, uroflowmetry and post-void residual urine volume), blood chemistry studies (prostate specific antigen, sex hormones and multiphasic analysis), prostate volumetrics by magnetic resonance imaging, and prostate biopsy for zonal tissue morphometry and semiquantitative histology studies.Results: Saw palmetto herbal blend and placebo groups had improved clinical parameters with a slight advantage in the saw palmetto group (not statistically significant).Neither prostate specific antigen nor prostate volume changed from baseline.Prostate epithelial contraction was noted, especially in the transition zone, where percent epithelium decreased from 17.8% at baseline to 10.7% after 6 months of saw palmetto herbal blend (p Ͻ0.01).Histological studies showed that the percent of atrophic glands increased from 25.2% to 40.9% after treatment with saw palmetto herbal blend (p Ͻ0.01).The mechanism of action appeared to be nonhormonal but it was not identified by tissue studies of apoptosis, cellular proliferation, angiogenesis, growth factors or androgen receptor expression.We noted no adverse effects of saw palmetto herbal blend.When the study was no longer blinded, 41 men elected to continue therapy in an open label extension.Conclusions: Saw palmetto herbal blend appears to be a safe, highly desirable option for men with moderately symptomatic BPH.The secondary outcome measures of clinical effect in our study were only slightly better for saw palmetto herbal blend than placebo (not statistically significant).However, saw palmetto herbal blend therapy was associated with epithelial contraction, especially in the transition zone (p Ͻ0.01), indicating a possible mechanism of action underlying the clinical significance detected in other studies."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2417,8 +2417,8 @@
         "양성 전립선 비대증(BPH)은 40대 남성의 8%, 70대 남성의 60%, 80대 이상 남성의 90%에게 영향을 미치는 흔한 건강 문제이다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2498,8 +2498,8 @@
         "또한 뼈 대사에서 인삼(P. ginseng) 유래 화합물의 영향을 받는 신호 전달 경로를 탐구한다."
        ],
        "terms": [
-        "ginse",
         "panax",
+        "ginse",
         "osteo",
         "bone"
        ],
@@ -2553,10 +2553,10 @@
         "보스웰리아 세라타(Boswellia serrata) 추출물에 존재하는 약리학적 활성 성분들 덕분에 보조제 유도 관절염에서 관절 손상이 유의하게 완화되었을 수 있다."
        ],
        "terms": [
-        "arthr",
-        "joint",
         "boswe",
         "carti",
+        "arthr",
+        "joint",
         "serra"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2609,10 +2609,10 @@
         "게다가, 크릴 오일 식단을 먹인 쥐는 대조군에 비해 관절 내 염증 세포의 침윤과 활막층 과형성이 더 낮게 나타났다."
        ],
        "terms": [
-        "arthr",
-        "joint",
         "krill",
         "carti",
+        "joint",
+        "arthr",
         "oil"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2635,10 +2635,10 @@
         "Outcomes The primary outcome was improvement in subjective symptoms of knee pain as assessed by the Japanese Knee Osteoarthritis Measure (JKOM) and Japanese Orthopaedic Association score (JOA)."
        ],
        "terms": [
-        "arthr",
-        "joint",
         "krill",
         "carti",
+        "joint",
+        "arthr",
         "oil"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2691,9 +2691,9 @@
         "SAM-e의 작용은 SAM-e JOINT에 들어 있는 것과 같이 추가적인 글루코사민 보충을 통해 더욱 강화될 수 있다."
        ],
        "terms": [
+        "joint",
         "arthr",
         "gluco",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2718,9 +2718,9 @@
         "이 체계적 문헌고찰을 바탕으로, 우리는 글루코사민 섭취와 관절 건강 사이의 관련성을 뒷받침할 만한 가능성 있는 근거가 있다고 결론지었다."
        ],
        "terms": [
+        "joint",
         "arthr",
         "gluco",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2745,9 +2745,9 @@
         "Our research focuses on investigating the impact of glucosamine supplementation on synovial fluid dynamics within the knee joint of individuals with Osteoarthritis."
        ],
        "terms": [
+        "joint",
         "arthr",
         "gluco",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2772,9 +2772,9 @@
         "또한, 글루코사민과 콘드로이틴의 사용은 관절염이 있는 사람들 사이에서 지난 30일간의 관절 통증, 쑤심, 뻣뻣함 보고와 연관이 있었다."
        ],
        "terms": [
+        "joint",
         "arthr",
         "gluco",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2799,9 +2799,9 @@
         "두 물질은 연골의 구성 성분이며 관절염 관절에서 손실된 연골을 회복시키는 것으로 주장된다."
        ],
        "terms": [
+        "joint",
         "arthr",
         "gluco",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2822,9 +2822,9 @@
         "MSM과 두 가지 형태의 글루코사민, 그리고 항산화제를 포함한 기타 영양소가 함유된 관절 지원 복합제는 염증 및 통증을 줄이고 콜라겐과 연골 재생을 돕는다."
        ],
        "terms": [
+        "joint",
         "arthr",
         "gluco",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2849,9 +2849,9 @@
         "장기적인 관절 건강 관리를 위한 신뢰할 수 있는 카티겐(cartigen)."
        ],
        "terms": [
+        "joint",
         "arthr",
         "gluco",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2902,10 +2902,10 @@
         "밀크 시슬 씨앗 추출물(실리마린)과 그 성분들(주로 실리비닌)은 간 강장제, 간 보호, 간경변, 간중독 치료 및 혈액 질환, 버섯 중독, 수유 등의 기타 건강상의 유익한 작용을 한다."
        ],
        "terms": [
-        "hepat",
         "silym",
-        "thist",
         "liver",
+        "thist",
+        "hepat",
         "milk"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2930,10 +2930,10 @@
         "결론: 이러한 연구 결과는 고용량(600 mg/kbwt)의 실리마린 밀크시슬이 회복 효과가 있으며 ALP, AST 및 ALT의 간 바이오마커를 정상화하는 것으로 나타났다."
        ],
        "terms": [
-        "hepat",
         "silym",
-        "thist",
         "liver",
+        "thist",
+        "hepat",
         "milk"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2958,10 +2958,10 @@
         "음성 대조군과 비교하여 양성 대조군, 저용량 실리마린 군, 중용량 실리마린 군 쥐들의 최종 평균 체중은 각각 유의한(p≤ 0.0001) 감소를 보였다. 결론: 밀크시슬의 실리마린은 고용량에서 파라세타몰 독성 이후 간 형태학과 체중을 회복시키는 효과가 있는 것으로 밝혀졌다."
        ],
        "terms": [
-        "hepat",
         "silym",
-        "thist",
         "liver",
+        "thist",
+        "hepat",
         "milk"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -2986,10 +2986,10 @@
         "실리마린(Silymarin)은 또한 간 재생을 자극하고 간 건강의 필수적인 보호자 역할을 한다."
        ],
        "terms": [
-        "hepat",
         "silym",
-        "thist",
         "liver",
+        "thist",
+        "hepat",
         "milk"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -3014,10 +3014,10 @@
         "증거에 따르면 밀크 시슬 오일은 비알코올성 지방간 질환(NAFLD) 환자의 간 효소를 낮추고 C형 간염 및 간경변과 같은 질환의 임상 증상을 개선할 수 있다."
        ],
        "terms": [
-        "hepat",
         "silym",
-        "thist",
         "liver",
+        "thist",
+        "hepat",
         "milk"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -3042,10 +3042,10 @@
         "이 화합물들은 실리마린의 유익한 효과에 주로 기여하는 성분일 가능성이 높다. 특히 실리비닌으로도 알려진 실리비인은 간 치료 및 기타 응용 분야에서의 효능에 대해 연구되어 왔다. 그림 2."
        ],
        "terms": [
-        "hepat",
         "silym",
-        "thist",
         "liver",
+        "thist",
+        "hepat",
         "milk"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -3070,10 +3070,10 @@
         "결과는 밀크시슬 압착 부산물이 사료에 첨가된 쥐가 실리마린의 간 보호 효과로 인해 간 지방변성(liver steatosis)의 발생률이 더 낮았음을 나타낸다."
        ],
        "terms": [
-        "hepat",
         "silym",
-        "thist",
         "liver",
+        "thist",
+        "hepat",
         "milk"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -3124,8 +3124,8 @@
         "프로바이오틱스가 조현병 환자의 배변 활동과 대사 인자에 미치는 영향을 조사하기 위해, 우리는 2개월 이상 변비로 인해 스트렙토코커스 패칼리스(Streptococcus faecalis) 2×10⁸ CFU/일, 바실러스 메센테리쿠스(Bacillus mesentericus) 1×10⁷ CFU/일, 클로스트리디움 부티리쿰(Clostridium butyricum) 5×10⁷ CFU/일이 포함된 복합 프로바이오틱스를 투여받은 조현병 입원 환자들을 대상으로 후향적 의무기록 조사를 수행했다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -3151,8 +3151,8 @@
         "분포 빈도의 중간 지점(사분위수 범위)에서 위약과 비피도박테리움 간에 통계적 차이는 없었으나, 빈도 분포의 양쪽 끝(즉, 15사분위수 미만: 변비, 81사분위수 초과: 설사)에서는 유의한 차이(p < 0.05)가 관찰되었으며, 비피도박테리움 투여군은 각각의 경우에서 배변 습관이 정상화되는 것을 경험했다. 표: 다양한 기저치에서의 기저치 대비 변화 비교 결론: 프로바이오틱스 B. 인판티스 35624(B. infantis 35624)는 기저 시점에 설사 또는 변비가 있는 과민성 대장 증후군(IBS) 환자에서 변비 환자의 배변 횟수를 늘리고 설사 환자의 배변 횟수를 줄임으로써 배변 습관을 정상화했다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -3176,8 +3176,8 @@
         "염증성 장질환에서의 세균총"
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -3203,8 +3203,8 @@
         "우리는 동물 모델에서 프로바이오틱스를 사용한 최근 연구 결과를 보고하며, 여기서 만성 염증성 장질환, 주머니염(pouchitis), 궤양성 대장염 치료에 대한 유망한 효과가 관찰되었다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -3228,8 +3228,8 @@
         "그러나 두 논문 모두 통증, 변비, 배변 빈도, 고창의 일반적인 증점에 초점을 맞추었다. 결론: 표 1의 결과 전체에 걸쳐 개선의 양의 상관관계가 나타났다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -3253,8 +3253,8 @@
         "한 메타 분석에 따르면 프로바이오틱스는 설사 기간과 배변 빈도를 모두 줄였다. 염증성 장 질환에서 프로바이오틱스의 가치는 환자들이 기존의 주류 약물 치료를 계속해야 하기 때문에 평가하기 더 어렵다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -3278,8 +3278,8 @@
         "건강한 장내 세균총은 예를 들어 사이토카인에 대한 영향을 통해 이러한 발달에 중요한 역할을 한다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -3301,8 +3301,8 @@
         "과민성 대장 증후군(IBS)의 병인은 다원성인 것으로 생각되며, 장 운동성 변화, 소장 세균 과증식, 미세 염증, 내장 과민성을 포함한 여러 요인이 잠재적으로 역할을 할 수 있다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -3459,9 +3459,9 @@
         "연구자들은 마늘과 콜레스테롤 저하 간의 관계를 조사한 38개의 연구를 확인했으며, 그중 13개가 포함 기준을 충족했다."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -3486,9 +3486,9 @@
         "따라서 마늘과 마늘 정제는 고콜레스테롤 식이에서 콜레스테롤 감소 및 동맥경화증의 발생률과 강도를 줄이는 데 유익한 효과가 있다고 결론지을 수 있다."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -3513,9 +3513,9 @@
         "Pittler , and Edzard Ernst Garlic for Total Cholesterol Reduction Clare Stevinson , Max H."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -3540,9 +3540,9 @@
         "생마늘은 혈중 콜레스테롤 수치가 정상 범위 내에 있더라도 이를 낮추기 위해 매일 섭취하는 것이 권장될 수 있다."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -3565,9 +3565,9 @@
         "콜레스테롤과 함께 마늘 오일을 보충한 것은 고콜레스테롤혈증을 유의하게 억제하고, 조직 콜레스테롤을 감소시키며, 대동맥의 죽상경화성 변화를 최소화했다."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -3590,9 +3590,9 @@
         "이 임상시험에서 연구자들은 LDL 콜레스테롤 수치가 130–190 mg/dL이고 중성지방 수치가 … 인 성인 192명을 무작위로 배정했다."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -3617,9 +3617,9 @@
         "결과는 마늘과 야생 마늘을 충분한 양으로 섭취할 경우 주로 콜레스테롤 합성을 억제하여 혈청 콜레스테롤 수치를 낮출 수 있으며, 이 효과는 황을 함유한 티오설피네이트(thiosulfinates), 아조엔(ajoenes), 다이티인(dithiines) 계열의 여러 화합물 혼합물에서 비롯된다는 것을 보여준다."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -3644,9 +3644,9 @@
         "Pittler , and Edzard Ernst Garlic for Total Cholesterol Reduction Larry D."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -3671,9 +3671,9 @@
         "따라서 용매 추출물 및 조추출물 상태로 여겨졌던 추출된 오일이 혈중 콜레스테롤 수치의 상승을 효과적으로 예방하는 것으로 밝혀졌다."
        ],
        "terms": [
+        "garli",
         "dysli",
         "chole",
-        "garli",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -3726,10 +3726,10 @@
         "결론 고지방 식단과 함께 가르시니아 캄보지아 추출물을 보충한 것은 체중 증가, 염증, 포도당 불내성을 감소시켰다."
        ],
        "terms": [
-        "garci",
         "obesi",
-        "adipo",
         "cambo",
+        "adipo",
+        "garci",
         "body",
         "fat"
        ],
@@ -3755,10 +3755,10 @@
         "이러한 결과는 스가몬(Garcinia cambogia) 추출물이 쥐의 내장 지방 조직에서 aP2, SREBP1c, PPARgamma2, C/EBPalpha와 같은 지방 생성과 관련된 여러 유전자를 조절함으로써 고지방 식이로 유도된 비만을 아마도 개선했음을 시사한다."
        ],
        "terms": [
-        "garci",
         "obesi",
-        "adipo",
         "cambo",
+        "adipo",
+        "garci",
         "body",
         "fat"
        ],
@@ -3784,10 +3784,10 @@
         "이러한 결과는 가르시니아 캄보지아(Garcinia Cambogia) 추출물이 아디포넥틴-AMPK 신호전달 경로에 영향을 미쳐 지방분해 유전자 발현을 조절함으로써, 고지방 식이 유도 비만 쥐 모델에서 지방 축적 및 체중 증가를 완화할 수 있음을 입증했다."
        ],
        "terms": [
-        "garci",
         "obesi",
-        "adipo",
         "cambo",
+        "adipo",
+        "garci",
         "body",
         "fat"
        ],
@@ -3841,13 +3841,13 @@
         "따라서 인간에게 500~600 mg/day의 장기간 차 카테킨 투여는 흡수가 저해될 수 있는 지용성 비타민과 음료의 종류에 관계없이 다양한 혈청 및 혈장 지표에 영향을 미치지 않으면서 체지방을 줄이는 것으로 보인다."
        ],
        "terms": [
-        "catec",
         "obesi",
+        "catec",
         "green",
         "adipo",
         "body",
-        "fat",
-        "tea"
+        "tea",
+        "fat"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -3871,13 +3871,13 @@
         "이러한 결과는 차 카테킨의 섭취가 체지방 축적에 유익함을 보여준다."
        ],
        "terms": [
-        "catec",
         "obesi",
+        "catec",
         "green",
         "adipo",
         "body",
-        "fat",
-        "tea"
+        "tea",
+        "fat"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -3899,13 +3899,13 @@
         "결론 고지방 식사 중 갈로일 모이어티가 풍부한 녹차 음료를 섭취하는 것은 중등도 비만 성인의 체지방을 감소시킨다."
        ],
        "terms": [
-        "catec",
         "obesi",
+        "catec",
         "green",
         "adipo",
         "body",
-        "fat",
-        "tea"
+        "tea",
+        "fat"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -3955,9 +3955,9 @@
         "이 글의 주요 목적은 특히 중추 피로 및 활성 산소 저항, 당대사 및 젖산 대사 수용, 그리고 Hb 함량의 영향 측면에서 고려인삼의 항피로 효과를 검토하는 것이다."
        ],
        "terms": [
-        "fatig",
+        "panax",
         "ginse",
-        "panax"
+        "fatig"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -3981,9 +3981,9 @@
         "고찰: 본 연구 결과는 인삼(Panax ginseng) 열수 추출물이 항피로 및 면역 증강 활성을 모두 나타낸다는 것을 확인해 준다."
        ],
        "terms": [
-        "fatig",
+        "panax",
         "ginse",
-        "panax"
+        "fatig"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -4003,9 +4003,9 @@
         "본 연구는 지린성 인삼 올리고펩타이드의 항피로 효과를 조사했다. SPF 등급의 336마리 수컷 ICR 쥐를 무작위로 대조군, 유청 프로틴군, 그리고 각각 0.125, 0.250, 0.500, 1.000, 2.000 g/kg 용량의 지린성 인삼 올리고펩타이드 투여군 등 7개 그룹으로 나누었다. 30일 동안 식이 투여 후, 수영 실험을 통해 부하 수영 시간을 측정했다. 자동 생화학 분석기를 사용하여 혈중 요소 질소(blood urea nitrogen) 함량과 젖산 탈수소효소(lactic dehydrogenase) 활성을 측정했다. 자외선 분광광도계를 이용하여 쥐의 혈중 젖산(lactic acid) 수준을 검출하였고, 키트에 따라 쥐의 간 글리코겐을 측정했다. 위 지표들과 관련하여 대조군과 유청 프로틴군 사이에 유의한 차이는 없었다. 유청 프로틴군과 비교하여, 지린성 인삼 올리고펩타이드는 쥐의 부하 수영 시간을 유의하게 증가시키고, 혈중 요소 질소 및 젖산 함량을 감소시키며, 젖산 탈수소효소의 활성을 향상시키고, 간 글리코겐 함량을 증가시킬 수 있었다. 따라서 지린성 인삼 올리고펩타이드는 쥐에서 우수한 항피로 효과를 가진다는 결론을 내린다."
        ],
        "terms": [
-        "fatig",
+        "panax",
         "ginse",
-        "panax"
+        "fatig"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -4027,9 +4027,9 @@
         "인삼의 항피로 작용은 치료받은 동물들이 수영에서 더 큰 지구력을 나타냈다는 사실에 의해 입증되었다."
        ],
        "terms": [
-        "fatig",
+        "panax",
         "ginse",
-        "panax"
+        "fatig"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -4053,9 +4053,9 @@
         "결론: 인삼은 피로에 대한 유망한 치료법이다."
        ],
        "terms": [
-        "fatig",
+        "panax",
         "ginse",
-        "panax"
+        "fatig"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -4107,8 +4107,8 @@
         "이 한방 제품은 만성 전립선염 치료에도 사용되어 왔으나 현재 그 효능에 대한 증거는 없다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4133,8 +4133,8 @@
         "쏘팔메토의 이러한 사용 수준과 전립선암 발생 위험 [위험비(HR) = 0.95; 95% 신뢰구간 = 0.74–1.23] 사이에는 연관성이 발견되지 않았으며, 사용 빈도나 기간의 증가와도 연관성이 없었다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4159,8 +4159,8 @@
         "결론 본 연구에서 쏘팔메토는 양성 전립선 비대증의 증상이나 객관적 지표를 개선하지 못했다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4185,8 +4185,8 @@
         "결론: 본 연구에서 쏘팔메토는 양성 전립선 비대증의 증상이나 객관적 지표를 개선하지 못했다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4211,8 +4211,8 @@
         "이 모든 결과는 쏘팔메토(Saw Palmetto)가 전립선암 환자 치료에 유용할 수 있음을 시사한다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4233,8 +4233,8 @@
         "Purpose: We tested the effects of a saw palmetto herbal blend in men with symptomatic benign prostatic hyperplasia (BPH) via a randomized, placebo controlled trial.Materials and Methods: We randomized 44 men 45 to 80 years old with symptomatic BPH into a trial of a saw palmetto herbal blend versus placebo.End points included routine clinical measures (symptom score, uroflowmetry and post-void residual urine volume), blood chemistry studies (prostate specific antigen, sex hormones and multiphasic analysis), prostate volumetrics by magnetic resonance imaging, and prostate biopsy for zonal tissue morphometry and semiquantitative histology studies.Results: Saw palmetto herbal blend and placebo groups had improved clinical parameters with a slight advantage in the saw palmetto group (not statistically significant).Neither prostate specific antigen nor prostate volume changed from baseline.Prostate epithelial contraction was noted, especially in the transition zone, where percent epithelium decreased from 17.8% at baseline to 10.7% after 6 months of saw palmetto herbal blend (p Ͻ0.01).Histological studies showed that the percent of atrophic glands increased from 25.2% to 40.9% after treatment with saw palmetto herbal blend (p Ͻ0.01).The mechanism of action appeared to be nonhormonal but it was not identified by tissue studies of apoptosis, cellular proliferation, angiogenesis, growth factors or androgen receptor expression.We noted no adverse effects of saw palmetto herbal blend.When the study was no longer blinded, 41 men elected to continue therapy in an open label extension.Conclusions: Saw palmetto herbal blend appears to be a safe, highly desirable option for men with moderately symptomatic BPH.The secondary outcome measures of clinical effect in our study were only slightly better for saw palmetto herbal blend than placebo (not statistically significant).However, saw palmetto herbal blend therapy was associated with epithelial contraction, especially in the transition zone (p Ͻ0.01), indicating a possible mechanism of action underlying the clinical significance detected in other studies."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4255,8 +4255,8 @@
         "양성 전립선 비대증(BPH)은 40대 남성의 8%, 70대 남성의 60%, 80대 이상 남성의 90%에게 영향을 미치는 흔한 건강 문제이다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4305,8 +4305,8 @@
         "목적: 골다공증 예방을 위한 칼슘 제제의 합리적인 사용을 제안한다. 방법: 칼슘 제제와 골다공증의 관계를 논의하고 국내 칼슘 제제를 평가한다. 결과 결론: 칼슘 대사 장애는 골다공증을 유발하는 중요한 요인이며, 칼슘 보충이 골다공증 예방 및 치료의 주요 조치로 여겨지나, 다다익선이라는 널리 퍼진 칼슘 보충 개념은 부적절하다. 칼슘 보충제의 합리적인 선택은 제제의 특성과 환자 상태를 기반으로 해야 한다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4331,8 +4331,8 @@
         "결론 칼슘 보충제, 합리적인 식단, 단백질과 소금의 균형 잡힌 섭취는 골밀도 저하를 예방할 수 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4357,8 +4357,8 @@
         "비타민 D와의 적응증이 폐경기 골다공증에서는 아직 명확하지 않지만, 골다공증의 예방과 치료에 칼슘 사용을 뒷받침하는 충분한 데이터가 있으며, 주로 노인 환자에서 칼슘을 비타민 D와 병용하여 골다공증의 예방과 치료에 널리 사용된다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4383,8 +4383,8 @@
         "일반적으로 골다공증이 있는 여성의 비타민 D 보충은 칼슘 흡수와 소변으로의 칼슘 배출을 증가시키며, 칼슘의 전반적인 체내 보유량에는 영향을 미치지 않는다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4409,8 +4409,8 @@
         "그러나 청소년기, 임신 및 수유기와 같은 높은 생리학적 요구 기간 동안 적절하지는 않지만 매우 낮지는 않은 습관적인 칼슘 섭취가 뼈 건강에 미치는 장기적인 영향은 여전히 크게 알려져 있지 않다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4431,8 +4431,8 @@
         "미국 식품의약국(FDA)은 칼슘과 골다공증 위험 감소 간의 관계에 대한 건강 강조 표시를 승인하는 라벨링 규정을 개정하여 비타민 D를 포함시키고 있음으로써, 칼슘과 골다공증에 대한 강조 표시에 더해 칼슘 및 비타민 D와 골다공증에 대한 추가적인 강조 표시를 할 수 있도록 하고; 골다공증 발생의 특정 위험 인자로 성별, 인종, 연령을 강조 표시 목록에 포함해야 하는 요건을 없애며; 강조 표시가 골다공증의 위험이 일반 미국 인구에게 동등하게 적용된다고 진술하거나 암시하지 않아야 하며 골다공증 발생의 특별한 위험이 있는 인구를 식별해야 한다는 요건을 없애고; 칼슘이 골다공증의 위험을 줄이는 기전을 강조 표시가 식별해야 하는 요건을 없애는 대신 선택 사항으로 만들며; 식품이 관습적으로 소비되는 1회 제공량당 또는 총 1일 권장 보충제 섭취량당 400 mg 이상의 칼슘을 함유할 때 권장 1일 섭취량의 200퍼센트(칼슘 2,000 밀리그램(mg))를 초과하는 총 식이 섭취량은 뼈 건강에 추가적인 이점이 없다는 진술을 강조 표시가 포함해야 하는 요건을 없애며; 두 건강 강조 표시 중 어느 곳에서든 신체 활동의 필요성에 대한 언급을 필수 사항이 아닌 선택 사항으로 허용하고 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4457,8 +4457,8 @@
         "결론: 칼슘 보충제는 골다공증 예방에 일정한 효과가 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4483,8 +4483,8 @@
         "일부 환자에서 관찰된 47Ca의 흡수 저하와 고칼슘뇨증이 골다공증의 특징으로 여겨지는 골 흡수 증가의 원인인지 결과인지는 데이터로 déterminer(결정)할 수 없었다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4533,8 +4533,8 @@
         "목적: 골다공증 예방을 위한 칼슘 제제의 합리적인 사용을 제안한다. 방법: 칼슘 제제와 골다공증의 관계를 논의하고 국내 칼슘 제제를 평가한다. 결과 결론: 칼슘 대사 장애는 골다공증을 유발하는 중요한 요인이며, 칼슘 보충이 골다공증 예방 및 치료의 주요 조치로 여겨지나, 다다익선이라는 널리 퍼진 칼슘 보충 개념은 부적절하다. 칼슘 보충제의 합리적인 선택은 제제의 특성과 환자 상태를 기반으로 해야 한다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4559,8 +4559,8 @@
         "결론 칼슘 보충제, 합리적인 식단, 단백질과 소금의 균형 잡힌 섭취는 골밀도 저하를 예방할 수 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4585,8 +4585,8 @@
         "비타민 D와의 적응증이 폐경기 골다공증에서는 아직 명확하지 않지만, 골다공증의 예방과 치료에 칼슘 사용을 뒷받침하는 충분한 데이터가 있으며, 주로 노인 환자에서 칼슘을 비타민 D와 병용하여 골다공증의 예방과 치료에 널리 사용된다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4611,8 +4611,8 @@
         "일반적으로 골다공증이 있는 여성의 비타민 D 보충은 칼슘 흡수와 소변으로의 칼슘 배출을 증가시키며, 칼슘의 전반적인 체내 보유량에는 영향을 미치지 않는다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4637,8 +4637,8 @@
         "그러나 청소년기, 임신 및 수유기와 같은 높은 생리학적 요구 기간 동안 적절하지는 않지만 매우 낮지는 않은 습관적인 칼슘 섭취가 뼈 건강에 미치는 장기적인 영향은 여전히 크게 알려져 있지 않다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4659,8 +4659,8 @@
         "미국 식품의약국(FDA)은 칼슘과 골다공증 위험 감소 간의 관계에 대한 건강 강조 표시를 승인하는 라벨링 규정을 개정하여 비타민 D를 포함시키고 있음으로써, 칼슘과 골다공증에 대한 강조 표시에 더해 칼슘 및 비타민 D와 골다공증에 대한 추가적인 강조 표시를 할 수 있도록 하고; 골다공증 발생의 특정 위험 인자로 성별, 인종, 연령을 강조 표시 목록에 포함해야 하는 요건을 없애며; 강조 표시가 골다공증의 위험이 일반 미국 인구에게 동등하게 적용된다고 진술하거나 암시하지 않아야 하며 골다공증 발생의 특별한 위험이 있는 인구를 식별해야 한다는 요건을 없애고; 칼슘이 골다공증의 위험을 줄이는 기전을 강조 표시가 식별해야 하는 요건을 없애는 대신 선택 사항으로 만들며; 식품이 관습적으로 소비되는 1회 제공량당 또는 총 1일 권장 보충제 섭취량당 400 mg 이상의 칼슘을 함유할 때 권장 1일 섭취량의 200퍼센트(칼슘 2,000 밀리그램(mg))를 초과하는 총 식이 섭취량은 뼈 건강에 추가적인 이점이 없다는 진술을 강조 표시가 포함해야 하는 요건을 없애며; 두 건강 강조 표시 중 어느 곳에서든 신체 활동의 필요성에 대한 언급을 필수 사항이 아닌 선택 사항으로 허용하고 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4685,8 +4685,8 @@
         "결론: 칼슘 보충제는 골다공증 예방에 일정한 효과가 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4711,8 +4711,8 @@
         "일부 환자에서 관찰된 47Ca의 흡수 저하와 고칼슘뇨증이 골다공증의 특징으로 여겨지는 골 흡수 증가의 원인인지 결과인지는 데이터로 déterminer(결정)할 수 없었다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -4815,10 +4815,10 @@
         "상 위의 데이터는 혈류역학이 이에 관여할 수 있다는 가설을 뒷받침한다."
        ],
        "terms": [
-        "fluid",
-        "omega",
-        "blood",
         "circu",
+        "fluid",
+        "blood",
+        "omega",
         "flow"
        ],
        "basis": "주장 단어가 없어 결론 문장"
@@ -4873,12 +4873,12 @@
         "추가적인 계층적 분석에서 홍삼은 면역력이 저하된 제2형 당뇨병 환자의 IgA 수치와 자연살해세포를 유의하게 증가시켰으며, 그룹 간 유의한 차이가 있었다."
        ],
        "terms": [
+        "diabe",
+        "glyce",
         "gluco",
         "blood",
         "insul",
-        "ginse",
-        "diabe",
-        "glyce"
+        "ginse"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -4902,12 +4902,12 @@
         "결론 인삼의 세근 분획은 혈류역학적 조절을 유의하게 개선한 반면, 동체 분획은 혈당에 긍정적인 효과를 보였다."
        ],
        "terms": [
+        "diabe",
+        "glyce",
         "gluco",
         "blood",
         "insul",
-        "ginse",
-        "diabe",
-        "glyce"
+        "ginse"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -4931,12 +4931,12 @@
         "당뇨병 마우스의 면역 구획이 고려홍삼(KRG) 투여 마우스에서 보존된 것으로 확인되어, 고려홍삼이 제1형 당뇨병(T1D) 환자에게 혈당 강하 효과뿐만 아니라 면역조절 효과로도 도움이 될 수 있음을 시사한다."
        ],
        "terms": [
+        "diabe",
+        "glyce",
         "gluco",
         "blood",
         "insul",
-        "ginse",
-        "diabe",
-        "glyce"
+        "ginse"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -4960,12 +4960,12 @@
         "이러한 결과는 PRG가 식이 또는 식수를 통해 투여된 인삼 사포닌을 통해 혈당에 영향을 미치며, 이에 따라 PRG가 경증 유도 당뇨병 쥐에서 혈당 상승을 예방하는 능력이 있음을 시사한다."
        ],
        "terms": [
+        "diabe",
+        "glyce",
         "gluco",
         "blood",
         "insul",
-        "ginse",
-        "diabe",
-        "glyce"
+        "ginse"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5266,9 +5266,9 @@
         "따라서 얻어진 결과를 바탕으로 루테인은 에탄올에 의해 유도된 기억력 결손 치료의 대안으로 고려될 수 있으나, 이 효과에 관여하는 기전을 평가하기 위한 더 많은 연구가 필요하다."
        ],
        "terms": [
-        "lutei",
+        "memor",
         "cogni",
-        "memor"
+        "lutei"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5292,9 +5292,9 @@
         "이 데이터는 식이 루테인이 쥐의 일화 기억을 개선한다는 것을 시사한다."
        ],
        "terms": [
-        "lutei",
+        "memor",
         "cogni",
-        "memor"
+        "lutei"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5318,9 +5318,9 @@
         "이 기술은 루테인의 수용해도를 높이고 결과적으로 생체이용률을 높이는 실현 가능한 대안임이 입증되었으며, 인지 장애에서 루테인의 역할에 기여하였다."
        ],
        "terms": [
-        "lutei",
+        "memor",
         "cogni",
-        "memor"
+        "lutei"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5344,9 +5344,9 @@
         "황반 카로티노이드는 기억력 수행과 관련이 없었다."
        ],
        "terms": [
-        "lutei",
+        "memor",
         "cogni",
-        "memor"
+        "lutei"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5370,9 +5370,9 @@
         "본 연구는 루테인이 중간 내지 높은 용량에서 특히 효과적인 방식으로, 항산화 수준을 높임으로써 디아제팜으로 유도된 기억력 손상을 완화할 수 있다고 결론지었다."
        ],
        "terms": [
-        "lutei",
+        "memor",
         "cogni",
-        "memor"
+        "lutei"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5396,9 +5396,9 @@
         "루테인은 학습과 기억을 향상시키며 이는 아마도 항산화 및 신경 보호 특성 때문일 것이다."
        ],
        "terms": [
-        "lutei",
+        "memor",
         "cogni",
-        "memor"
+        "lutei"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5422,9 +5422,9 @@
         "루테인이 필수 영양소는 아니지만, 인지 건강 증진을 위해 이 식이 생체활성 물질에 대한 연령별 권장 섭취량을 설정하려는 노력이 정당화될 수 있다."
        ],
        "terms": [
-        "lutei",
+        "memor",
         "cogni",
-        "memor"
+        "lutei"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5699,8 +5699,8 @@
        ],
        "terms": [
         "insom",
-        "calci",
-        "sleep"
+        "sleep",
+        "calci"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5725,8 +5725,8 @@
        ],
        "terms": [
         "insom",
-        "calci",
-        "sleep"
+        "sleep",
+        "calci"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5751,8 +5751,8 @@
        ],
        "terms": [
         "insom",
-        "calci",
-        "sleep"
+        "sleep",
+        "calci"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5777,8 +5777,8 @@
        ],
        "terms": [
         "insom",
-        "calci",
-        "sleep"
+        "sleep",
+        "calci"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5803,8 +5803,8 @@
        ],
        "terms": [
         "insom",
-        "calci",
-        "sleep"
+        "sleep",
+        "calci"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5829,8 +5829,8 @@
        ],
        "terms": [
         "insom",
-        "calci",
-        "sleep"
+        "sleep",
+        "calci"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5855,8 +5855,8 @@
        ],
        "terms": [
         "insom",
-        "calci",
-        "sleep"
+        "sleep",
+        "calci"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5881,8 +5881,8 @@
        ],
        "terms": [
         "insom",
-        "calci",
-        "sleep"
+        "sleep",
+        "calci"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5907,8 +5907,8 @@
        ],
        "terms": [
         "insom",
-        "calci",
-        "sleep"
+        "sleep",
+        "calci"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -5960,8 +5960,8 @@
         "글루코사민은 히알루론산 합성을 자극하기 때문에 상처 치유를 촉진하고, 피부 보습을 개선하며, 주름을 감소시키는 것으로 나타났다."
        ],
        "terms": [
-        "gluco",
         "derma",
+        "gluco",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -5982,8 +5982,8 @@
         "여기서 우리는 요추 퇴행성 관절 질환으로 글루코사민과 콘드로이틴 알약을 복용한 후 지연성 발현으로 발진이 발생한 36세 여성의 사례를 제시한다."
        ],
        "terms": [
-        "gluco",
         "derma",
+        "gluco",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -6004,8 +6004,8 @@
         "아세틸-CoA에서 글루코사민 및 글루코사민-6-포스페ート의 2-아미노기로 아세틸기를 전달하는 N-아세틸트랜스퍼라제 활성의 정상 배양된 인간 피부 섬유모세포 내 세포내 위치를 조사했다."
        ],
        "terms": [
-        "gluco",
         "derma",
+        "gluco",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -6028,8 +6028,8 @@
         "아세틸살리실산은 뚜렷한 과다각화증, 각화세포 이형성증, 진피 및 피하 지방 조직의 염증 반응이 관찰되었기 때문에 동물의 피부 조직학적 구조를 회복시키지 못했다."
        ],
        "terms": [
-        "gluco",
         "derma",
+        "gluco",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -6054,8 +6054,8 @@
         "국소 한랭 손상 후 피부 회복에 가장 긍정적인 효과를 미치는 것은 염산 글루코사민(glucosamine hydrochloride)이다."
        ],
        "terms": [
-        "gluco",
         "derma",
+        "gluco",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -6110,9 +6110,9 @@
         "대부분의 연구, 체계적 문헌고찰 및 메타분석의 결과는 I~III기 관절염 치료에서 히알루론산 약물의 긍정적인 임상적용에 대해 말해주고 있다."
        ],
        "terms": [
+        "carti",
         "arthr",
         "joint",
-        "carti",
         "hyalu",
         "acid"
        ],
@@ -6138,9 +6138,9 @@
         "골관절염 쥐 모델에서 히알루론산-키토산 나노파티클 캡슐화의 관절 내 주사는 히알루론산 단독에 비해 무릎 관절 구조의 유의한 개선을 나타냈다."
        ],
        "terms": [
+        "carti",
         "arthr",
         "joint",
-        "carti",
         "hyalu",
         "acid"
        ],
@@ -6162,9 +6162,9 @@
         "관절 건강 증진을 위한 화학적으로 변형된 히알루론산의 유변학적 특성 및 임상적 효능."
        ],
        "terms": [
+        "carti",
         "arthr",
         "joint",
-        "carti",
         "hyalu",
         "acid"
        ],
@@ -6190,9 +6190,9 @@
         "히알루론산 주사는 오십견, 골관절염, 류마티스 관절염 치료에 유용하다."
        ],
        "terms": [
+        "carti",
         "arthr",
         "joint",
-        "carti",
         "hyalu",
         "acid"
        ],
@@ -6218,9 +6218,9 @@
         "결론: 관절천자와 히알루론산 주사의 병용은 히알루론산 주사 단독보다 훨씬 더 나은 결과를 보였지만, 히알루론산 주사 단독 시술은 침습성이 더 낮다."
        ],
        "terms": [
+        "carti",
         "arthr",
         "joint",
-        "carti",
         "hyalu",
         "acid"
        ],
@@ -6246,9 +6246,9 @@
         "게다가, 히알루론산 점탄보충요법은 무릎 관절 마찰의 초기 감소로 이어지지 않는다."
        ],
        "terms": [
+        "carti",
         "arthr",
         "joint",
-        "carti",
         "hyalu",
         "acid"
        ],
@@ -6435,8 +6435,8 @@
        ],
        "terms": [
         "obesi",
-        "calci",
         "adipo",
+        "calci",
         "body",
         "fat"
        ],
@@ -6463,8 +6463,8 @@
        ],
        "terms": [
         "obesi",
-        "calci",
         "adipo",
+        "calci",
         "body",
         "fat"
        ],
@@ -6487,8 +6487,8 @@
        ],
        "terms": [
         "obesi",
-        "calci",
         "adipo",
+        "calci",
         "body",
         "fat"
        ],
@@ -6515,8 +6515,8 @@
        ],
        "terms": [
         "obesi",
-        "calci",
         "adipo",
+        "calci",
         "body",
         "fat"
        ],
@@ -6543,8 +6543,8 @@
        ],
        "terms": [
         "obesi",
-        "calci",
         "adipo",
+        "calci",
         "body",
         "fat"
        ],
@@ -6571,8 +6571,8 @@
        ],
        "terms": [
         "obesi",
-        "calci",
         "adipo",
+        "calci",
         "body",
         "fat"
        ],
@@ -6599,8 +6599,8 @@
        ],
        "terms": [
         "obesi",
-        "calci",
         "adipo",
+        "calci",
         "body",
         "fat"
        ],
@@ -6882,9 +6882,9 @@
         "결론: 마그네슘 섭취량과 수축기 혈압 사이에 유의한 관련성이 있었으나, 그 관련성의 밀접도는 약하고 양의 방향이었으며, 이는 마그네슘 섭취량이 높을수록 수축기 혈압이 높다는 것을 의미한다."
        ],
        "terms": [
-        "blood",
-        "hyper",
         "magne",
+        "hyper",
+        "blood",
         "press"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -6909,9 +6909,9 @@
         "결론 이러한 결과는 칼슘, 칼륨, 마그네슘이 풍부한 식단이 낮은 혈압과 관련이 있음을 시사한다."
        ],
        "terms": [
-        "blood",
-        "hyper",
         "magne",
+        "hyper",
+        "blood",
         "press"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -6936,9 +6936,9 @@
         "식단 속 마그네슘, 특히 식수의 마그네슘에 관한 역학 데이터는 신중하게 검토되어야 한다. 이 연구들은 마그네슘이 항고혈압 인자로서 주된 역할을 한다는 것을 확립하지는 못하지만, 신장심혈관 위험 요인으로서 마그네슘 결핍의 중요성을 확인해주고, 때로는 항고혈압 보조 인자로서 마그네슘의 역할을 뒷받침하는 근거를 제공한다."
        ],
        "terms": [
-        "blood",
-        "hyper",
         "magne",
+        "hyper",
+        "blood",
         "press"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -6963,9 +6963,9 @@
         "결론적으로, 우리의 결과는 질산마그네슘이 동맥 혈압의 상승을 효과적으로 완화한다는 것을 보여준다."
        ],
        "terms": [
-        "blood",
-        "hyper",
         "magne",
+        "hyper",
+        "blood",
         "press"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -6990,9 +6990,9 @@
         "결론적으로 마그네슘 보충은 선정되지 않은 경증 고혈압 환자나 정상 고혈압 혈압을 가진 환자에게 효과적인 것으로 보이지 않으며 따라서 일반적으로 권장될 수 없다."
        ],
        "terms": [
-        "blood",
-        "hyper",
         "magne",
+        "hyper",
+        "blood",
         "press"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -7017,9 +7017,9 @@
         "결론: 혈압 조절은 혈중 마그네슘 수치의 영향을 받는다."
        ],
        "terms": [
-        "blood",
-        "hyper",
         "magne",
+        "hyper",
+        "blood",
         "press"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -7044,9 +7044,9 @@
         "따라서 혈청 미네랄 상태의 변화에도 불구하고 혈압과 조직병리학은 식이 마그네슘의 영향을 받지 않았다."
        ],
        "terms": [
-        "blood",
-        "hyper",
         "magne",
+        "hyper",
+        "blood",
         "press"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -7071,9 +7071,9 @@
         "통계 분석은 피어슨 및 스피어맨 상관 분석을 사용했다. 결과: p<0.001 및 r=-0.737로 혈청 마그네슘 수치와 수축기 혈압 사이에 유의한 상관관계가 있었고, p=0.011 및 r=-0.457로 혈청 마그네슘 수치와 이완기 혈압 사이에 상관관계가 있었다. 결론: 본 연구에서 혈청 마그네슘 수치는 수축기 혈압과 강한 음의 상관관계가 있었고 이완기 혈압과 중간 정도의 음의 상관관계가 있었다."
        ],
        "terms": [
-        "blood",
-        "hyper",
         "magne",
+        "hyper",
+        "blood",
         "press"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -7098,9 +7098,9 @@
         "혈장 및 세포내 마그네슘 농도의 현저하고 장기적인 변화는 정상 혈압의 WKY 또는 SHR 모두에서 동맥혈압 수준에 영향을 미치지 않았다."
        ],
        "terms": [
-        "blood",
-        "hyper",
         "magne",
+        "hyper",
+        "blood",
         "press"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -7242,8 +7242,8 @@
         "인삼 사포닌에 의한 혈압 저하 효과는 신혈관성 고혈압 및 대조군 쥐에서 내피 산화질소 합성효소 활성 증가를 통한 혈장 산화질소 농도의 증가 때문일 수 있다."
        ],
        "terms": [
-        "hyper",
         "panax",
+        "hyper",
         "blood",
         "ginse",
         "press"
@@ -7582,8 +7582,8 @@
         "본 리뷰에서는 심혈관 질환 발병률 및 사망률 감소와 고중성지방혈증 치료를 위한 오메가-3 지방산 사용에 관한 임상시험 결과를 요약한다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -7607,8 +7607,8 @@
         "연구 결과는 타우린에 결합된 오메가-3 지방산에 의한 중성지방 저하의 잠재적 길을 연다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -7632,8 +7632,8 @@
         "따라서 담즙 내 오메가-3 NAT는 생선 (오일의) 트리글리세리드 저하 작용 기전에 기여할 수 있으며, 더 강력한 오메가-3 지방산 기반 치료제의 설계에 영향을 미칠 수 있다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -7655,8 +7655,8 @@
         "결과에 따르면 오메가-3 지방산이 포함된 구미(gummies)를 식이 섭취한 경우가 생선을 식이 섭취한 경우에 비해 중성지방, 총콜레스테롤 및 체질량지수 수준에서 더 큰 변화를 유도하였다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -7676,8 +7676,8 @@
         "연구에 따르면 EPA와 DHA의 사용은 간 중성지방의 생산을 줄이고 혈장 중성지방의 청조(clearance)를 증가시킴으로써 중성지방 수치를 낮춘다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -7701,8 +7701,8 @@
         "중앙값 중성지방 농도는 오메가-3 지방산 복용 환자군과 미복용군 간에 차이가 없었다 (각각 110 (범위 25-1701) mg/dl 대 106 (범위 23-3340) mg/dl; P=0.08)."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -7754,8 +7754,8 @@
         "주사 가능 히알루론산을 포함하는 스킨 부스터는 환자의 피부를 안팎으로 생기 있게 만드는 방법을 제공할 수 있다."
        ],
        "terms": [
-        "hyalu",
         "derma",
+        "hyalu",
         "acid",
         "skin"
        ],
@@ -7781,8 +7781,8 @@
         "결론 : 히알루론산은 피부 회춘에 효과가 있는 것으로 입증되었다."
        ],
        "terms": [
-        "hyalu",
         "derma",
+        "hyalu",
         "acid",
         "skin"
        ],
@@ -7808,8 +7808,8 @@
         "학사 학위 논문 목적 – 피부 보습에 대한 히알루론산의 효과."
        ],
        "terms": [
-        "hyalu",
         "derma",
+        "hyalu",
         "acid",
         "skin"
        ],
@@ -7833,8 +7833,8 @@
         "연구진은 저분자 히알루론산(HA)에 글루탐산(Glu)을 결합시킴으로써, 향후 피부 건강 증진을 위해 두 화합물의 항염증 속성을 활용하고자 했다."
        ],
        "terms": [
-        "hyalu",
         "derma",
+        "hyalu",
         "acid",
         "skin"
        ],
@@ -7860,8 +7860,8 @@
         "대안으로, 기계적인 분말화 및 균질화 과정 없이 성체 토끼 피부에서 히알루론산을 얻었다."
        ],
        "terms": [
-        "hyalu",
         "derma",
+        "hyalu",
         "acid",
         "skin"
        ],
@@ -7883,8 +7883,8 @@
         "Objective To study the effect of hyaluronic acid on the expanded dermal internal environment and skin contraction process.Methods New Zealand rabbits were divided randomly into two groups and rabbit models were used in the forehead skin with local injections of hyaluronic acid or saline as control group.Immunohistochemistry were used to measure the variation of type Ⅰand Ⅲ collagen in expanded skin.Results TypeⅠcollagen recovered rapidly in expanded skin and type Ⅲ collagen increased obviously in the hyaluronic acid group.Conclusion The collagens in expanded skin reconstructed and the external hyaluronic acid could reduce the contraction in expanded skin."
        ],
        "terms": [
-        "hyalu",
         "derma",
+        "hyalu",
         "acid",
         "skin"
        ],
@@ -7910,8 +7910,8 @@
         "그러나 히알루론산의 사용과 이점을 알지 못하는 상당 수의 사람들이 있으며, 이 연구는 피부 문제에 히알루론산 사용을 시작하려는 모든 이들에게 정보의 원천으로 사용될 수 있다."
        ],
        "terms": [
-        "hyalu",
         "derma",
+        "hyalu",
         "acid",
         "skin"
        ],
@@ -7937,8 +7937,8 @@
         "결과는 경구 투여된 히알루론산이 피부로 이동했을 가능성을 보여준다."
        ],
        "terms": [
-        "hyalu",
         "derma",
+        "hyalu",
         "acid",
         "skin"
        ],
@@ -7992,9 +7992,9 @@
         "SAM-e의 작용은 SAM-e JOINT에 들어 있는 것과 같이 추가적인 글루코사민 보충을 통해 더욱 강화될 수 있다."
        ],
        "terms": [
+        "joint",
         "arthr",
         "gluco",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8019,9 +8019,9 @@
         "이 체계적 문헌고찰을 바탕으로, 우리는 글루코사민 섭취와 관절 건강 사이의 관련성을 뒷받침할 만한 가능성 있는 근거가 있다고 결론지었다."
        ],
        "terms": [
+        "joint",
         "arthr",
         "gluco",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8046,9 +8046,9 @@
         "Our research focuses on investigating the impact of glucosamine supplementation on synovial fluid dynamics within the knee joint of individuals with Osteoarthritis."
        ],
        "terms": [
+        "joint",
         "arthr",
         "gluco",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8073,9 +8073,9 @@
         "또한, 글루코사민과 콘드로이틴의 사용은 관절염이 있는 사람들 사이에서 지난 30일간의 관절 통증, 쑤심, 뻣뻣함 보고와 연관이 있었다."
        ],
        "terms": [
+        "joint",
         "arthr",
         "gluco",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8100,9 +8100,9 @@
         "두 물질은 연골의 구성 성분이며 관절염 관절에서 손실된 연골을 회복시키는 것으로 주장된다."
        ],
        "terms": [
+        "joint",
         "arthr",
         "gluco",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8123,9 +8123,9 @@
         "MSM과 두 가지 형태의 글루코사민, 그리고 항산화제를 포함한 기타 영양소가 함유된 관절 지원 복합제는 염증 및 통증을 줄이고 콜라겐과 연골 재생을 돕는다."
        ],
        "terms": [
+        "joint",
         "arthr",
         "gluco",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8150,9 +8150,9 @@
         "장기적인 관절 건강 관리를 위한 신뢰할 수 있는 카티겐(cartigen)."
        ],
        "terms": [
+        "joint",
         "arthr",
         "gluco",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8205,10 +8205,10 @@
         "결론 고지방 식단과 함께 가르시니아 캄보지아 추출물을 보충한 것은 체중 증가, 염증, 포도당 불내성을 감소시켰다."
        ],
        "terms": [
-        "garci",
         "obesi",
-        "adipo",
         "cambo",
+        "adipo",
+        "garci",
         "body",
         "fat"
        ],
@@ -8234,10 +8234,10 @@
         "이러한 결과는 스가몬(Garcinia cambogia) 추출물이 쥐의 내장 지방 조직에서 aP2, SREBP1c, PPARgamma2, C/EBPalpha와 같은 지방 생성과 관련된 여러 유전자를 조절함으로써 고지방 식이로 유도된 비만을 아마도 개선했음을 시사한다."
        ],
        "terms": [
-        "garci",
         "obesi",
-        "adipo",
         "cambo",
+        "adipo",
+        "garci",
         "body",
         "fat"
        ],
@@ -8263,10 +8263,10 @@
         "이러한 결과는 가르시니아 캄보지아(Garcinia Cambogia) 추출물이 아디포넥틴-AMPK 신호전달 경로에 영향을 미쳐 지방분해 유전자 발현을 조절함으로써, 고지방 식이 유도 비만 쥐 모델에서 지방 축적 및 체중 증가를 완화할 수 있음을 입증했다."
        ],
        "terms": [
-        "garci",
         "obesi",
-        "adipo",
         "cambo",
+        "adipo",
+        "garci",
         "body",
         "fat"
        ],
@@ -8320,10 +8320,10 @@
         "결론적으로, 인삼 및 인삼+영지버섯 투여는 특히 혈장 및 적혈구 내 TOS 비율을 감소시킴으로써 산화 스트레스 예방에 효과적이며, 또한 간 단백질 발현 증가를 자극하는 것으로 결정되었다."
        ],
        "terms": [
-        "ginse",
-        "hepat",
+        "liver",
         "panax",
-        "liver"
+        "ginse",
+        "hepat"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -8347,10 +8347,10 @@
         "또한, 황산동 군에서 대조군에 비해 간 내 글리코겐 밀도, 글루타치온(GSH) 수치 및 슈퍼옥사이드 디스뮤타제(SOD) 활성이 유의하게 감소하였고, 인삼(Panax ginseng) + 황산동 군에서는 황산동 군에 비해 증가한 것으로 확인되었다."
        ],
        "terms": [
-        "ginse",
-        "hepat",
+        "liver",
         "panax",
-        "liver"
+        "ginse",
+        "hepat"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -8374,10 +8374,10 @@
         "이 연구는 인삼(panax ginseng)이 쥐의 간 기능, 염증 및 산화 스트레스의 조절을 통해 난소 절제 쥐에서 TAA 유도 간 손상을 잠재적으로 완화한다고 시사한다."
        ],
        "terms": [
-        "ginse",
-        "hepat",
+        "liver",
         "panax",
-        "liver"
+        "ginse",
+        "hepat"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -8429,9 +8429,9 @@
         "패널은 커큐민 섭취와 관절 기능 유지 사이에 인과 관계가 확립되지 않았다고 결론짓는다."
        ],
        "terms": [
+        "joint",
         "arthr",
         "curcu",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8456,9 +8456,9 @@
         "이러한 결과는 커큐민이 관절 구축 치료를 위한 새로운 후보 물질로 잠재적으로 사용될 수 있다는 가설을 뒷받침한다."
        ],
        "terms": [
+        "joint",
         "arthr",
         "curcu",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8483,9 +8483,9 @@
         "따라서 커큐민 단독 또는 저용량 프레드니손과의 병용 치료는 실험적으로 류마티스 관절염이 유도된 고령 암컷 랫드에서 관절 기능을 회복시키고 염증, 산화 및 형태학적 측면을 개선했다."
        ],
        "terms": [
+        "joint",
         "arthr",
         "curcu",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8510,9 +8510,9 @@
         "따라서 커큐민 나노에멀션은 OA 모델에서 관절 부종, 활막염, 산화 스트레스를 감소시킴으로써 OA 미세환경을 조절하는 연골 보호제로 작용할 수 있다."
        ],
        "terms": [
+        "joint",
         "arthr",
         "curcu",
-        "joint",
         "carti"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8565,8 +8565,8 @@
         "이 결과는 석류 추출물이 갱년기 여성에게 도움이 될 수 있는 가능성을 시사한다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -8590,8 +8590,8 @@
         "따라서 본 연구의 결과로부터, 일정 기간 동안 1.5 g/day의 석류 추출물을 복용하는 것은 안면 홍조를 포함한 갱년기 증상을 개선할 것이라고 결론지을 수 있다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -8615,8 +8615,8 @@
         "따라서 본 연구의 결과로부터 일정 기간 동안 1.5 g/day의 석류 추출물을 섭취하는 것이 안면 홍조를 포함한 갱년기 증상을 개선할 것이라고 결론지을 수 있다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -8640,8 +8640,8 @@
         "매일 석류 주스를 섭취한 폐경기 골다공증 여성쥐 그룹에서 더 적은 CTX 수치가 발견되었다(183,18±37,66) 결론: 항산화제로서 석류 주스의 매일 섭취는 폐경기 후 골다공증쥐에서 발생하는 하악골 흡수를 예방하는 데 기여할 수 있다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -8665,8 +8665,8 @@
         "결론: 석류 추출물은 갱년기 증상 치료에 안전하고 효과적이다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -8718,8 +8718,8 @@
         "이 한방 제품은 만성 전립선염 치료에도 사용되어 왔으나 현재 그 효능에 대한 증거는 없다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8744,8 +8744,8 @@
         "쏘팔메토의 이러한 사용 수준과 전립선암 발생 위험 [위험비(HR) = 0.95; 95% 신뢰구간 = 0.74–1.23] 사이에는 연관성이 발견되지 않았으며, 사용 빈도나 기간의 증가와도 연관성이 없었다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8770,8 +8770,8 @@
         "결론 본 연구에서 쏘팔메토는 양성 전립선 비대증의 증상이나 객관적 지표를 개선하지 못했다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8796,8 +8796,8 @@
         "결론: 본 연구에서 쏘팔메토는 양성 전립선 비대증의 증상이나 객관적 지표를 개선하지 못했다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8822,8 +8822,8 @@
         "이 모든 결과는 쏘팔메토(Saw Palmetto)가 전립선암 환자 치료에 유용할 수 있음을 시사한다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8844,8 +8844,8 @@
         "Purpose: We tested the effects of a saw palmetto herbal blend in men with symptomatic benign prostatic hyperplasia (BPH) via a randomized, placebo controlled trial.Materials and Methods: We randomized 44 men 45 to 80 years old with symptomatic BPH into a trial of a saw palmetto herbal blend versus placebo.End points included routine clinical measures (symptom score, uroflowmetry and post-void residual urine volume), blood chemistry studies (prostate specific antigen, sex hormones and multiphasic analysis), prostate volumetrics by magnetic resonance imaging, and prostate biopsy for zonal tissue morphometry and semiquantitative histology studies.Results: Saw palmetto herbal blend and placebo groups had improved clinical parameters with a slight advantage in the saw palmetto group (not statistically significant).Neither prostate specific antigen nor prostate volume changed from baseline.Prostate epithelial contraction was noted, especially in the transition zone, where percent epithelium decreased from 17.8% at baseline to 10.7% after 6 months of saw palmetto herbal blend (p Ͻ0.01).Histological studies showed that the percent of atrophic glands increased from 25.2% to 40.9% after treatment with saw palmetto herbal blend (p Ͻ0.01).The mechanism of action appeared to be nonhormonal but it was not identified by tissue studies of apoptosis, cellular proliferation, angiogenesis, growth factors or androgen receptor expression.We noted no adverse effects of saw palmetto herbal blend.When the study was no longer blinded, 41 men elected to continue therapy in an open label extension.Conclusions: Saw palmetto herbal blend appears to be a safe, highly desirable option for men with moderately symptomatic BPH.The secondary outcome measures of clinical effect in our study were only slightly better for saw palmetto herbal blend than placebo (not statistically significant).However, saw palmetto herbal blend therapy was associated with epithelial contraction, especially in the transition zone (p Ͻ0.01), indicating a possible mechanism of action underlying the clinical significance detected in other studies."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8866,8 +8866,8 @@
         "양성 전립선 비대증(BPH)은 40대 남성의 8%, 70대 남성의 60%, 80대 이상 남성의 90%에게 영향을 미치는 흔한 건강 문제이다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8920,8 +8920,8 @@
         "이 한방 제품은 만성 전립선염 치료에도 사용되어 왔으나 현재 그 효능에 대한 증거는 없다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8946,8 +8946,8 @@
         "쏘팔메토의 이러한 사용 수준과 전립선암 발생 위험 [위험비(HR) = 0.95; 95% 신뢰구간 = 0.74–1.23] 사이에는 연관성이 발견되지 않았으며, 사용 빈도나 기간의 증가와도 연관성이 없었다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8972,8 +8972,8 @@
         "결론 본 연구에서 쏘팔메토는 양성 전립선 비대증의 증상이나 객관적 지표를 개선하지 못했다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -8998,8 +8998,8 @@
         "결론: 본 연구에서 쏘팔메토는 양성 전립선 비대증의 증상이나 객관적 지표를 개선하지 못했다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9024,8 +9024,8 @@
         "이 모든 결과는 쏘팔메토(Saw Palmetto)가 전립선암 환자 치료에 유용할 수 있음을 시사한다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9046,8 +9046,8 @@
         "Purpose: We tested the effects of a saw palmetto herbal blend in men with symptomatic benign prostatic hyperplasia (BPH) via a randomized, placebo controlled trial.Materials and Methods: We randomized 44 men 45 to 80 years old with symptomatic BPH into a trial of a saw palmetto herbal blend versus placebo.End points included routine clinical measures (symptom score, uroflowmetry and post-void residual urine volume), blood chemistry studies (prostate specific antigen, sex hormones and multiphasic analysis), prostate volumetrics by magnetic resonance imaging, and prostate biopsy for zonal tissue morphometry and semiquantitative histology studies.Results: Saw palmetto herbal blend and placebo groups had improved clinical parameters with a slight advantage in the saw palmetto group (not statistically significant).Neither prostate specific antigen nor prostate volume changed from baseline.Prostate epithelial contraction was noted, especially in the transition zone, where percent epithelium decreased from 17.8% at baseline to 10.7% after 6 months of saw palmetto herbal blend (p Ͻ0.01).Histological studies showed that the percent of atrophic glands increased from 25.2% to 40.9% after treatment with saw palmetto herbal blend (p Ͻ0.01).The mechanism of action appeared to be nonhormonal but it was not identified by tissue studies of apoptosis, cellular proliferation, angiogenesis, growth factors or androgen receptor expression.We noted no adverse effects of saw palmetto herbal blend.When the study was no longer blinded, 41 men elected to continue therapy in an open label extension.Conclusions: Saw palmetto herbal blend appears to be a safe, highly desirable option for men with moderately symptomatic BPH.The secondary outcome measures of clinical effect in our study were only slightly better for saw palmetto herbal blend than placebo (not statistically significant).However, saw palmetto herbal blend therapy was associated with epithelial contraction, especially in the transition zone (p Ͻ0.01), indicating a possible mechanism of action underlying the clinical significance detected in other studies."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9068,8 +9068,8 @@
         "양성 전립선 비대증(BPH)은 40대 남성의 8%, 70대 남성의 60%, 80대 이상 남성의 90%에게 영향을 미치는 흔한 건강 문제이다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9118,8 +9118,8 @@
         "목적: 골다공증 예방을 위한 칼슘 제제의 합리적인 사용을 제안한다. 방법: 칼슘 제제와 골다공증의 관계를 논의하고 국내 칼슘 제제를 평가한다. 결과 결론: 칼슘 대사 장애는 골다공증을 유발하는 중요한 요인이며, 칼슘 보충이 골다공증 예방 및 치료의 주요 조치로 여겨지나, 다다익선이라는 널리 퍼진 칼슘 보충 개념은 부적절하다. 칼슘 보충제의 합리적인 선택은 제제의 특성과 환자 상태를 기반으로 해야 한다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9144,8 +9144,8 @@
         "결론 칼슘 보충제, 합리적인 식단, 단백질과 소금의 균형 잡힌 섭취는 골밀도 저하를 예방할 수 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9170,8 +9170,8 @@
         "비타민 D와의 적응증이 폐경기 골다공증에서는 아직 명확하지 않지만, 골다공증의 예방과 치료에 칼슘 사용을 뒷받침하는 충분한 데이터가 있으며, 주로 노인 환자에서 칼슘을 비타민 D와 병용하여 골다공증의 예방과 치료에 널리 사용된다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9196,8 +9196,8 @@
         "일반적으로 골다공증이 있는 여성의 비타민 D 보충은 칼슘 흡수와 소변으로의 칼슘 배출을 증가시키며, 칼슘의 전반적인 체내 보유량에는 영향을 미치지 않는다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9222,8 +9222,8 @@
         "그러나 청소년기, 임신 및 수유기와 같은 높은 생리학적 요구 기간 동안 적절하지는 않지만 매우 낮지는 않은 습관적인 칼슘 섭취가 뼈 건강에 미치는 장기적인 영향은 여전히 크게 알려져 있지 않다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9244,8 +9244,8 @@
         "미국 식품의약국(FDA)은 칼슘과 골다공증 위험 감소 간의 관계에 대한 건강 강조 표시를 승인하는 라벨링 규정을 개정하여 비타민 D를 포함시키고 있음으로써, 칼슘과 골다공증에 대한 강조 표시에 더해 칼슘 및 비타민 D와 골다공증에 대한 추가적인 강조 표시를 할 수 있도록 하고; 골다공증 발생의 특정 위험 인자로 성별, 인종, 연령을 강조 표시 목록에 포함해야 하는 요건을 없애며; 강조 표시가 골다공증의 위험이 일반 미국 인구에게 동등하게 적용된다고 진술하거나 암시하지 않아야 하며 골다공증 발생의 특별한 위험이 있는 인구를 식별해야 한다는 요건을 없애고; 칼슘이 골다공증의 위험을 줄이는 기전을 강조 표시가 식별해야 하는 요건을 없애는 대신 선택 사항으로 만들며; 식품이 관습적으로 소비되는 1회 제공량당 또는 총 1일 권장 보충제 섭취량당 400 mg 이상의 칼슘을 함유할 때 권장 1일 섭취량의 200퍼센트(칼슘 2,000 밀리그램(mg))를 초과하는 총 식이 섭취량은 뼈 건강에 추가적인 이점이 없다는 진술을 강조 표시가 포함해야 하는 요건을 없애며; 두 건강 강조 표시 중 어느 곳에서든 신체 활동의 필요성에 대한 언급을 필수 사항이 아닌 선택 사항으로 허용하고 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9270,8 +9270,8 @@
         "결론: 칼슘 보충제는 골다공증 예방에 일정한 효과가 있다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9296,8 +9296,8 @@
         "일부 환자에서 관찰된 47Ca의 흡수 저하와 고칼슘뇨증이 골다공증의 특징으로 여겨지는 골 흡수 증가의 원인인지 결과인지는 데이터로 déterminer(결정)할 수 없었다."
        ],
        "terms": [
-        "osteo",
         "calci",
+        "osteo",
         "bone"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9350,8 +9350,8 @@
         "이 한방 제품은 만성 전립선염 치료에도 사용되어 왔으나 현재 그 효능에 대한 증거는 없다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9376,8 +9376,8 @@
         "쏘팔메토의 이러한 사용 수준과 전립선암 발생 위험 [위험비(HR) = 0.95; 95% 신뢰구간 = 0.74–1.23] 사이에는 연관성이 발견되지 않았으며, 사용 빈도나 기간의 증가와도 연관성이 없었다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9402,8 +9402,8 @@
         "결론 본 연구에서 쏘팔메토는 양성 전립선 비대증의 증상이나 객관적 지표를 개선하지 못했다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9428,8 +9428,8 @@
         "결론: 본 연구에서 쏘팔메토는 양성 전립선 비대증의 증상이나 객관적 지표를 개선하지 못했다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9454,8 +9454,8 @@
         "이 모든 결과는 쏘팔메토(Saw Palmetto)가 전립선암 환자 치료에 유용할 수 있음을 시사한다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9476,8 +9476,8 @@
         "Purpose: We tested the effects of a saw palmetto herbal blend in men with symptomatic benign prostatic hyperplasia (BPH) via a randomized, placebo controlled trial.Materials and Methods: We randomized 44 men 45 to 80 years old with symptomatic BPH into a trial of a saw palmetto herbal blend versus placebo.End points included routine clinical measures (symptom score, uroflowmetry and post-void residual urine volume), blood chemistry studies (prostate specific antigen, sex hormones and multiphasic analysis), prostate volumetrics by magnetic resonance imaging, and prostate biopsy for zonal tissue morphometry and semiquantitative histology studies.Results: Saw palmetto herbal blend and placebo groups had improved clinical parameters with a slight advantage in the saw palmetto group (not statistically significant).Neither prostate specific antigen nor prostate volume changed from baseline.Prostate epithelial contraction was noted, especially in the transition zone, where percent epithelium decreased from 17.8% at baseline to 10.7% after 6 months of saw palmetto herbal blend (p Ͻ0.01).Histological studies showed that the percent of atrophic glands increased from 25.2% to 40.9% after treatment with saw palmetto herbal blend (p Ͻ0.01).The mechanism of action appeared to be nonhormonal but it was not identified by tissue studies of apoptosis, cellular proliferation, angiogenesis, growth factors or androgen receptor expression.We noted no adverse effects of saw palmetto herbal blend.When the study was no longer blinded, 41 men elected to continue therapy in an open label extension.Conclusions: Saw palmetto herbal blend appears to be a safe, highly desirable option for men with moderately symptomatic BPH.The secondary outcome measures of clinical effect in our study were only slightly better for saw palmetto herbal blend than placebo (not statistically significant).However, saw palmetto herbal blend therapy was associated with epithelial contraction, especially in the transition zone (p Ͻ0.01), indicating a possible mechanism of action underlying the clinical significance detected in other studies."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9498,8 +9498,8 @@
         "양성 전립선 비대증(BPH)은 40대 남성의 8%, 70대 남성의 60%, 80대 이상 남성의 90%에게 영향을 미치는 흔한 건강 문제이다."
        ],
        "terms": [
-        "palme",
         "prost",
+        "palme",
         "saw"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9633,12 +9633,12 @@
         "총 안토시아닌 오분위수 증가와 전체 및 시각적으로 유의한 연령 관련 황반변성(AMD) 간에는 유의한 연관성이 없었으나, 상위 두 오분위수에서의 10% 백내장 감소에 기인하여 백내장과는 온건한 역상관관계가 있었다(p, trend=0.022)."
        ],
        "terms": [
-        "visio",
         "visua",
         "blueb",
-        "retin",
         "antho",
         "macul",
+        "retin",
+        "visio",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9691,11 +9691,11 @@
         "콘택트렌즈 착용자 102명에서 오메가-3 지방산 12주 요법 후 안구건조증의 증상과 징후가 개선되었다."
        ],
        "terms": [
-        "visio",
-        "omega",
-        "retin",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "omega",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9716,11 +9716,11 @@
         "연구에 따르면 오메가-3 지방산은 황반변성(AMD)으로 인한 시력 상실의 진행을 늦추고 안구건조증의 징후를 역전시킬 수 있다."
        ],
        "terms": [
-        "visio",
-        "omega",
-        "retin",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "omega",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9745,11 +9745,11 @@
         "Of 206 included surveys, most respondents (79%) indicated recommending for their patients to consume omega-3 fatty acids to improve their eye health."
        ],
        "terms": [
-        "visio",
-        "omega",
-        "retin",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "omega",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9774,11 +9774,11 @@
         "결론: 안구건조증 치료에 오메가-3 지방산 경구 보충제가 미치는 영향에 대한 연구는 초기 단계이며, 지식을 증진하기 위해 지속될 필요가 있다."
        ],
        "terms": [
-        "visio",
-        "omega",
-        "retin",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "omega",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9824,11 +9824,11 @@
         "주요 초점은 루테인이 연령 관련 안질환에 미치는 영향을 논의한 연구들에 맞춰졌다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9853,11 +9853,11 @@
         "수많은 연구에서 적절한 루테인 섭취가 연령관련 황반변성(AMD), 백내장 및 기타 시각 장애의 위험 감소와 관련이 있음이 입증되었다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9880,11 +9880,11 @@
         "특히, 루테인은 실명 및 시력 손상의 주요 원인인 연령 관련 황반변성을 개선하거나 심지어 예방하는 것으로 알려져 있다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9909,11 +9909,11 @@
         "샤오(Shao)는 그의 논평에서 안구 건강을 최적화하는 데 예방적 역할과 치료적 역할을 모두 수행하는, 그동안 간과되었던 디하이드록시 카로티노이드에 주목한다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9938,11 +9938,11 @@
         "또한, 당뇨병성 망막병증에서 루테인의 역할이 대두되고 있으며, 실험 모델에서 보충 후 망막 산화 스트레스가 감소하고 시각적 결과가 개선되는 것으로 나타났다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9967,11 +9967,11 @@
         "베타카로틴과 루테인 함량은 눈 건강에 유익하다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -9996,11 +9996,11 @@
         "또한, 우리는 황반변성 및 기타 노인성 안질환의 예방, 시력 개선, 빛 민감도에 미치는 영향을 포함하여 식이 카로티노이드와 루테인이 노인의 눈 건강에 미치는 구체적인 영향에 대해 자세히 논의했다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10025,11 +10025,11 @@
         "대부분의 역학 연구와 임상 시험은 루테인과 제아잔틴이 연령관련 황반변성, 백내장, 망막색소변성증과 같은 특정 안과 질환의 예방 및 치료에 잠재적인 역할을 한다는 개념을 지지한다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10054,11 +10054,11 @@
         "결과는 루테인이 청소년의 눈 건강을 개선하는 데 잠재적 가치가 있음을 보여준다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10083,11 +10083,11 @@
         "황반 색소 광학 밀도(MPOD)를 통한 황반 내 루테인과 제아잔틴의 측정은 루테인 성분의 생체 이용률을 확인하는 데 도움을 줄 수 있으며, 환자가 식단이나 보충제 요법을 통해 충분한 루테인과 제아잔틴을 섭취하고 있는지 나타낸다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10133,11 +10133,11 @@
         "주요 초점은 루테인이 연령 관련 안질환에 미치는 영향을 논의한 연구들에 맞춰졌다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10162,11 +10162,11 @@
         "수많은 연구에서 적절한 루테인 섭취가 연령관련 황반변성(AMD), 백내장 및 기타 시각 장애의 위험 감소와 관련이 있음이 입증되었다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10189,11 +10189,11 @@
         "특히, 루테인은 실명 및 시력 손상의 주요 원인인 연령 관련 황반변성을 개선하거나 심지어 예방하는 것으로 알려져 있다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10218,11 +10218,11 @@
         "샤오(Shao)는 그의 논평에서 안구 건강을 최적화하는 데 예방적 역할과 치료적 역할을 모두 수행하는, 그동안 간과되었던 디하이드록시 카로티노이드에 주목한다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10247,11 +10247,11 @@
         "또한, 당뇨병성 망막병증에서 루테인의 역할이 대두되고 있으며, 실험 모델에서 보충 후 망막 산화 스트레스가 감소하고 시각적 결과가 개선되는 것으로 나타났다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10276,11 +10276,11 @@
         "베타카로틴과 루테인 함량은 눈 건강에 유익하다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10305,11 +10305,11 @@
         "또한, 우리는 황반변성 및 기타 노인성 안질환의 예방, 시력 개선, 빛 민감도에 미치는 영향을 포함하여 식이 카로티노이드와 루테인이 노인의 눈 건강에 미치는 구체적인 영향에 대해 자세히 논의했다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10334,11 +10334,11 @@
         "대부분의 역학 연구와 임상 시험은 루테인과 제아잔틴이 연령관련 황반변성, 백내장, 망막색소변성증과 같은 특정 안과 질환의 예방 및 치료에 잠재적인 역할을 한다는 개념을 지지한다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10363,11 +10363,11 @@
         "결과는 루테인이 청소년의 눈 건강을 개선하는 데 잠재적 가치가 있음을 보여준다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10392,11 +10392,11 @@
         "황반 색소 광학 밀도(MPOD)를 통한 황반 내 루테인과 제아잔틴의 측정은 루테인 성분의 생체 이용률을 확인하는 데 도움을 줄 수 있으며, 환자가 식단이나 보충제 요법을 통해 충분한 루테인과 제아잔틴을 섭취하고 있는지 나타낸다."
        ],
        "terms": [
-        "visio",
-        "retin",
-        "lutei",
         "visua",
         "macul",
+        "retin",
+        "visio",
+        "lutei",
         "eye"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10489,10 +10489,10 @@
         "이 결과는 한국산 홍삼이 인체의 혈액순환을 개선한다는 것을 시사한다."
        ],
        "terms": [
+        "circu",
         "fluid",
         "blood",
         "ginse",
-        "circu",
         "flow"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10545,8 +10545,8 @@
         "본 리뷰에서는 심혈관 질환 발병률 및 사망률 감소와 고중성지방혈증 치료를 위한 오메가-3 지방산 사용에 관한 임상시험 결과를 요약한다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -10570,8 +10570,8 @@
         "연구 결과는 타우린에 결합된 오메가-3 지방산에 의한 중성지방 저하의 잠재적 길을 연다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -10595,8 +10595,8 @@
         "따라서 담즙 내 오메가-3 NAT는 생선 (오일의) 트리글리세리드 저하 작용 기전에 기여할 수 있으며, 더 강력한 오메가-3 지방산 기반 치료제의 설계에 영향을 미칠 수 있다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -10618,8 +10618,8 @@
         "결과에 따르면 오메가-3 지방산이 포함된 구미(gummies)를 식이 섭취한 경우가 생선을 식이 섭취한 경우에 비해 중성지방, 총콜레스테롤 및 체질량지수 수준에서 더 큰 변화를 유도하였다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -10639,8 +10639,8 @@
         "연구에 따르면 EPA와 DHA의 사용은 간 중성지방의 생산을 줄이고 혈장 중성지방의 청조(clearance)를 증가시킴으로써 중성지방 수치를 낮춘다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -10664,8 +10664,8 @@
         "중앙값 중성지방 농도는 오메가-3 지방산 복용 환자군과 미복용군 간에 차이가 없었다 (각각 110 (범위 25-1701) mg/dl 대 106 (범위 23-3340) mg/dl; P=0.08)."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -10710,8 +10710,8 @@
         "본 리뷰에서는 심혈관 질환 발병률 및 사망률 감소와 고중성지방혈증 치료를 위한 오메가-3 지방산 사용에 관한 임상시험 결과를 요약한다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -10735,8 +10735,8 @@
         "연구 결과는 타우린에 결합된 오메가-3 지방산에 의한 중성지방 저하의 잠재적 길을 연다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -10760,8 +10760,8 @@
         "따라서 담즙 내 오메가-3 NAT는 생선 (오일의) 트리글리세리드 저하 작용 기전에 기여할 수 있으며, 더 강력한 오메가-3 지방산 기반 치료제의 설계에 영향을 미칠 수 있다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -10783,8 +10783,8 @@
         "결과에 따르면 오메가-3 지방산이 포함된 구미(gummies)를 식이 섭취한 경우가 생선을 식이 섭취한 경우에 비해 중성지방, 총콜레스테롤 및 체질량지수 수준에서 더 큰 변화를 유도하였다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -10804,8 +10804,8 @@
         "연구에 따르면 EPA와 DHA의 사용은 간 중성지방의 생산을 줄이고 혈장 중성지방의 청조(clearance)를 증가시킴으로써 중성지방 수치를 낮춘다."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -10829,8 +10829,8 @@
         "중앙값 중성지방 농도는 오메가-3 지방산 복용 환자군과 미복용군 간에 차이가 없었다 (각각 110 (범위 25-1701) mg/dl 대 106 (범위 23-3340) mg/dl; P=0.08)."
        ],
        "terms": [
-        "trigl",
-        "omega"
+        "omega",
+        "trigl"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -10871,10 +10871,10 @@
         "상 위의 데이터는 혈류역학이 이에 관여할 수 있다는 가설을 뒷받침한다."
        ],
        "terms": [
-        "fluid",
-        "omega",
-        "blood",
         "circu",
+        "fluid",
+        "blood",
+        "omega",
         "flow"
        ],
        "basis": "주장 단어가 없어 결론 문장"
@@ -10927,10 +10927,10 @@
         "종합적인 연구는 향후 건강 전망에 필수적인 프로바이오틱스를 변형하고 개선하기 위해 미생물군 컨소시엄, 영양 중재, 유전 도구를 활용하는 데 초점을 맞추고 있다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10951,10 +10951,10 @@
         "장내 세균총은 인간의 장 건강과 밀접한 관련이 있다. 프로바이오틱스는 감염 예방, 신체 미생물총 균형 조절, 면역력 향상, 아동의 성장과 발달에 핵심적인 역할을 해왔다. 본 논문은 프로바이오틱스와 장 건강의 메커니즘, 그리고 위장관 질환에서의 프로바이오틱스 응용을 설명한다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -10979,10 +10979,10 @@
         "장내 미생물의 미세한 균형이 깨지면 장 건강에 영향을 미칠 뿐만 아니라 다양한 정신 건강 장애와도 연관된다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11005,10 +11005,10 @@
         "이것은 남성의 장 건강 증진을 표방하는 속효성 영양 보조제이다 my website http://www.guideonproduct.com/best-probiotic-supplement.html"
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11033,10 +11033,10 @@
         "과민성 대장 증후군(IBS), 염증성 장 질환(IBD), 항생제 연관 설사 등 다양한 위장관 질환에서 프로바이오틱스의 이점에 대한 증거가 논의된다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11061,10 +11061,10 @@
         "이는 닭의 장내 항상성과 장 건강에 대한 현재의 이해와, 가금류 식이에 프로바이오틱스를 보충함으로써 이를 어떻게 평가하고 개선할 수 있는지에 초점을 맞춘다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11089,10 +11089,10 @@
         "연구 결과는 프리바이오틱스와 프로바이오틱스 모두 가시적인 건강상의 이점을 제공하지만, 그 효능은 균주 특이성, 용량, 개인의 마이크로바이옴 구성에 따라 다르므로 맞춤형 영양 전략의 필요성을 강조함을 보여준다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11113,10 +11113,10 @@
         "인간 장내 마이크로바이옴은 전반적인 건강을 유지하는 데 중대한 역할을 하며, 면역 기능, 대사 및 질병 예방에 영향을 미친다. 본 리뷰는 장 건강 증진에 있어 프로바이오틱스와 프리바이오틱스의 사용을 뒷받침하는 최신 증거를 고찰한다. 적절한 양을 섭취했을 때 건강상의 이점을 부여하는 살아있는 미생물로 정의되는 프로바이오틱스와 유익균의 성장을 선택적으로 자극하는 소화 불가능한 식품 성분인 프리바이오틱스는 치료적 개입으로서 상당한 주목을 받아왔다. 최근 임상 연구들은 위장관 질환 치료, 면역 기능 강화, 대사 건강 지원에 있어 이들의 효능을 입증한다. 그러나 균주 특이적 효과, 용량 고려 사항, 그리고 반응의 개인별 차이는 임상적용에 있어 여전히 중요한 요소로 남아 있다. 본 리뷰는 최신 연구 결과를 종합하고 장 건강 관리에 있어 프로바이오틱스와 프리바이오틱스의 치료적 사용에 대한 근거 기반 권고사항을 제공한다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11141,10 +11141,10 @@
         "유익균의 성장을 촉진하고 장 건강을 증진함으로써, 프로바이오틱스는 장내 미생물군을 개선하고 염증 감소 및 대사 과정 개선을 가져올 수 있다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11190,10 +11190,10 @@
         "종합적인 연구는 향후 건강 전망에 필수적인 프로바이오틱스를 변형하고 개선하기 위해 미생물군 컨소시엄, 영양 중재, 유전 도구를 활용하는 데 초점을 맞추고 있다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11214,10 +11214,10 @@
         "장내 세균총은 인간의 장 건강과 밀접한 관련이 있다. 프로바이오틱스는 감염 예방, 신체 미생물총 균형 조절, 면역력 향상, 아동의 성장과 발달에 핵심적인 역할을 해왔다. 본 논문은 프로바이오틱스와 장 건강의 메커니즘, 그리고 위장관 질환에서의 프로바이오틱스 응용을 설명한다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11242,10 +11242,10 @@
         "장내 미생물의 미세한 균형이 깨지면 장 건강에 영향을 미칠 뿐만 아니라 다양한 정신 건강 장애와도 연관된다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11268,10 +11268,10 @@
         "이것은 남성의 장 건강 증진을 표방하는 속효성 영양 보조제이다 my website http://www.guideonproduct.com/best-probiotic-supplement.html"
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11296,10 +11296,10 @@
         "과민성 대장 증후군(IBS), 염증성 장 질환(IBD), 항생제 연관 설사 등 다양한 위장관 질환에서 프로바이오틱스의 이점에 대한 증거가 논의된다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11324,10 +11324,10 @@
         "이는 닭의 장내 항상성과 장 건강에 대한 현재의 이해와, 가금류 식이에 프로바이오틱스를 보충함으로써 이를 어떻게 평가하고 개선할 수 있는지에 초점을 맞춘다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11352,10 +11352,10 @@
         "연구 결과는 프리바이오틱스와 프로바이오틱스 모두 가시적인 건강상의 이점을 제공하지만, 그 효능은 균주 특이성, 용량, 개인의 마이크로바이옴 구성에 따라 다르므로 맞춤형 영양 전략의 필요성을 강조함을 보여준다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11376,10 +11376,10 @@
         "인간 장내 마이크로바이옴은 전반적인 건강을 유지하는 데 중대한 역할을 하며, 면역 기능, 대사 및 질병 예방에 영향을 미친다. 본 리뷰는 장 건강 증진에 있어 프로바이오틱스와 프리바이오틱스의 사용을 뒷받침하는 최신 증거를 고찰한다. 적절한 양을 섭취했을 때 건강상의 이점을 부여하는 살아있는 미생물로 정의되는 프로바이오틱스와 유익균의 성장을 선택적으로 자극하는 소화 불가능한 식품 성분인 프리바이오틱스는 치료적 개입으로서 상당한 주목을 받아왔다. 최근 임상 연구들은 위장관 질환 치료, 면역 기능 강화, 대사 건강 지원에 있어 이들의 효능을 입증한다. 그러나 균주 특이적 효과, 용량 고려 사항, 그리고 반응의 개인별 차이는 임상적용에 있어 여전히 중요한 요소로 남아 있다. 본 리뷰는 최신 연구 결과를 종합하고 장 건강 관리에 있어 프로바이오틱스와 프리바이오틱스의 치료적 사용에 대한 근거 기반 권고사항을 제공한다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11404,10 +11404,10 @@
         "유익균의 성장을 촉진하고 장 건강을 증진함으로써, 프로바이오틱스는 장내 미생물군을 개선하고 염증 감소 및 대사 과정 개선을 가져올 수 있다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11451,8 +11451,8 @@
         "프로바이오틱스가 조현병 환자의 배변 활동과 대사 인자에 미치는 영향을 조사하기 위해, 우리는 2개월 이상 변비로 인해 스트렙토코커스 패칼리스(Streptococcus faecalis) 2×10⁸ CFU/일, 바실러스 메센테리쿠스(Bacillus mesentericus) 1×10⁷ CFU/일, 클로스트리디움 부티리쿰(Clostridium butyricum) 5×10⁷ CFU/일이 포함된 복합 프로바이오틱스를 투여받은 조현병 입원 환자들을 대상으로 후향적 의무기록 조사를 수행했다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -11478,8 +11478,8 @@
         "분포 빈도의 중간 지점(사분위수 범위)에서 위약과 비피도박테리움 간에 통계적 차이는 없었으나, 빈도 분포의 양쪽 끝(즉, 15사분위수 미만: 변비, 81사분위수 초과: 설사)에서는 유의한 차이(p < 0.05)가 관찰되었으며, 비피도박테리움 투여군은 각각의 경우에서 배변 습관이 정상화되는 것을 경험했다. 표: 다양한 기저치에서의 기저치 대비 변화 비교 결론: 프로바이오틱스 B. 인판티스 35624(B. infantis 35624)는 기저 시점에 설사 또는 변비가 있는 과민성 대장 증후군(IBS) 환자에서 변비 환자의 배변 횟수를 늘리고 설사 환자의 배변 횟수를 줄임으로써 배변 습관을 정상화했다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -11503,8 +11503,8 @@
         "염증성 장질환에서의 세균총"
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -11530,8 +11530,8 @@
         "우리는 동물 모델에서 프로바이오틱스를 사용한 최근 연구 결과를 보고하며, 여기서 만성 염증성 장질환, 주머니염(pouchitis), 궤양성 대장염 치료에 대한 유망한 효과가 관찰되었다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -11555,8 +11555,8 @@
         "그러나 두 논문 모두 통증, 변비, 배변 빈도, 고창의 일반적인 증점에 초점을 맞추었다. 결론: 표 1의 결과 전체에 걸쳐 개선의 양의 상관관계가 나타났다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -11580,8 +11580,8 @@
         "한 메타 분석에 따르면 프로바이오틱스는 설사 기간과 배변 빈도를 모두 줄였다. 염증성 장 질환에서 프로바이오틱스의 가치는 환자들이 기존의 주류 약물 치료를 계속해야 하기 때문에 평가하기 더 어렵다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -11605,8 +11605,8 @@
         "건강한 장내 세균총은 예를 들어 사이토카인에 대한 영향을 통해 이러한 발달에 중요한 역할을 한다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -11628,8 +11628,8 @@
         "과민성 대장 증후군(IBS)의 병인은 다원성인 것으로 생각되며, 장 운동성 변화, 소장 세균 과증식, 미세 염증, 내장 과민성을 포함한 여러 요인이 잠재적으로 역할을 할 수 있다."
        ],
        "terms": [
-        "probi",
         "bowel",
+        "probi",
         "const",
         "defec"
        ],
@@ -11684,8 +11684,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11711,8 +11711,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11738,8 +11738,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11765,8 +11765,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11792,8 +11792,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11819,8 +11819,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11846,8 +11846,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11873,8 +11873,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11921,8 +11921,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11948,8 +11948,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -11975,8 +11975,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12002,8 +12002,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12029,8 +12029,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12056,8 +12056,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12083,8 +12083,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12110,8 +12110,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12158,8 +12158,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12185,8 +12185,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12212,8 +12212,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12239,8 +12239,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12266,8 +12266,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12293,8 +12293,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12320,8 +12320,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12347,8 +12347,8 @@
        ],
        "terms": [
         "colla",
-        "pepti",
         "derma",
+        "pepti",
         "skin"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12513,8 +12513,8 @@
         "진세노사이드는 인삼의 주요 활성 성분이다. 현대 연구에 따르면 진세노사이드는 신경계, 심혈관계 및 면역계에 영향을 미칠 수 있으며, 항아포토시스, 항염증, 혈관확장, 항노화 및 운동 피로 회복에 일정한 효과가 있다. 현재 연구는 진세노사이드의 Rb1, Re, Rg1과 더 많이 관련되어 있고 다른 성분과는 적게 관련되어 있다. 연구에 따르면 진세노사이드는 강력한 항산화 및 활성 산소 제거 능력이 있고, 중추신경계에 보호 효과가 있으며, 근글리코겐과 간글리코겐을 증가시키고, 혈중 젖산 농도를 낮추며, 운동 피로를 연기할 수 있다. 본 논문에서는 진세노사이드의 항운동 피로 효과에 대한 기존 연구들을 요약함으로써 진세노사이드와 운동의 관계를 논하고, 진세노사이드의 향후 연구와 응용을 전망한다."
        ],
        "terms": [
-        "ginse",
-        "fatig"
+        "fatig",
+        "ginse"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -12536,8 +12536,8 @@
         "결과에 따르면 진세노사이드(ginsenosides)는 생쥐의 강제 수영 시간을 연장할 수 있고 혈중 젖산과 혈청 요소 질소의 함량을 감소시켰으며, 이는 진세노사이드가 신체 피로 완화 효과가 있음을 나타낸다."
        ],
        "terms": [
-        "ginse",
-        "fatig"
+        "fatig",
+        "ginse"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -12557,8 +12557,8 @@
         "본 연구는 운동 유도성 피로가 발생한 랫드 골격근의 생화학적 지표에 대한 진세노사이드 Rb1(Ginsenoside Rb1)과 진세노사이드(Ginsenosides)들의 효과를 알아내고, 중강도 트레드밀 운동 동물 모델을 확립하기 위해 수행되었다: 랫드를 무작위로 4개 그룹으로 나누었다: 대조군, 모델군, 진세노사이드 Rb1군, 진세노사이드군. 2주의 실험 후, 랫드 골격근의 미토콘드리아 막전위, 칼슘 이온 함량, MDA 함량, SOD 활성 및 포도당 함량을 측정하였다; 결과는 진세노사이드 Rb1과 진세노사이드 모두 골격근 세포의 Ca2+ 항상성 불균형 및 미토콘드리아 막전위 감소 문제를 해결하고, 골격근 세포의 MDA를 감소시키며, SOD 활성을 활성화하고, 골격근의 포도당 함량을 증가시키는 데 도움을 줄 수 있음을 보여준다, p<0.05. 결론적으로, 이들은 스포츠로 인한 골격근 세포 손상을 줄이고 항피로 역할을 할 수 있다. 그러나 미토콘드리아 막전위 회복과 MDA 감소에 있어서는 진세노사이드들이 진세노사이드 Rb1보다 우수하다. 그리고 Ca2+ 항상성 불균형 문제 해결, SOD 활성 활성화, 포도당 함량 증가에 있어서는 진세노사이드 Rb1이 진세노사이드들보다 우수하다."
        ],
        "terms": [
-        "ginse",
-        "fatig"
+        "fatig",
+        "ginse"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -12578,8 +12578,8 @@
         "목적: 유사인삼사포닌 GQ의 항피로 작용을 논의한다. 방법: 모델 구축을 통해 유사인삼사포닌 GQ의 항피로 효과를 분석했다. 대조군과 비교하여 강제 수영 시간, 체중, 젖산 함량, 요소질소, 젖산탈수소효소 및 근육 글리코겐을 측정했다. 결과: 대조군과 비교하여, 유사인삼사포닌 GQ 군의 수영 시간이 현저히 연장되었고, 체중이 증가했으며, 혈중 젖산 함량이 낮았고, 요소질소 함량이 낮았으며, 젖산탈수소효소 활성이 높았고, 근육 글리코겐 함량이 높았다. 결론: 유사인삼사포닌 GQ는 비교적 강한 항피로 기능을 나타냈다."
        ],
        "terms": [
-        "ginse",
-        "fatig"
+        "fatig",
+        "ginse"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -12599,8 +12599,8 @@
         "이 보고서는 운동 유도 피로 쥐에서 중추 신경전달물질 5-HT, GABA, DA 및 Ach의 함량 검정을 통해 운동 유도 중추 피로에 저항하는 진세노사이드 Rg1과 Rb1의 기능적 시스템을 기술한다. 실험에서 40마리의 수컷 SD 쥐를 무작위로 4개 그룹으로 나누었다: 진세노사이드 Rg1 그룹, Rb1 그룹, 모델 그룹, 대조 그룹. 진세노사이드 Rg1 그룹과 Rb1 그룹의 쥐에게는 진세노사이드 Rg1과 Rb1(50 mg/kg)을 하루에 한 번 위장 투여(위내 주입)하였고, 모델 그룹과 대조 그룹의 쥐에게는 동일한 양의 생리식염수를 위장 투여하였다. 한 시간 후, 진세노사이드 Rg1, Rb1 및 모델 그룹의 쥐들은 경사 0도, 속도 15 m/min으로 중간 강도의 트레드밀 운동을 20분 동안 하였고, 40분 휴식 후 추가로 20분 동안 운동을 하였다. 14일 후, 중추 신경전달물질 5-HT, GABA, DA 및 Ach의 함량을 측정하였다. 결과는 진세노사이드 Rg1과 Rb1 모두 시상하부에서 5-HT와 GABA의 함량을 효과적으로 감소시키고, DA와 Ach의 함량을 개선할 수 있음을 보여주었다. 진세노사이드 Rg1과 비교하여, 진세노사이드 Rb1은 5-HT와 GABA의 함량을 줄이고 DA의 함량을 개선하는 측면에서 더 나은 성능을 보인 반면, Ach의 함량을 개선하는 효과는 상대적으로 적었다. 우리는 진세노사이드 Rg1과 Rb1이 운동 유도 피로 후 중추 신경전달물질의 장애를 서로 다른 수준과 서로 다른 표적에서 개선하여 운동 유도 피로를 해소하는 원하는 효과를 달성할 수 있다는 결론을 내렸다. 그러나 진세노사이드 Rb1의 효과가 더 좋다."
        ],
        "terms": [
-        "ginse",
-        "fatig"
+        "fatig",
+        "ginse"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -12620,8 +12620,8 @@
         "Observing the effect of ginsenoside and ginsenoside Re and Rg1 on rat MDA and activity of SOD in the model of campaign fatigue,this article shows the anti-fatigue principle of ginsenoside and discusses the prevention and treatment mechanism of ginsenoside on campaign fatigue."
        ],
        "terms": [
-        "ginse",
-        "fatig"
+        "fatig",
+        "ginse"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -12641,8 +12641,8 @@
         "Objective In this paper,in order to reduce the strong oxidizing free radicals caused by exercise-induced skeletal muscle fatigue.Methods The model of exercise-induced fatigue in skeletal muscle superoxide dismutase(SOD) skeletal muscle activity and malondialdehyde(MDA) levels were detected by use of literature and data,experimental method and mathematical statistics.Results The results showed that compared with model group,ginsenoside Rb1 could effectively reduce the MDA content and increase SOD activity;ginsenoside Rb1 effectively enhanced the body's antioxidant enzyme(SOD) activity levels,and there might be two mechanisms reaching anti-exercise-induced fatigue-one is to directly participate in ion-free radical scavenging ability of the body,and the other is to affect enzyme activity by reducing the redox reaction of substrate concentration.Conclusions Therefore,ginsenoside Rb1 against high-intensity exercise has generated free radicals and slowed down the role of exercise-induced skeletal muscle fatigue."
        ],
        "terms": [
-        "ginse",
-        "fatig"
+        "fatig",
+        "ginse"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -12666,8 +12666,8 @@
         "결론: 우리의 결과는 진세노사이드 Rg1이 EGFR 조절을 통해 타우린과 만노스 6-인산의 대사에 영향을 미치며 항피로 효과가 있음을 시사한다."
        ],
        "terms": [
-        "ginse",
-        "fatig"
+        "fatig",
+        "ginse"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -12687,8 +12687,8 @@
         "Objective This report describes the mechanism of Ginsenoside Re to resist Exercise-induced fatigue based on the observation of effects on MDA content and SOD activity.Methods Thirty male SD rats were divided into 3 groups randomly:Ginsenoside Re group,model group and control group,10 rats in each group.Rats in Ginsenoside Re group were given gastric gavage of Ginsenoside Re once a day,while rats in model and control groups were given the same volume of normal saline.One hour after administration,rats of Ginsenoside Re groups and Model groups received medium-intensity treadmill exercise for 20 minutes at the speed of 15m/min,with a slope of 0 degree,and after 40-mimute break repeated it for another 20minutes.Fourteen days later,MDA content and SOD activity have been tested.Results MDA content in the serum,liver tissue and muscle tissue of Ginsenoside Re group was obviously lower than that in the model group (P 0.01).SOD activity in erythrocyte,liver tissue and muscle tissue of Ginsenoside Re group was obviously higher than that in the model group (P 0.01).Conclusion Our research indicates that Ginsenoside Re is able to relieve fatigue by decreasing SOD content and increasing SOD activity."
        ],
        "terms": [
-        "ginse",
-        "fatig"
+        "fatig",
+        "ginse"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -12742,9 +12742,9 @@
         "최근의 실망스러운 콜레스테롤 저하제 임상시험: 콜레스테롤 이론에 대한 전면적인 재평가의 시기가 아니란 말인가? 드 로르제릴, M."
        ],
        "terms": [
+        "omega",
         "dysli",
         "chole",
-        "omega",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12769,9 +12769,9 @@
         "우지 또는 아마씨유 식이에 콜레스테롤을 포함시키면 막 C20:4, 오메가-6 지방산 함량이 감소하고, 이와 함께 C18:2, 오메가-6 지방산 함량이 증가하였다."
        ],
        "terms": [
+        "omega",
         "dysli",
         "chole",
-        "omega",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12796,9 +12796,9 @@
         "직계 가족은 혈장 고밀도 지단백 콜레스테롤이 유의하게 낮았고 인지질 내 총 오메가-6 지방산은 증가했다."
        ],
        "terms": [
+        "omega",
         "dysli",
         "chole",
-        "omega",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12823,9 +12823,9 @@
         "또한, 최근 연구들은 스타틴 투여 환자에서 피브레이트, 니아신, 콜레스테롤 흡수 억제제, 또는 EPA와 DHA를 모두 함유한 오메가-3 지방산 제제 치료 후 심혈관 위험 감소를 입증하지 못했으며; 따라서 보조 치료를 위한 추가적인 심혈관 결과 연구의 필요성이 여전히 남아 있다."
        ],
        "terms": [
+        "omega",
         "dysli",
         "chole",
-        "omega",
         "hyper"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12875,10 +12875,10 @@
         "따라서 우리는 크릴 오일 보충이 고콜레스테롤혈증 동안 조직으로의 LDL-콜레스테롤 섭취 및 콜레스테롤 배설을 촉진하고 콜레스테롤 합성을 억제함으로써 혈중 LDL-콜레스테롤 수치를 감소시킬 수 있음을 시사한다."
        ],
        "terms": [
+        "krill",
+        "hyper",
         "dysli",
         "chole",
-        "hyper",
-        "krill",
         "oil"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12903,10 +12903,10 @@
         "결론 본 연구의 결과는 총콜레스테롤, LDL, 중성지방을 유의하게 줄이고 HDL 수치를 높임으로써 크릴오일이 고지혈증 관리에 효과적이라는 것을 높은 신뢰 수준으로 입증한다."
        ],
        "terms": [
+        "krill",
+        "hyper",
         "dysli",
         "chole",
-        "hyper",
-        "krill",
         "oil"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12931,10 +12931,10 @@
         "결론: 크릴 오일 인지질을 이용한 3개월 치료는 고혈압 환자의 지질 프로필을 유의하게 개선한다."
        ],
        "terms": [
+        "krill",
+        "hyper",
         "dysli",
         "chole",
-        "hyper",
-        "krill",
         "oil"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -12959,10 +12959,10 @@
         "결론 PKO는 WKO에 비해 전반적으로 더 나은 콜레스테롤 저하 효과를 보였으며, 이는 더 높은 n-3 다불포화지방산(PUFA) 수치 때문일 수 있다."
        ],
        "terms": [
+        "krill",
+        "hyper",
         "dysli",
         "chole",
-        "hyper",
-        "krill",
         "oil"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -13010,11 +13010,11 @@
         "여주 추출물, 심바스타틴, 그리고 심바스타틴과 여주 추출물의 병용은 고콜레스테롤혈증 쥐에서 콜레스테롤 수치, IL-6, MDA를 감소시키는 효과가 있다."
        ],
        "terms": [
-        "dysli",
-        "chole",
         "melon",
+        "bitte",
         "hyper",
-        "bitte"
+        "dysli",
+        "chole"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13038,11 +13038,11 @@
         "이러한 결과로부터 여주와 마늘의 병용은 항고혈당 및 항고콜레스테롤혈증 제제로 사용될 수 있다는 결론을 내렸다."
        ],
        "terms": [
-        "dysli",
-        "chole",
         "melon",
+        "bitte",
         "hyper",
-        "bitte"
+        "dysli",
+        "chole"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13066,11 +13066,11 @@
         "또한 여주는 고혈당 쥐에서 분변 콜레스테롤 배설을 증가시키고 콜레스테롤 흡수를 효과적으로 억제했다."
        ],
        "terms": [
-        "dysli",
-        "chole",
         "melon",
+        "bitte",
         "hyper",
-        "bitte"
+        "dysli",
+        "chole"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13086,6 +13086,24 @@
  },
  {
   "id": "link-08",
+  "source": "실제 링크",
+  "input": "https://blog.naver.com/bknms2007/224380278565",
+  "claims": [
+   {
+    "noClaim": true,
+    "ingredient": "",
+    "effect": "",
+    "intensity": "",
+    "statement": "",
+    "context": "황반 색소 밀도를 유지해 시력 저하와 노안을 예방해주는 루테인효능 총정리 스마트폰을 오래 보고 난 뒤 눈이 침침하고 시야가 뿌옇게 흐려진 적 있으신가요? 눈 건강을 위해 많은 분들이 챙겨 먹는 루테인의 정확한 효능과 섭취법에 대해 자세히 알아보겠습니다. 💡 오늘의 3줄 요약 ① 루테인은 황반 중심부의 색소 밀도를 유지해 시력 저하를 막아줘요. ② 블루라이트와 자외선을 흡수해 망막 세포 손상을 예방해요. ③ 체내 합성이 안 되므로 하루 권장량(10~20mg)을 식품이나 영양제로 채워야 해요. ① 황반 색소 밀도 유지와 중심 시력 보호 황반은 시력의 90%를 담당하는 핵심 부위예요. 나이가 들며 황반 색소 밀도가 50대 이후 급감하므로 루테인을 보충해 망막 손상을 막아야 해요. ② 유해 청색광(블루라이트) 차단 루테인은 전자기기에서 나오는 강한 블루라이트를 걸러주는 필터 역할을 해요. 활성산소를 중화시켜 안구 망막의 광산화 손상을 40% 이상 줄여줘요. ③ 지아잔틴과의 복합 시너지 황반의 주변부는 루테인이, 중심부는 지아잔틴이 집중되어 있어요. 루테인과 지아잔틴을 4:1 또는 5:1 비율로 함께 섭취할 때 보호막이 빈틈없이 채워져요. ④ 지용성 특성에 맞춘 식후…",
+    "mfds": null,
+    "papers": [],
+    "svcCount": null
+   }
+  ]
+ },
+ {
+  "id": "link-09",
   "source": "실제 링크",
   "input": "https://blog.naver.com/bilight/224408733111",
   "claims": [
@@ -13314,8 +13332,8 @@
         "이러한 연구 결과는 산화 스트레스와 면역 기능 저하를 교정하는 데 있어 아로니아 멜라노카르파(Aronia melanocarpa) 타닌 분획의 잠재력을 확인시켜 준다."
        ],
        "terms": [
-        "immun",
-        "aroni"
+        "aroni",
+        "immun"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13330,7 +13348,7 @@
   ]
  },
  {
-  "id": "link-09",
+  "id": "link-10",
   "source": "실제 링크",
   "input": "https://blog.naver.com/3jeong/223280722194",
   "claims": [
@@ -13392,8 +13410,8 @@
        ],
        "terms": [
         "catec",
-        "infla",
         "green",
+        "infla",
         "tea"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -13419,8 +13437,8 @@
        ],
        "terms": [
         "catec",
-        "infla",
         "green",
+        "infla",
         "tea"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -13466,8 +13484,8 @@
         "비타민 D 결합 단백질의 세포외 수용체인 LRP2의 발현은 서아프리카계 혈통과 양의 상관관계를 보였고, 아프리카계 미국인(AAs)의 조직 25(OH)D 농도와는 음의 상관관계를 보였다. 결론. 비타민 D 결합 단백질 LRP2와 비타민 D 대사체 간의 관계는 프로호르몬이 수동 확산을 통한 방식보다는 전립선 내로 능동적으로 운반된 후 전립선 내에서 활성 호르몬으로 전환됨을 시사한다."
        ],
        "terms": [
-        "vitam",
-        "prost"
+        "prost",
+        "vitam"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13491,8 +13509,8 @@
         "이를 비롯한 기존 근거에 비추어 볼 때, 비타민 C 섭취는 전립선암 예방과 관련하여 유망해 보이지 않는다."
        ],
        "terms": [
-        "vitam",
-        "prost"
+        "prost",
+        "vitam"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13516,8 +13534,8 @@
         "엽산과 비타민 B6의 섭취량이 높을수록 진행성 전립선암에 대해 보호 효과가 있을 수 있지만 연관성은 약했고, 반면 비타민 B12의 높은 섭취량은 더 높은 전립선암(PC) 위험에 대한 유의성 경향을 보였다."
        ],
        "terms": [
-        "vitam",
-        "prost"
+        "prost",
+        "vitam"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13541,8 +13559,8 @@
         "Overall, this thesis provides insight and validation of the beneficial, protective role of vitamin D in both benign and malignant prostate biology, highlighting the potential implications of vitamin D for therapeutic strategies, including vitamin D supplementation aimed at reducing PCa incidence and aggressiveness in at-risk populations."
        ],
        "terms": [
-        "vitam",
-        "prost"
+        "prost",
+        "vitam"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13566,8 +13584,8 @@
         "클라인(Klein) 등이 수행한 연구는 비타민 E가 셀레늄, 비타민 E와 셀레늄, 그리고 위약과 비교했을 때 50세 이상 남성의 전립선암 발병 건수를 줄이는 데 더 효과적인지 조사했다."
        ],
        "terms": [
-        "vitam",
-        "prost"
+        "prost",
+        "vitam"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13591,8 +13609,8 @@
         "전립선샘 세포의 악성 형질전환은 항산화제(리코펜, 카로티노이드, 비타민 E, 비타민 C, 게르마늄, 황, 셀레늄)의 혈중 농도 감소 및 프로산화제(알루미늄 및 공액 다이엔)의 농도 증가와 관련이 있다."
        ],
        "terms": [
-        "vitam",
-        "prost"
+        "prost",
+        "vitam"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13616,8 +13634,8 @@
         "결론 혈중 비타민 D 수치, 전립선 조직, 비타민 D 효소의 관찰된 활성, 그리고 유전적 변화에 관한 가용한 연구들은 전립선암 발병에서 비타민 D 작용의 기본 기전에 대한 단편적인 통찰만을 제공할 뿐이므로, 추가적인 연구가 필요하다."
        ],
        "terms": [
-        "vitam",
-        "prost"
+        "prost",
+        "vitam"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13641,8 +13659,8 @@
         "이 데이터는 비타민 D 신호전달의 교란이 전립선암의 예방 및 치료를 위한 표적이 될 수 있음을 나타낸다."
        ],
        "terms": [
-        "vitam",
-        "prost"
+        "prost",
+        "vitam"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13657,7 +13675,7 @@
   ]
  },
  {
-  "id": "link-10",
+  "id": "link-11",
   "source": "실제 링크",
   "input": "https://blog.naver.com/bctin/224310513837",
   "claims": [
@@ -13694,13 +13712,13 @@
         "따라서 인간에게 500~600 mg/day의 장기간 차 카테킨 투여는 흡수가 저해될 수 있는 지용성 비타민과 음료의 종류에 관계없이 다양한 혈청 및 혈장 지표에 영향을 미치지 않으면서 체지방을 줄이는 것으로 보인다."
        ],
        "terms": [
-        "catec",
         "obesi",
+        "catec",
         "green",
         "adipo",
         "body",
-        "fat",
-        "tea"
+        "tea",
+        "fat"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13724,13 +13742,13 @@
         "이러한 결과는 차 카테킨의 섭취가 체지방 축적에 유익함을 보여준다."
        ],
        "terms": [
-        "catec",
         "obesi",
+        "catec",
         "green",
         "adipo",
         "body",
-        "fat",
-        "tea"
+        "tea",
+        "fat"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13752,13 +13770,13 @@
         "결론 고지방 식사 중 갈로일 모이어티가 풍부한 녹차 음료를 섭취하는 것은 중등도 비만 성인의 체지방을 감소시킨다."
        ],
        "terms": [
-        "catec",
         "obesi",
+        "catec",
         "green",
         "adipo",
         "body",
-        "fat",
-        "tea"
+        "tea",
+        "fat"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13773,7 +13791,25 @@
   ]
  },
  {
-  "id": "link-11",
+  "id": "link-12",
+  "source": "실제 링크",
+  "input": "https://news.hidoc.co.kr/news/articleView.html?idxno=22669",
+  "claims": [
+   {
+    "noClaim": true,
+    "ingredient": "",
+    "effect": "",
+    "intensity": "",
+    "statement": "",
+    "context": "혈당 조절에서 다이어트까지, ‘새싹보리’의 효능 - 하이닥 ‘슈퍼푸드’로 불리는 새싹보리는 건강보조식품의 재료로도 각광받고 있다. 건강 포털 Healthline은 새싹보리의 다양한 효능을 소개했다. 새싹보리 10g당 3g 정도의 섬유질이 들어있으며 면역 기능, 세포 성장, 시력 등에 영향을 미치는 비타민 A가 다량 함유되어 있다. 피부 건강 및 상처 치유, 구강 건강에 중추적인 역할을 하는 비타민 C와 혈액 응고, 뼈 형성, 심장 건강 등에 필요한 비타민 K도 들어있다. 이 밖에도 산화 스트레스를 줄이고 만성 질환으로부터 신체를 보호해 주는 폴리페놀과 플라보노이드 등 항산화제 또한 풍부하다. 새싹보리에 들어있는 불용성 섬유질은 인슐린 민감도 향상을 통한 혈당 조절에 도움을 주며, 나쁜(LDL) 콜레스테롤 및 혈압을 저하하고 심장 건강을 증진하는 데도 효과적이라는 연구 결과가 있다. 새싹보리는 다이어트에도 효과적이다. 칼로리는 낮지만, 섬유질이 많기 때문. 섬유질 섭취가 체중 및 체질량지수(BMI)에 영향을 미친다는 연구 결과들이 다수 나와 있다. 단 와파린과 같은 혈액 희석제를 복용하고 있거나 신장병, 셀리악병 환자 등은 새싹보리의 비타민K나 칼륨 등이 영향…",
+    "mfds": null,
+    "papers": [],
+    "svcCount": null
+   }
+  ]
+ },
+ {
+  "id": "link-13",
   "source": "실제 링크",
   "input": "https://kormedi.com/1544844/",
   "claims": [
@@ -13810,8 +13846,8 @@
         "이 결과는 석류 추출물이 갱년기 여성에게 도움이 될 수 있는 가능성을 시사한다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13835,8 +13871,8 @@
         "따라서 본 연구의 결과로부터, 일정 기간 동안 1.5 g/day의 석류 추출물을 복용하는 것은 안면 홍조를 포함한 갱년기 증상을 개선할 것이라고 결론지을 수 있다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13860,8 +13896,8 @@
         "따라서 본 연구의 결과로부터 일정 기간 동안 1.5 g/day의 석류 추출물을 섭취하는 것이 안면 홍조를 포함한 갱년기 증상을 개선할 것이라고 결론지을 수 있다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13885,8 +13921,8 @@
         "매일 석류 주스를 섭취한 폐경기 골다공증 여성쥐 그룹에서 더 적은 CTX 수치가 발견되었다(183,18±37,66) 결론: 항산화제로서 석류 주스의 매일 섭취는 폐경기 후 골다공증쥐에서 발생하는 하악골 흡수를 예방하는 데 기여할 수 있다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13910,8 +13946,8 @@
         "결론: 석류 추출물은 갱년기 증상 치료에 안전하고 효과적이다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13956,8 +13992,8 @@
         "이 결과는 석류 추출물이 갱년기 여성에게 도움이 될 수 있는 가능성을 시사한다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -13981,8 +14017,8 @@
         "따라서 본 연구의 결과로부터, 일정 기간 동안 1.5 g/day의 석류 추출물을 복용하는 것은 안면 홍조를 포함한 갱년기 증상을 개선할 것이라고 결론지을 수 있다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14006,8 +14042,8 @@
         "따라서 본 연구의 결과로부터 일정 기간 동안 1.5 g/day의 석류 추출물을 섭취하는 것이 안면 홍조를 포함한 갱년기 증상을 개선할 것이라고 결론지을 수 있다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14031,8 +14067,8 @@
         "매일 석류 주스를 섭취한 폐경기 골다공증 여성쥐 그룹에서 더 적은 CTX 수치가 발견되었다(183,18±37,66) 결론: 항산화제로서 석류 주스의 매일 섭취는 폐경기 후 골다공증쥐에서 발생하는 하악골 흡수를 예방하는 데 기여할 수 있다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14056,8 +14092,8 @@
         "결론: 석류 추출물은 갱년기 증상 치료에 안전하고 효과적이다."
        ],
        "terms": [
-        "pomeg",
-        "menop"
+        "menop",
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14106,10 +14142,10 @@
         "HDL-콜레스테롤은 6 및 9 ml 비율/주의 용량으로 석류 주스를 경구 투여한 고지혈증 쥐에서 유의하게 증가했다."
        ],
        "terms": [
+        "hyper",
         "dysli",
         "chole",
-        "pomeg",
-        "hyper"
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14133,10 +14169,10 @@
         "또한, 석류 껍질 폴리페놀은 ABCG1 및 PPARγ와 무관하게, mRNA 및 단백질 수준에서 ABCA1과 LXRα를 상향 조절함으로써 apoA-1 매개 대식세포 콜레스테롤 유출을 촉진했다."
        ],
        "terms": [
+        "hyper",
         "dysli",
         "chole",
-        "pomeg",
-        "hyper"
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14160,10 +14196,10 @@
         "더욱이, 정상군과 비교하여, 석류 껍질 폴리페놀에 의해 HMGCR mRNA와 SE mRNA는 하향조절된 반면, LDLR mRNA와 SREBP-2 mRNA는 상향조절되었다. 간세포에서 PPPs와 그 주성분인 PC 및 EA에 의한 콜레스테롤 균형 조절의 가능한 메커니즘은 콜레스테롤 합성 효소 유전자 발현을 하향조절하고 LDLR 유전자 발현을 상향조절하는 것을 통해서였다."
        ],
        "terms": [
+        "hyper",
         "dysli",
         "chole",
-        "pomeg",
-        "hyper"
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14187,10 +14223,10 @@
         "사용된 연구 방법은 완전임의배치법(CRD)을 사용한 실험적 방법으로 6개의 처리군으로 나누어졌고, 실험 동물은 증류수를 투여한 음성 대조군, 고지방 식이를 먹이고 심바스타틴을 투여한 양성 대조군, 석류 메탄올 분획물 25 mg/grBB 투여군, 석류 메탄올 분획물 50 mg/grBB 투여군, 석류 메탄올 분획물 100 mg/grBB 투여군인 6개의 처리군으로 나누어졌으며, 각 처리군은 4마리의 수컷 쥐로 나누어졌다. 본 연구의 결과에 따르면 쥐의 혈중 콜레스테롤 수치와 중성지방을 낮추는 데 효과가 있는 활성 분획은 석류 물-메탄올 분획물 100mg/grBB를 투여한 처리군이다."
        ],
        "terms": [
+        "hyper",
         "dysli",
         "chole",
-        "pomeg",
-        "hyper"
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14214,10 +14250,10 @@
         "고콜레스테롤혈증 환자에게 스타틴을 석류 주스와 병용하여 사용하는 것은 스타틴의 해로운 부작용을 예방하기 위해 더 낮은 용량의 스타틴을 사용할 수 있게 할 것이다."
        ],
        "terms": [
+        "hyper",
         "dysli",
         "chole",
-        "pomeg",
-        "hyper"
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14241,10 +14277,10 @@
         "CPJ 섭취는 이러한 고지혈증 환자들의 심장 질환 위험 요인을 수정할 수 있다고 결론지어진다."
        ],
        "terms": [
+        "hyper",
         "dysli",
         "chole",
-        "pomeg",
-        "hyper"
+        "pomeg"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14259,7 +14295,7 @@
   ]
  },
  {
-  "id": "link-12",
+  "id": "link-14",
   "source": "실제 링크",
   "input": "https://blog.naver.com/ejados7/224308129608",
   "claims": [
@@ -14296,8 +14332,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14323,8 +14359,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14350,8 +14386,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14377,8 +14413,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14404,8 +14440,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14429,8 +14465,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14456,8 +14492,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14483,8 +14519,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14529,8 +14565,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14556,8 +14592,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14583,8 +14619,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14610,8 +14646,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14637,8 +14673,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14662,8 +14698,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14689,8 +14725,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14716,8 +14752,8 @@
        "terms": [
         "antio",
         "oxida",
-        "antho",
-        "blueb"
+        "blueb",
+        "antho"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -14762,10 +14798,10 @@
         "종합적인 연구는 향후 건강 전망에 필수적인 프로바이오틱스를 변형하고 개선하기 위해 미생물군 컨소시엄, 영양 중재, 유전 도구를 활용하는 데 초점을 맞추고 있다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -14786,10 +14822,10 @@
         "장내 세균총은 인간의 장 건강과 밀접한 관련이 있다. 프로바이오틱스는 감염 예방, 신체 미생물총 균형 조절, 면역력 향상, 아동의 성장과 발달에 핵심적인 역할을 해왔다. 본 논문은 프로바이오틱스와 장 건강의 메커니즘, 그리고 위장관 질환에서의 프로바이오틱스 응용을 설명한다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -14814,10 +14850,10 @@
         "장내 미생물의 미세한 균형이 깨지면 장 건강에 영향을 미칠 뿐만 아니라 다양한 정신 건강 장애와도 연관된다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -14840,10 +14876,10 @@
         "이것은 남성의 장 건강 증진을 표방하는 속효성 영양 보조제이다 my website http://www.guideonproduct.com/best-probiotic-supplement.html"
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -14868,10 +14904,10 @@
         "과민성 대장 증후군(IBS), 염증성 장 질환(IBD), 항생제 연관 설사 등 다양한 위장관 질환에서 프로바이오틱스의 이점에 대한 증거가 논의된다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -14896,10 +14932,10 @@
         "이는 닭의 장내 항상성과 장 건강에 대한 현재의 이해와, 가금류 식이에 프로바이오틱스를 보충함으로써 이를 어떻게 평가하고 개선할 수 있는지에 초점을 맞춘다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -14924,10 +14960,10 @@
         "연구 결과는 프리바이오틱스와 프로바이오틱스 모두 가시적인 건강상의 이점을 제공하지만, 그 효능은 균주 특이성, 용량, 개인의 마이크로바이옴 구성에 따라 다르므로 맞춤형 영양 전략의 필요성을 강조함을 보여준다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -14948,10 +14984,10 @@
         "인간 장내 마이크로바이옴은 전반적인 건강을 유지하는 데 중대한 역할을 하며, 면역 기능, 대사 및 질병 예방에 영향을 미친다. 본 리뷰는 장 건강 증진에 있어 프로바이오틱스와 프리바이오틱스의 사용을 뒷받침하는 최신 증거를 고찰한다. 적절한 양을 섭취했을 때 건강상의 이점을 부여하는 살아있는 미생물로 정의되는 프로바이오틱스와 유익균의 성장을 선택적으로 자극하는 소화 불가능한 식품 성분인 프리바이오틱스는 치료적 개입으로서 상당한 주목을 받아왔다. 최근 임상 연구들은 위장관 질환 치료, 면역 기능 강화, 대사 건강 지원에 있어 이들의 효능을 입증한다. 그러나 균주 특이적 효과, 용량 고려 사항, 그리고 반응의 개인별 차이는 임상적용에 있어 여전히 중요한 요소로 남아 있다. 본 리뷰는 최신 연구 결과를 종합하고 장 건강 관리에 있어 프로바이오틱스와 프리바이오틱스의 치료적 사용에 대한 근거 기반 권고사항을 제공한다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -14976,10 +15012,10 @@
         "유익균의 성장을 촉진하고 장 건강을 증진함으로써, 프로바이오틱스는 장내 미생물군을 개선하고 염증 감소 및 대사 과정 개선을 가져올 수 있다."
        ],
        "terms": [
-        "probi",
-        "micro",
         "bowel",
+        "probi",
         "intes",
+        "micro",
         "gut"
        ],
        "basis": "주장 단어가 나오는 문장"
@@ -14995,7 +15031,25 @@
   ]
  },
  {
-  "id": "link-13",
+  "id": "link-15",
+  "source": "실제 링크",
+  "input": "https://blog.lifecodebeautiful.com/21",
+  "claims": [
+   {
+    "noClaim": true,
+    "ingredient": "",
+    "effect": "",
+    "intensity": "",
+    "statement": "",
+    "context": "양배추 효능 총정리, 위 건강, 다이어트, 독소 배출까지 한 번에 잡는 슈퍼푸드 📑 목차 양배추는 오랫동안 ‘속 편한 음식’으로 알려져 있지만, 최근 연구에서는 위 점막 보호, 만성 소화 불량 개선, 다이어트 조절 효과까지 인정받으며 다시 주목받고 있습니다. 특히 위염·역류성 식도염·속쓰림 같은 증상으로 고민하는 사람들이 많아지면서, 양배추는 이제 단순한 채소가 아니라 ‘위 건강 슈퍼푸드’로 자리 잡았습니다. 양배추가 ‘위 건강’에 좋은 진짜 이유 많은 사람들이 양배추를 먹으면 속이 편안해진다고 말하지만, 그 이유는 비타민 U(카베진) 때문입니다. 비타민 U는 손상된 위 점막을 보호해주는 성분으로, 실제로 일본과 유럽에서는 위 보호 보조제로도 사용되고 있습니다. - 위 점막 보호 – 속쓰림·역류성 식도염 완화에 도움 - 만성 소화 불량 개선 – 소화 기능 안정화에 효과적 - 위장 내 염증 감소 – 자극적 음식 많이 먹는 날 특히 유용 다이어트 식단에서 양배추가 빠지지 않는 이유 양배추는 100g 기준 약 21kcal에 불과하면서도 식이섬유가 풍부해 포만감 유지, 식욕 조절, 과식 방지에 탁월합니다. 또한 혈당지수(GI)가 낮아 식후 혈당 급등을 막아 다이어트…",
+    "mfds": null,
+    "papers": [],
+    "svcCount": null
+   }
+  ]
+ },
+ {
+  "id": "link-16",
   "source": "실제 링크",
   "input": "https://www.hinews.co.kr/view.php?ud=202212151143580034471_48",
   "claims": [
@@ -15034,9 +15088,9 @@
         "관절염군에 비해 생강군에서 IL-17, TNF-α, COX-2 및 NF-κB 조직 수치의 감소는 통계적으로 유의하였다."
        ],
        "terms": [
+        "joint",
         "ginge",
-        "arthr",
-        "joint"
+        "arthr"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15060,9 +15114,9 @@
         "윌코콕스의 대체 대응표본 t-검정에 기반할 때, p값 0.000(<0.05)은 류마티스 관절염 환자의 통증 강도 감소에 따뜻한 생강 찜질의 효과 사이에 유의한 영향이 있음을 의미한다."
        ],
        "terms": [
+        "joint",
         "ginge",
-        "arthr",
-        "joint"
+        "arthr"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15086,9 +15140,9 @@
         "One way to relieve arthritis pain is by way of compress ginger."
        ],
        "terms": [
+        "joint",
         "ginge",
-        "arthr",
-        "joint"
+        "arthr"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15112,9 +15166,9 @@
         "이 결과는 붉은 생강을 이용한 마사지 유플루라주가 노인의 통풍성 관절염 통증 척도에 영향을 미쳤음을 나타냈다."
        ],
        "terms": [
+        "joint",
         "ginge",
-        "arthr",
-        "joint"
+        "arthr"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15138,9 +15192,9 @@
         "결론: 따뜻한 생강 찜질 중재 전후의 통증 통풍 관절염 수준에 유의한 효과가 있다."
        ],
        "terms": [
+        "joint",
         "ginge",
-        "arthr",
-        "joint"
+        "arthr"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15164,9 +15218,9 @@
         "결론: 생강 보충제는 관절염 증상을 관리하는 데, 특히 통증 및 기능적 결과를 개선하는 데 치료적 선택이 될 수 있다."
        ],
        "terms": [
+        "joint",
         "ginge",
-        "arthr",
-        "joint"
+        "arthr"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15190,9 +15244,9 @@
         "따뜻한 생강 찜질은 류마티스 관절염이 있는 노인의 통증 강도를 줄이는 데 효과적이다."
        ],
        "terms": [
+        "joint",
         "ginge",
-        "arthr",
-        "joint"
+        "arthr"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15216,9 +15270,9 @@
         "생강 온습프 요법의 EBN(근거기반간호) 적용은 류마티스 관절염 환자의 관절 통증 강도를 줄이는 데 매우 영향력이 있다."
        ],
        "terms": [
+        "joint",
         "ginge",
-        "arthr",
-        "joint"
+        "arthr"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15242,9 +15296,9 @@
         "고찰: 붉은 생강의 따뜻한 찜질을 제공하는 것은 류마티스 관절염 환자의 통증을 낮추는 데 효과적이며, 이 중재는 환자가 독자적으로 수행할 수 있다."
        ],
        "terms": [
+        "joint",
         "ginge",
-        "arthr",
-        "joint"
+        "arthr"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15471,7 +15525,7 @@
   ]
  },
  {
-  "id": "link-14",
+  "id": "link-17",
   "source": "실제 링크",
   "input": "https://www.youtube.com/watch?v=RfxAz6RwfpI",
   "claims": [
@@ -15508,8 +15562,8 @@
         "우리는 마늘에 의한 유의한 혈압 감소를 확인할 수 없었다."
        ],
        "terms": [
-        "hyper",
         "garli",
+        "hyper",
         "blood",
         "press"
        ],
@@ -15535,8 +15589,8 @@
         "고혈압 인구 사이에서 마늘의 사용은 흔하지만, 마늘과 마늘 정제는 급성 혈압 강하 효과가 없으며, 환자와 대중에게 마늘에 대해 알리는 특별한 교육 프로그램이 필요하다."
        ],
        "terms": [
-        "hyper",
         "garli",
+        "hyper",
         "blood",
         "press"
        ],
@@ -15562,8 +15616,8 @@
         "결과: 마늘에 들어있는 알리신(Allicin)과 같은 활성 성분들로 인해, 이는 고혈압 환자의 고혈압을 낮추는 데 효과가 있음이 입증되었다."
        ],
        "terms": [
-        "hyper",
         "garli",
+        "hyper",
         "blood",
         "press"
        ],
@@ -15589,8 +15643,8 @@
         "마늘이 혈압 관리에 일부 이점을 제공할 수 있지만, 기존의 항고혈압 약물의 대체제로 여겨져서는 안 된다."
        ],
        "terms": [
-        "hyper",
         "garli",
+        "hyper",
         "blood",
         "press"
        ],
@@ -15614,8 +15668,8 @@
         "이 연구들은 마늘이 생체 내(in vivo) 저산소성 폐고혈압을 차단한다는 것을 문서화하고, 폐동맥 고리에서 그 효과에 대한 내피 의존적 및 비의존적 기전의 조합을 입증한다."
        ],
        "terms": [
-        "hyper",
         "garli",
+        "hyper",
         "blood",
         "press"
        ],
@@ -15641,8 +15695,8 @@
         "고찰: 본 연구의 결과는 마늘 오일을 경구 투여했을 때 본태성 고혈압을 앓고 있는 경증 및 중등도 고혈압 환자에게 경미한 혈압 강하 효과가 있음을 나타낸다."
        ],
        "terms": [
-        "hyper",
         "garli",
+        "hyper",
         "blood",
         "press"
        ],
@@ -15668,8 +15722,8 @@
         "본 연구는 H2S 신호전달, 산화질소(NO), 장내 미생물의 조절을 통해 모체의 만성콩팥병(CKD)으로 인해 유도된 자손의 고혈압에 대항하는 주산기 마늘 오일 보충의 효능을 검증했다."
        ],
        "terms": [
-        "hyper",
         "garli",
+        "hyper",
         "blood",
         "press"
        ],
@@ -15695,8 +15749,8 @@
         "주요 연구 결과는 고혈압 환자에서 마늘 섭취 투여 후 평균 혈압 수치가 마늘 요법 투여 전 평균 혈압 수치보다 낮았다는 것이다."
        ],
        "terms": [
-        "hyper",
         "garli",
+        "hyper",
         "blood",
         "press"
        ],
@@ -15713,7 +15767,7 @@
   ]
  },
  {
-  "id": "link-15",
+  "id": "link-18",
   "source": "실제 링크",
   "input": "https://www.youtube.com/watch?v=CeSXjD468uI",
   "claims": [
@@ -15750,13 +15804,13 @@
         "또한 여주는 고혈당 쥐에서 분변 콜레스테롤 배설을 증가시키고 콜레스테롤 흡수를 효과적으로 억제했다."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15780,13 +15834,13 @@
         "또한 우리는 유산균 발효 여주가 알록산 일수화물 처리에 의한 간 손상을 보호하고, 이들 마우스 모델에서 중성지방 수치를 낮게, HDL 콜레스테롤 수치를 높게 유지한다는 것을 발견했다."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15810,13 +15864,13 @@
         "이러한 결과로부터 여주와 마늘의 병용은 항고혈당 및 항고콜레스테롤혈증 제제로 사용될 수 있다는 결론을 내렸다."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15840,13 +15894,13 @@
         "이 화합물들은 췌장 베타 세포에서의 인슐린 분비를 증가시키고, 인슐린 감수성을 개선하며, 탄수화물 분해 효소를 억제함으로써 작용한다.</p> <p><strong>결론:</strong> 여주의 규칙적인 섭취는 췌장 기능과 포도당 대사를 지원하는 다양한 분자 기전을 통해 혈당 수치를 낮출 잠재력이 있다.</p> <p><strong>키워드:</strong> 여주, 혈당, 당뇨병, 췌장, 차란틴, 인슐린."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15870,13 +15924,13 @@
         "결론적으로, 여주 주스의 매일 섭취는 제2형 당뇨병 환자의 혈당 수치의 유의한 감소와 연관이 있었으며, 개입 7일 후에 더 두드러진 효과가 관찰되었다."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15900,13 +15954,13 @@
         "이러한 결과는 당뇨병의 예방과 치료를 위한 여주의 항당뇨 및 항산화 효과를 보여준다."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15930,13 +15984,13 @@
         "뿐만 아니라, 여주는 장내 세균총 조절, 글루코시다아제 및 아밀라아제 억제, 활성 산소 제거, AMP 활성화 단백질 키나아제(AMPK)의 활성 강화, 퍼옥시좀 증식체 활성화 수용체(PPARs)의 발현 증가를 통해 고혈당을 줄일 수 있다."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -15960,13 +16014,13 @@
         "여주의 혈당 강하 효과는 42명의 환자에서 평가 가능했다."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -16011,13 +16065,13 @@
         "또한 여주는 고혈당 쥐에서 분변 콜레스테롤 배설을 증가시키고 콜레스테롤 흡수를 효과적으로 억제했다."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -16041,13 +16095,13 @@
         "또한 우리는 유산균 발효 여주가 알록산 일수화물 처리에 의한 간 손상을 보호하고, 이들 마우스 모델에서 중성지방 수치를 낮게, HDL 콜레스테롤 수치를 높게 유지한다는 것을 발견했다."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -16071,13 +16125,13 @@
         "이러한 결과로부터 여주와 마늘의 병용은 항고혈당 및 항고콜레스테롤혈증 제제로 사용될 수 있다는 결론을 내렸다."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -16101,13 +16155,13 @@
         "이 화합물들은 췌장 베타 세포에서의 인슐린 분비를 증가시키고, 인슐린 감수성을 개선하며, 탄수화물 분해 효소를 억제함으로써 작용한다.</p> <p><strong>결론:</strong> 여주의 규칙적인 섭취는 췌장 기능과 포도당 대사를 지원하는 다양한 분자 기전을 통해 혈당 수치를 낮출 잠재력이 있다.</p> <p><strong>키워드:</strong> 여주, 혈당, 당뇨병, 췌장, 차란틴, 인슐린."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -16131,13 +16185,13 @@
         "결론적으로, 여주 주스의 매일 섭취는 제2형 당뇨병 환자의 혈당 수치의 유의한 감소와 연관이 있었으며, 개입 7일 후에 더 두드러진 효과가 관찰되었다."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -16161,13 +16215,13 @@
         "이러한 결과는 당뇨병의 예방과 치료를 위한 여주의 항당뇨 및 항산화 효과를 보여준다."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -16191,13 +16245,13 @@
         "뿐만 아니라, 여주는 장내 세균총 조절, 글루코시다아제 및 아밀라아제 억제, 활성 산소 제거, AMP 활성화 단백질 키나아제(AMPK)의 활성 강화, 퍼옥시좀 증식체 활성화 수용체(PPARs)의 발현 증가를 통해 고혈당을 줄일 수 있다."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -16221,13 +16275,13 @@
         "여주의 혈당 강하 효과는 42명의 환자에서 평가 가능했다."
        ],
        "terms": [
-        "melon",
+        "glyce",
         "gluco",
+        "melon",
+        "bitte",
         "blood",
         "insul",
-        "diabe",
-        "glyce",
-        "bitte"
+        "diabe"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -16274,11 +16328,11 @@
         "여주 추출물, 심바스타틴, 그리고 심바스타틴과 여주 추출물의 병용은 고콜레스테롤혈증 쥐에서 콜레스테롤 수치, IL-6, MDA를 감소시키는 효과가 있다."
        ],
        "terms": [
-        "dysli",
-        "chole",
         "melon",
+        "bitte",
         "hyper",
-        "bitte"
+        "dysli",
+        "chole"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -16302,11 +16356,11 @@
         "이러한 결과로부터 여주와 마늘의 병용은 항고혈당 및 항고콜레스테롤혈증 제제로 사용될 수 있다는 결론을 내렸다."
        ],
        "terms": [
-        "dysli",
-        "chole",
         "melon",
+        "bitte",
         "hyper",
-        "bitte"
+        "dysli",
+        "chole"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -16330,11 +16384,11 @@
         "또한 여주는 고혈당 쥐에서 분변 콜레스테롤 배설을 증가시키고 콜레스테롤 흡수를 효과적으로 억제했다."
        ],
        "terms": [
-        "dysli",
-        "chole",
         "melon",
+        "bitte",
         "hyper",
-        "bitte"
+        "dysli",
+        "chole"
        ],
        "basis": "주장 단어가 나오는 문장"
       }
@@ -16345,6 +16399,42 @@
      "r": 0,
      "failed": false
     }
+   }
+  ]
+ },
+ {
+  "id": "link-19",
+  "source": "실제 링크",
+  "input": "https://www.youtube.com/shorts/fEMZtslU0_A",
+  "claims": [
+   {
+    "noClaim": true,
+    "ingredient": "",
+    "effect": "",
+    "intensity": "",
+    "statement": "",
+    "context": "강황 커큐민: 노화방지, 항산화, 염증 치료의 비밀 #shorts 자,네 번째는 커큐민은 좀 아시겠죠? 어디에 많이 들어 있어요? 강황. 강황 커리 카레 속에 많이 들어 있어요. 그래서 강화 누르스름만 말려서 가루낸 것들 얼마든지 구할 수 있지요. 예. 여러 가지 요리법으로 먹을 수 있어요.이 커큐민이 100g당 2천 내지 5,000mg이나 들어 있습니다. 이게 노아 방지 강력한 항산화재 활성산소가 염증을 만드는데 또 좀비 세포가 염증 유발 물질을 만들어 내는데이 강황가루를 먹으면은 코큐민이 들어와서 좀비 세포 제거해 주고 또 강력한 항산화제가 되기 때문에 염증을 만드는 항산화재까지 없애 줘서 염증 치료 1등 식품이 강황이에요. Yeah.",
+    "mfds": null,
+    "papers": [],
+    "svcCount": null
+   }
+  ]
+ },
+ {
+  "id": "link-20",
+  "source": "실제 링크",
+  "input": "https://www.youtube.com/watch?v=A-9OcHGP9jE",
+  "claims": [
+   {
+    "noClaim": true,
+    "ingredient": "",
+    "effect": "",
+    "intensity": "",
+    "statement": "",
+    "context": "장 건강 지킴이 유산균, 바로 알기ㅣ건강플러스 요즘 건강을 위해서 건강기능식품 이나 영양제를 챙겨 먹는 분들이 많이 계시죠 그중에서도 유산균에 대한 관심이 아주 뜨거운데요 프로바이오틱스 라고도 불리는 유산균은 우리 몸의 살아 있는 유익한 미생물이 라는 뜻으로 김치나 된장 요거트 같은 발효 음식에 들어 있으며 최근에는 따로 섭취가 가능하도록 분말이나 캡슐 등의 제품으로도 나와있습니다 특히 장 건강에 큰 도움을 주는 것으로 알려지며 최근에는 꼭 챙겨야 하는 필수 영양제로 도 꼽히고 있는데요 유산균은 우리의 장건강을 위해 실제로 어떤 역할을 하고 있을까요 우리 몸에는 인체 총 세포 수보다 더 많은 미생물이 군집을 이르면서 서식하고 있는데 그 중에 가장 많은 비율의 미생물이 장관 내 손수 하고 있습니다 이러한 장내 미생물은 우리 몸에 필요한 영양소 및 약물 대사 기능을 담당하고 장관 점막에 보호 기능을 유지하면서 병원 등으로부터 보호하는 역할을 할 뿐 만이 아니라 면역 조절 기능 또한 담당해서 많은 유익한 역할을 하고 있습니다 이처럼 우리의 건강 에서 중요한 역할을 하는 장내 미생물은 평소 식습관에 많은 영향을 받는데요 서구식 식단에 보편 하루 예전보다 동물성 지방…",
+    "mfds": null,
+    "papers": [],
+    "svcCount": null
    }
   ]
  }

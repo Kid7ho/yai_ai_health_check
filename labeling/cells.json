@@ -854,6 +854,13 @@
  },
  {
   "id": "link-08",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-999",
+  "content_source": "article",
+  "claims": []
+ },
+ {
+  "id": "link-09",
   "service_label": "CAUTION",
   "service_rule": "R-071",
   "content_source": "article",
@@ -873,7 +880,7 @@
   ]
  },
  {
-  "id": "link-09",
+  "id": "link-10",
   "service_label": "CAUTION",
   "service_rule": "R-070",
   "content_source": "article",
@@ -899,7 +906,7 @@
   ]
  },
  {
-  "id": "link-10",
+  "id": "link-11",
   "service_label": "TRUSTWORTHY",
   "service_rule": "R-040",
   "content_source": "article",
@@ -913,7 +920,14 @@
   ]
  },
  {
-  "id": "link-11",
+  "id": "link-12",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-001",
+  "content_source": "article",
+  "claims": []
+ },
+ {
+  "id": "link-13",
   "service_label": "CAUTION",
   "service_rule": "R-041",
   "content_source": "article",
@@ -939,7 +953,7 @@
   ]
  },
  {
-  "id": "link-12",
+  "id": "link-14",
   "service_label": "CAUTION",
   "service_rule": "R-070",
   "content_source": "article",
@@ -965,7 +979,14 @@
   ]
  },
  {
-  "id": "link-13",
+  "id": "link-15",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-999",
+  "content_source": "article",
+  "claims": []
+ },
+ {
+  "id": "link-16",
   "service_label": "CAUTION",
   "service_rule": "R-070",
   "content_source": "article",
@@ -991,7 +1012,7 @@
   ]
  },
  {
-  "id": "link-14",
+  "id": "link-17",
   "service_label": "CAUTION",
   "service_rule": "R-050",
   "content_source": null,
@@ -1005,7 +1026,7 @@
   ]
  },
  {
-  "id": "link-15",
+  "id": "link-18",
   "service_label": "CAUTION",
   "service_rule": "R-070",
   "content_source": null,
@@ -1029,5 +1050,19 @@
     "service_rule": "R-070"
    }
   ]
+ },
+ {
+  "id": "link-19",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-999",
+  "content_source": null,
+  "claims": []
+ },
+ {
+  "id": "link-20",
+  "service_label": "UNKNOWN",
+  "service_rule": "R-999",
+  "content_source": null,
+  "claims": []
  }
 ]
