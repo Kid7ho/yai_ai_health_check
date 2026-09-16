@@ -129,7 +129,8 @@ a{color:var(--accent)}
 .excerpt{background:var(--surface-2);border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.65}
 .excerpt small{display:block;font-size:12px;color:var(--ink-3);margin-bottom:4px}
 .excerpt p{margin:0}
-.excerpt p + p{margin-top:6px}
+.excerpt p + p{margin-top:8px}
+.excerpt p.en{margin-top:2px;font-size:12.5px;color:var(--ink-3)}
 mark{background:var(--caution-soft);color:inherit;border-radius:3px;padding:0 2px;font-weight:600}
 .paper details summary{font-size:13px;color:var(--ink-2);cursor:pointer}
 .paper details p{margin:6px 0 0;font-size:13px;color:var(--ink-2);line-height:1.6}
@@ -521,7 +522,7 @@ function panel(cs, c, d) {
       return `<li class="paper s-${v}">
         <a class="title" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a>
         <div class="meta">${[p.journal, year, p.citations != null ? `인용 ${p.citations}회` : ""].filter(Boolean).map(esc).join(" · ")}</div>
-        ${p.excerpt && p.excerpt.sentences.length ? `<div class="excerpt"><small>초록에서 주장이 나오는 부분 · ${esc(p.excerpt.basis)}</small>${p.excerpt.sentences.map(t => `<p>${hl(t, p.excerpt.terms)}</p>`).join("")}</div>` : ""}
+        ${p.excerpt && p.excerpt.sentences.length ? `<div class="excerpt"><small>초록에서 주장이 나오는 부분 · ${esc(p.excerpt.basis)}</small>${p.excerpt.sentences.map((t, i) => (p.excerpt.ko && p.excerpt.ko[i]) ? `<p>${esc(p.excerpt.ko[i])}</p><p class="en">${hl(t, p.excerpt.terms)}</p>` : `<p>${hl(t, p.excerpt.terms)}</p>`).join("")}</div>` : ""}
         ${p.abstract ? `<details><summary>초록 전체 보기</summary><p>${hl(p.abstract, p.excerpt ? p.excerpt.terms : [])}</p></details>` : ""}
         <div class="stance" role="group" aria-label="논문 ${i + 1} 판단">
           <button data-act="set-stance" data-idx="${i}" data-val="SUPPORT" ${pressed(v === "SUPPORT")}>뒷받침</button>
@@ -531,7 +532,7 @@ function panel(cs, c, d) {
     }).join("");
     return wrongNote + `<h3>Liner에서 찾은 관련 논문 ${c.papers.length}편</h3>
       <div class="ask"><p>논문마다 이 주장을 뒷받침하는지, 반박하는지 골라 주세요.</p>
-        <p class="hint">발췌 문장과 필요하면 초록 전체를 보고 판단합니다. 노란 표시는 주장의 성분·효능 단어입니다. 주장과 다른 효능·다른 성분을 다루거나, 동물·세포 실험만으로 사람에 대한 판단이 어렵다고 보면 그 이유를 한 줄 이유에 적어 주세요. 논문 판단은 1~2명만 맡아도 됩니다.</p>
+        <p class="hint">발췌 문장과 필요하면 초록 전체를 보고 판단합니다. 한국어는 기계 번역이고 아래 작은 글씨가 원문입니다. 노란 표시는 원문에서 주장의 성분·효능 단어입니다. 주장과 다른 효능·다른 성분을 다루거나, 동물·세포 실험만으로 사람에 대한 판단이 어렵다고 보면 그 이유를 한 줄 이유에 적어 주세요. 논문 판단은 1~2명만 맡아도 됩니다.</p>
         <div class="seg"><button data-act="toggle-skip" ${pressed(!!d?.skipPapers)}>이 주장은 논문 판단을 건너뜁니다</button></div>
         <div class="tally mono"><span>뒷받침 ${counts.SUPPORT}</span><span>반박 ${counts.REFUTE}</span><span>무관 ${counts.IRRELEVANT}</span><span>남음 ${c.papers.length - counts.SUPPORT - counts.REFUTE - counts.IRRELEVANT}</span></div>
       </div>

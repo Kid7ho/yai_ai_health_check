@@ -72,6 +72,10 @@ _FINDING_CUES = re.compile(
     r"\b(conclusion|conclude|results?|found|showed|suggest|significant|no effect|not|improv|reduc|increas|decreas|associated|lower)",
     re.IGNORECASE,
 )
+# 초록에 섞여 들어온 키워드·인용 안내·저작권 줄은 발췌하지 않는다.
+_METADATA = re.compile(r"^(key\s*words?|abstract$)|please cite|copyright|©", re.IGNORECASE)
+# 발췌 문장 번역. scripts/translate_excerpts.py가 만든다. 시트 표시용이며 판정에 쓰지 않는다.
+EXCERPT_KO = DIR / "excerpt_ko.json"
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+(?=[A-Z(\[])")
 
 
@@ -100,6 +104,8 @@ def excerpt(abstract: str, claim) -> dict:
     sentences = _SENTENCE_SPLIT.split(text)
     scored: list[tuple[int, int]] = []
     for index, sentence in enumerate(sentences):
+        if _METADATA.search(sentence):
+            continue
         lower = sentence.lower()
         has_effect = any(all(term in lower for term in terms) for terms in effect_sets)
         has_ingredient = any(term in lower for term in ingredient_terms)
@@ -120,7 +126,18 @@ def excerpt(abstract: str, claim) -> dict:
         key=len,
         reverse=True,
     )
-    return {"sentences": [sentences[i] for i in chosen], "terms": terms, "basis": basis}
+    picked = [sentences[i] for i in chosen]
+    return {"sentences": picked, "ko": [_translations().get(s, "") for s in picked], "terms": terms, "basis": basis}
+
+
+_KO_CACHE: dict[str, str] | None = None
+
+
+def _translations() -> dict[str, str]:
+    global _KO_CACHE
+    if _KO_CACHE is None:
+        _KO_CACHE = json.loads(EXCERPT_KO.read_text(encoding="utf-8")) if EXCERPT_KO.is_file() else {}
+    return _KO_CACHE
 
 
 def recognition_row(mfds) -> str:
