@@ -28,6 +28,9 @@ class Settings:
     adapter_mode: AdapterMode = "fake"
     liner_api_key: str | None = field(default=None, repr=False)
     mfds_api_key: str | None = field(default=None, repr=False)
+    # 공공데이터포털(data.go.kr) 인증키. 일반 인증키(Decoding)를 쓴다.
+    # 요청 라이브러리가 쿼리를 인코딩하므로 Encoding 키를 넣으면 두 번 인코딩된다.
+    data_go_kr_api_key: str | None = field(default=None, repr=False)
     rules_path: Path = PROJECT_ROOT / "rules" / "verdict_rules_v0.yaml"
     worker_count: int = 2
 
@@ -117,6 +120,7 @@ class Settings:
             "adapter_mode": self.adapter_mode,
             "liner_api_key": "설정됨" if self.has_liner_key else "없음",
             "mfds_api_key": "설정됨" if self.has_mfds_key else "없음",
+            "data_go_kr_api_key": "설정됨" if self.data_go_kr_api_key else "없음",
             "rules_path": str(self.rules_path),
             "youtube_proxy": "설정됨" if self.has_youtube_proxy else "없음",
             "gemini_api_key": "설정됨" if self.gemini_api_key else "없음",
@@ -162,6 +166,7 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         adapter_mode=mode,  # type: ignore[arg-type]
         liner_api_key=_clean(os.environ.get("LINER_API_KEY")),
         mfds_api_key=_clean(os.environ.get("MFDS_API_KEY")),
+        data_go_kr_api_key=_clean(os.environ.get("DATA_GO_KR_API_KEY")),
         worker_count=int(os.environ.get("WORKER_COUNT") or 2),
         youtube_proxy_url=_clean(os.environ.get("YOUTUBE_PROXY_URL")),
         webshare_username=_clean(os.environ.get("WEBSHARE_PROXY_USERNAME")),
