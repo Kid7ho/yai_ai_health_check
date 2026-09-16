@@ -284,6 +284,15 @@ def create_app(
         )
     warn_if_unprotected(auth, skill_path, settings.debug_ui)
 
+    # 팀원 분류 시트. 토큰이 있을 때만 연다. 서비스 판정과 무관한 내부 도구다.
+    if settings.labeling_token:
+        from healthcheck.api import labeling
+
+        app.include_router(
+            labeling.build_router(settings.labeling_token, labeling.LabelingStore(settings.labeling_db_path))
+        )
+        logger.info("분류 시트: /labeling/<토큰>/ (저장 %s)", settings.labeling_db_path)
+
     # 디버그 채팅 화면. 개발용이며 DEBUG_UI=0으로 끈다. live와 fake 두 조립을
     # 함께 올려 두고 화면에서 고를 수 있게 한다. 규칙만 시험할 때 토큰을 아낀다.
     if settings.debug_ui:

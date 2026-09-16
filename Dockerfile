@@ -23,6 +23,8 @@ RUN uv pip install --system --no-cache -r pyproject.toml
 # 이미지를 다시 굽지 않도록 볼륨으로 덮어쓸 수 있게 따로 복사한다.
 COPY rules/ ./rules/
 COPY src/ ./src/
+# 팀원 분류 시트. LABELING_TOKEN이 있을 때만 서버가 연다.
+COPY labeling/claim_labeling.html ./labeling/claim_labeling.html
 
 ENV PYTHONPATH=/app/src \
     ADAPTER_MODE=fake

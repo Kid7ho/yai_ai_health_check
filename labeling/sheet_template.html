@@ -246,6 +246,8 @@ const state = {
   pickSlot: null,
 };
 let db = null, downloads = null, readOnly = false;
+// 공유 저장소. 서버(LABELING_API)나 아티팩트 db 중 하나를 같은 모양으로 감싼다.
+let remote = null;
 
 // ── 로컬 저장 (본인 편의용 백업. 공유 모드에서도 함께 남긴다) ──
 function loadLocal() {
@@ -304,7 +306,7 @@ function caseStarted(doc) { return !!doc && (!!doc.missingClaim || doc.claims.so
 // 문서마다 입력이 멈추면 한 번만 쓰고, 쓰기는 한 번에 하나씩 이어 붙인다.
 const timers = {}, chains = {}, inflight = {}, dirty = new Set();
 function writeShared(k) {
-  if (state.mode !== "shared" || readOnly || !state.labels[k]) return;
+  if (state.mode !== "shared" || readOnly || !remote || !state.labels[k]) return;
   dirty.add(k);
   clearTimeout(timers[k]);
   timers[k] = setTimeout(() => {
@@ -312,9 +314,9 @@ function writeShared(k) {
     const body = JSON.parse(JSON.stringify(state.labels[k]));
     inflight[k] = (inflight[k] || 0) + 1;
     chains[k] = (chains[k] || Promise.resolve())
-      .then(() => db.doc("labels/" + k).set(body))
+      .then(() => remote.setLabel(k, body))
       .catch(err => {
-        if (err && err.code === "invalid_argument") { readOnly = true; toast("이 화면에서는 팀 저장 권한이 없어요. 내 브라우저에만 남깁니다."); }
+        if (err && (err.code === "invalid_argument" || err.status === 401 || err.status === 403 || err.status === 404)) { readOnly = true; toast("이 화면에서는 팀 저장 권한이 없어요. 내 브라우저에만 남깁니다."); }
         else if (err && err.code === "quota_exceeded") toast("저장 공간이 가득 찼어요. 시트 관리자에게 알려 주세요.");
         else toast("저장하지 못했어요. 잠시 뒤 다시 선택해 주세요.");
       })
@@ -331,38 +333,75 @@ function persist(cs) {
 async function saveMember(slot, name) {
   state.members[slot] = { name };
   saveLocal();
-  if (state.mode === "shared" && !readOnly) {
-    try { await db.doc("members/" + slot).set({ name }); }
+  if (state.mode === "shared" && !readOnly && remote) {
+    try { await remote.setMember(slot, name); }
     catch (e) { toast("팀원 이름을 저장하지 못했어요."); }
   }
 }
 
+// 서버와 아티팩트 db가 돌려준 분류 문서를 반영한다. 첫 동기화 때 서버에 없는 내 분류는 올린다.
+let firstSync = true;
+function applyLabels(entries) {
+  const seen = new Set();
+  entries.forEach(([id, data]) => {
+    seen.add(id);
+    if (dirty.has(id)) return; // 내가 고치는 중인 문서는 로컬 값이 우선
+    state.labels[id] = JSON.parse(JSON.stringify(data));
+  });
+  if (firstSync) {
+    firstSync = false;
+    Object.keys(state.labels).forEach(k => { if (state.me && k.endsWith("__" + state.me) && !seen.has(k)) writeShared(k); });
+  }
+  renderRail(); renderTop();
+  if (state.view === "agg") renderMain();
+}
+function applyMembers(entries) {
+  entries.forEach(([slot, data]) => { if (data && data.name) state.members[slot] = { name: data.name }; });
+  saveLocal(); renderTop(); if (state.view === "agg") renderMain(); renderDialog();
+}
+
+async function connectServer(base) {
+  const call = async (method, path, body) => {
+    const res = await fetch(base + path, { method, headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+    if (!res.ok) { const e = new Error("HTTP " + res.status); e.status = res.status; throw e; }
+    return res.json();
+  };
+  remote = {
+    setLabel: (k, body) => call("PUT", "/labels/" + encodeURIComponent(k), body),
+    setMember: (slot, name) => call("PUT", "/members/" + slot, { name }),
+  };
+  state.mode = "shared";
+  renderAll();
+  const pull = async () => {
+    try {
+      const data = await call("GET", "/state");
+      applyMembers(Object.entries(data.members || {}));
+      applyLabels(Object.entries(data.labels || {}));
+    } catch (e) { toast("팀 분류를 불러오지 못했어요. 잠시 뒤 다시 시도합니다."); }
+  };
+  await pull();
+  // 다른 팀원의 분류는 20초마다, 화면이 보일 때만 새로 받는다.
+  setInterval(() => { if (!document.hidden) pull(); }, 20000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) pull(); });
+}
+
 async function connect() {
+  if (window.LABELING_API) { await connectServer(window.LABELING_API); return; }
   if (!window.claude || typeof window.claude.use !== "function") { state.mode = "local"; renderAll(); return; }
   claude.use("downloads").then(d => { downloads = d; if (state.view === "agg") renderMain(); });
   db = await claude.use("db");
   if (!db) { state.mode = "local"; renderAll(); return; }
   state.mode = "shared";
+  remote = {
+    setLabel: (k, body) => db.doc("labels/" + k).set(body),
+    setMember: (slot, name) => db.doc("members/" + slot).set({ name }),
+  };
   db.collection("members").onSnapshot(snap => {
-    snap.docs.forEach(d => { if (d.exists) state.members[d.id] = d.data(); });
-    saveLocal(); renderTop(); if (state.view === "agg") renderMain(); renderDialog();
+    applyMembers(snap.docs.filter(d => d.exists).map(d => [d.id, d.data()]));
   }, () => {});
-  let first = true;
   db.collection("labels").onSnapshot(snap => {
-    const seen = new Set();
-    snap.docs.forEach(d => {
-      if (!d.exists) return;
-      seen.add(d.id);
-      if (dirty.has(d.id)) return; // 내가 고치는 중인 문서는 로컬 값이 우선
-      state.labels[d.id] = JSON.parse(JSON.stringify(d.data()));
-    });
-    if (first && !snap.metadata.fromCache) {
-      first = false;
-      // 공유 저장소에 없고 내 브라우저에만 남은 내 분류는 올린다
-      Object.keys(state.labels).forEach(k => { if (state.me && k.endsWith("__" + state.me) && !seen.has(k)) writeShared(k); });
-    }
-    renderRail(); renderTop();
-    if (state.view === "agg") renderMain();
+    if (snap.metadata.fromCache && firstSync) return; // 서버 확정본을 받은 뒤 첫 동기화를 한다
+    applyLabels(snap.docs.filter(d => d.exists).map(d => [d.id, d.data()]));
   }, () => { toast("다른 팀원의 분류를 불러오지 못했어요. 새로고침해 주세요."); });
   renderAll();
 }
@@ -588,7 +627,7 @@ function aggView() {
       </tr>`);
     });
   });
-  const canSave = !!downloads || !window.claude;
+  const canSave = !!downloads || !window.claude || !!window.LABELING_API;
   return `<div class="agg-head">
       <div class="stat"><b>${myDone}/${CASES.length}</b><span>내가 마친 사례</span></div>
       <div class="stat"><b>${agree}</b><span>확정 후보</span></div>
@@ -717,7 +756,7 @@ async function exportFile() {
     catch (e) { if (e?.code !== "declined") toast("파일로 받지 못했어요. 잠시 뒤 다시 눌러 주세요."); }
     return;
   }
-  if (!window.claude) {
+  if (!window.claude || window.LABELING_API) {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([body], { type: "application/json" }));
     a.download = filename; a.click();
