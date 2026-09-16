@@ -21,6 +21,7 @@ import argparse
 import asyncio
 import json
 import logging
+import re
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -30,10 +31,19 @@ sys.path.insert(0, str(ROOT / "src"))
 
 import yaml  # noqa: E402
 
+from healthcheck.adapters.liner.academic import (  # noqa: E402
+    _GENERIC_EFFECT_WORDS,
+    _load_title_expressions,
+    query_terms_of,
+)
 from healthcheck.pipeline import step1_input  # noqa: E402
 
 DIR = ROOT / "labeling"
 CANDIDATES = DIR / "candidates.yaml"
+# 실제 블로그·기사·유튜브 링크. 본문은 한 번 추출해 link_contents.json에 저장하고 이후에는 그 본문만 쓴다.
+# 글이 고쳐지거나 영상 자막 호출이 막혀도 팀원이 보는 사례가 바뀌지 않게 한다.
+LINKS = DIR / "links.yaml"
+LINK_CONTENTS = DIR / "link_contents.json"
 RECORDINGS = DIR / "recordings.json"
 
 ROWS = ("인정+효능 일치", "인정+효능 일부 일치", "미인정", "식약처 조회 실패")
@@ -55,6 +65,64 @@ def evidence_grade(supporting: int, refuting: int) -> str:
     return "엇갈림"
 
 
+# 성분 영문명에서 뺄 일반어. "Korean red ginseng"의 korean이 아무 논문 문장에나 걸린다.
+_GENERIC_INGREDIENT_WORDS = frozenset({"korean", "red", "acids", "fatty", "extract", "supplementation", "complex"})
+# 결과·결론을 말하는 문장 표지. 같은 점수면 이런 문장을 먼저 보여 준다.
+_FINDING_CUES = re.compile(
+    r"\b(conclusion|conclude|results?|found|showed|suggest|significant|no effect|not|improv|reduc|increas|decreas|associated|lower)",
+    re.IGNORECASE,
+)
+_SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+(?=[A-Z(\[])")
+
+
+def _stem(word: str) -> str:
+    """3글자 이하는 그대로, 그보다 길면 앞 5글자. 논문 관련성 판단과 같은 기준이다."""
+    return word if len(word) <= 3 else word[:5]
+
+
+def excerpt(abstract: str, claim) -> dict:
+    """초록에서 주장이 등장하는 문장을 고른다.
+
+    팀원이 논문 전체를 읽지 않고도 주장이 어떤 맥락에서 나오는지 보게 하려는 것이다.
+    효능 표현이 있는 문장을 우선하고, 성분 이름과 결과 표지가 함께 있으면 앞에 둔다.
+    그런 문장이 없으면 결론 문장을 보여 주고 그 사실을 표시한다.
+    """
+    text = " ".join((abstract or "").split())
+    if not text:
+        return {"sentences": [], "terms": [], "basis": "초록 없음"}
+    ingredient, effect = query_terms_of(claim)
+    ingredient_terms = [_stem(w) for w in ingredient.lower().split() if w not in _GENERIC_INGREDIENT_WORDS]
+    expressions = _load_title_expressions().get(effect.lower()) or (
+        (" ".join(w for w in effect.lower().split() if w not in _GENERIC_EFFECT_WORDS),) if effect else ()
+    )
+    effect_sets = [[_stem(w) for w in expression.split()] for expression in expressions if expression]
+
+    sentences = _SENTENCE_SPLIT.split(text)
+    scored: list[tuple[int, int]] = []
+    for index, sentence in enumerate(sentences):
+        lower = sentence.lower()
+        has_effect = any(all(term in lower for term in terms) for terms in effect_sets)
+        has_ingredient = any(term in lower for term in ingredient_terms)
+        score = (2 if has_effect else 0) + (1 if has_ingredient else 0) + (1 if _FINDING_CUES.search(sentence) else 0)
+        if has_effect:
+            scored.append((score, index))
+
+    if scored:
+        chosen = sorted(index for _, index in sorted(scored, key=lambda s: (-s[0], s[1]))[:3])
+        basis = "주장 단어가 나오는 문장"
+    else:
+        conclusion = [i for i, s in enumerate(sentences) if re.search(r"\bconclu", s, re.IGNORECASE)]
+        chosen = conclusion[-1:] or [len(sentences) - 1]
+        basis = "주장 단어가 없어 결론 문장"
+    # 화면 강조용. 'vitamin d'의 d처럼 짧은 조각은 아무 단어에나 걸리므로 뺀다.
+    terms = sorted(
+        {t for t in ingredient_terms if len(t) >= 3} | {t for terms in effect_sets for t in terms if len(t) >= 3},
+        key=len,
+        reverse=True,
+    )
+    return {"sentences": [sentences[i] for i in chosen], "terms": terms, "basis": basis}
+
+
 def recognition_row(mfds) -> str:
     if mfds is None or mfds.lookup_failed or mfds.recognition == "UNKNOWN":
         return "식약처 조회 실패"
@@ -63,9 +131,19 @@ def recognition_row(mfds) -> str:
     return "미인정"
 
 
-def claim_view(check) -> dict:
+def claim_context(text: str, span: tuple[int, int], margin: int = 120) -> str:
+    """주장 앞뒤 원문. 긴 글에서 주장이 어떤 맥락으로 나왔는지 보게 한다."""
+    if not text or not span:
+        return ""
+    start, end = max(0, span[0] - margin), min(len(text), span[1] + margin)
+    snippet = " ".join(text[start:end].split())
+    return ("…" if start > 0 else "") + snippet + ("…" if end < len(text) else "")
+
+
+def claim_view(check, content_text: str = "") -> dict:
     claim, mfds, academic = check.claim, check.mfds, check.academic
     return {
+        "context": claim_context(content_text, claim.span) if len(content_text) > 200 else "",
         "ingredient": claim.ingredient,
         "effect": claim.claimed_effect,
         "intensity": claim.intensity,
@@ -88,7 +166,8 @@ def claim_view(check) -> dict:
                 "journal": p.journal,
                 "date": p.date,
                 "citations": p.citation_count,
-                "abstract": (p.description or "")[:600],
+                "abstract": p.description or "",
+                "excerpt": excerpt(p.description or "", claim),
             }
             for p in academic.papers
         ],
@@ -96,6 +175,44 @@ def claim_view(check) -> dict:
         if academic is None
         else {"s": academic.supporting, "r": academic.refuting, "failed": academic.lookup_failed},
     }
+
+
+class SavedContentExtractor:
+    """저장한 본문을 돌려주는 추출기. 녹화 모드에서 저장본이 없으면 실제 추출기로 받아 저장한다."""
+
+    def __init__(self, store: dict, prefix: str, live=None) -> None:
+        self._store = store
+        self._prefix = prefix
+        self._live = live
+
+    async def fetch(self, key: str):
+        from healthcheck.domain.types import ExtractedContent
+
+        stored = self._store.get(f"{self._prefix}:{key}")
+        if stored is not None:
+            return ExtractedContent(**stored)
+        if self._live is None:
+            raise RuntimeError(f"저장된 본문이 없습니다. --mode record로 다시 만드세요: {self._prefix}:{key}")
+        content = await self._live.fetch(key)
+        self._store[f"{self._prefix}:{key}"] = {
+            "text": content.text,
+            "has_transcript": content.has_transcript,
+            "confidence": content.confidence,
+            "language": content.language,
+            "content_hash": content.content_hash,
+            "source": content.source,
+        }
+        return content
+
+
+def load_inputs() -> list[tuple[str, str]]:
+    """(묶음, 입력) 목록. 후보 문장 뒤에 실제 링크를 붙인다."""
+    raw = yaml.safe_load(CANDIDATES.read_text(encoding="utf-8")) or {}
+    inputs = [(group, sentence) for group, sentences in raw.items() for sentence in sentences]
+    if LINKS.is_file():
+        for link in yaml.safe_load(LINKS.read_text(encoding="utf-8")) or []:
+            inputs.append(("실제 링크", link["url"]))
+    return inputs
 
 
 async def run(mode: str) -> list[dict]:
@@ -118,22 +235,74 @@ async def run(mode: str) -> list[dict]:
     else:
         orchestrator, transport = replay_orchestrator(RECORDINGS, "replay")
 
-    raw = yaml.safe_load(CANDIDATES.read_text(encoding="utf-8")) or {}
+    store = json.loads(LINK_CONTENTS.read_text(encoding="utf-8")) if LINK_CONTENTS.is_file() else {}
+    live_transcript = live_article = None
+    if mode == "record":
+        from dataclasses import replace
+
+        from healthcheck.api.app import build_orchestrator
+
+        live = build_orchestrator(replace(settings, adapter_mode="live"))
+        live_transcript, live_article = live.transcript, live.article
+    orchestrator.transcript = SavedContentExtractor(store, "youtube", live_transcript)
+    orchestrator.article = SavedContentExtractor(store, "article", live_article)
+
     results: list[dict] = []
-    for group, sentences in raw.items():
-        for sentence in sentences:
-            result = await orchestrator.run(step1_input.classify(sentence))
-            results.append({"group": group, "input": sentence, "result": result})
+    for group, text in load_inputs():
+        try:
+            result = await orchestrator.run(step1_input.classify(text))
+        except Exception as error:  # 링크 하나가 막혀도 나머지는 만든다
+            print(f"⚠ 건너뜀 {text}: {type(error).__name__} {str(error)[:120]}")
+            continue
+        results.append({"group": group, "input": text, "result": result})
     if mode == "record":
         transport.save()
+        LINK_CONTENTS.write_text(json.dumps(store, ensure_ascii=False, indent=1), encoding="utf-8")
     return results
 
 
 def build(results: list[dict]) -> tuple[list[dict], list[dict], dict]:
     pool: dict[tuple[str, str], list[dict]] = defaultdict(list)
     skipped: dict[str, int] = defaultdict(int)
+    link_cases: list[dict] = []
+    link_cells: list[dict] = []
     for item in results:
         result = item["result"]
+        if item["group"] == "실제 링크":
+            # 실제 링크는 칸을 가리지 않고 모두 넣는다. 주장이 여럿이면 주장마다 칸을 적는다.
+            if not result.claim_checks:
+                skipped["실제 링크 주장 없음"] += 1
+                continue
+            text = result.content.text if result.content else ""
+            case_id = f"link-{len(link_cases) + 1:02d}"
+            link_cases.append(
+                {
+                    "id": case_id,
+                    "source": "실제 링크",
+                    "input": item["input"],
+                    "claims": [claim_view(check, text) for check in result.claim_checks],
+                }
+            )
+            link_cells.append(
+                {
+                    "id": case_id,
+                    "service_label": result.verdict.label,
+                    "service_rule": result.verdict.rule_id,
+                    "content_source": result.content.source if result.content else None,
+                    "claims": [
+                        {
+                            "row": recognition_row(check.mfds),
+                            "grade": evidence_grade(check.academic.supporting, check.academic.refuting)
+                            if check.academic and not check.academic.lookup_failed
+                            else "학술 검색 실패",
+                            "service_label": check.verdict.label,
+                            "service_rule": check.verdict.rule_id,
+                        }
+                        for check in result.claim_checks
+                    ],
+                }
+            )
+            continue
         if result.verdict.rule_id in GATE_RULES:
             skipped[f"관문 규칙 {result.verdict.rule_id}"] += 1
             continue
@@ -215,6 +384,8 @@ def build(results: list[dict]) -> tuple[list[dict], list[dict], dict]:
                         }
                     )
             counts[row][grade] = chosen
+    cases.extend(link_cases)
+    cells.extend(link_cells)
     return cases, cells, {"counts": counts, "skipped": dict(skipped), "pool": {f"{r}/{g}": len(v) for (r, g), v in pool.items()}}
 
 
@@ -238,6 +409,8 @@ def main() -> int:
 
     print(f"후보 {len(results)}건 → 사례 {len(cases)}건")
     print(f"제외: {summary['skipped']}")
+    links = [c for c in cases if c["source"] == "실제 링크"]
+    print(f"실제 링크 사례 {len(links)}건, 주장 {sum(len(c['claims']) for c in links)}개")
     print("\n칸별 사례 수 (후보 수)")
     print("국가 인정 \\ 논문 근거".ljust(22) + "".join(g.ljust(10) for g in GRADES))
     for row in ROWS:

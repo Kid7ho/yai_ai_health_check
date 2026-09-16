@@ -1,0 +1,23 @@
+# 분류 시트에 넣는 실제 공개 글·영상(2026-09-17 수집, 페이지를 열어 주장 문장을 확인함).
+# 유형: a 인정 범위 안 / b 인정 범위를 넘거나 과장 / c 기능성 원료가 아닌 음식
+# 본문은 처음 녹화할 때 한 번 추출해 link_contents.json에 저장한다.
+- {url: "https://www.pharmnews.com/news/articleView.html?idxno=209227", 종류: 기사, 유형: a, 제목: "루테인, 지아잔틴? 눈건강에 어떤 영양제 먹어야 할까"}
+- {url: "https://blog.naver.com/daymed/224389559755", 종류: 블로그, 유형: a, 제목: "홍삼 효능과 부작용 | 피로·면역력에 먹는 이유와 복용법"}
+- {url: "https://blog.naver.com/blsss486/224378922770", 종류: 블로그, 유형: a, 제목: "오메가3 효능 및 복용시간"}
+- {url: "https://blog.naver.com/bona9582/224384578957", 종류: 블로그, 유형: a, 제목: "비피더스 효능 장건강에 좋은 이유"}
+- {url: "https://news.hidoc.co.kr/news/articleView.html?idxno=52961", 종류: 기사, 유형: a, 제목: "콜라겐 섭취 효과 있을까?"}
+- {url: "https://blog.naver.com/bichon_lumi/224396840174", 종류: 블로그, 유형: b, 제목: "가을철 면역력 대비 홍삼"}
+- {url: "https://www.sedaily.com/NewsView/1VQRP692O0", 종류: 기사, 유형: b, 제목: "'혈관청소부' 크릴오일 효능은?"}
+- {url: "https://blog.naver.com/bknms2007/224380278565", 종류: 블로그, 유형: b, 제목: "루테인효능 총정리"}
+- {url: "https://blog.naver.com/bilight/224408733111", 종류: 블로그, 유형: b, 제목: "아로니아 효능 5가지와 부작용"}
+- {url: "https://blog.naver.com/3jeong/223280722194", 종류: 블로그, 유형: b, 제목: "쏘팔메토 효능, 부작용"}
+- {url: "https://blog.naver.com/bctin/224310513837", 종류: 블로그, 유형: b, 제목: "녹차의 항암·다이어트 효능"}
+- {url: "https://news.hidoc.co.kr/news/articleView.html?idxno=22669", 종류: 기사, 유형: c, 제목: "새싹보리의 효능"}
+- {url: "https://kormedi.com/1544844/", 종류: 기사, 유형: c, 제목: "갱년기에 '석류'"}
+- {url: "https://blog.naver.com/ejados7/224308129608", 종류: 블로그, 유형: c, 제목: "블루베리 효능 총정리"}
+- {url: "https://blog.lifecodebeautiful.com/21", 종류: 블로그, 유형: c, 제목: "양배추 효능 총정리"}
+- {url: "https://www.hinews.co.kr/view.php?ud=202212151143580034471_48", 종류: 기사, 유형: c, 제목: "생강의 11가지 효능"}
+- {url: "https://www.youtube.com/watch?v=RfxAz6RwfpI", 종류: 유튜브, 유형: c, 제목: "혈압 낮추는 마늘의 효능"}
+- {url: "https://www.youtube.com/watch?v=CeSXjD468uI", 종류: 유튜브, 유형: c, 제목: "여주 나쁜 콜레스테롤 낮추고 혈당 조절을 돕는"}
+- {url: "https://www.youtube.com/shorts/fEMZtslU0_A", 종류: 유튜브, 유형: b, 제목: "강황 커큐민"}
+- {url: "https://www.youtube.com/watch?v=A-9OcHGP9jE", 종류: 유튜브, 유형: a, 제목: "장 건강 지킴이 유산균, 바로 알기"}

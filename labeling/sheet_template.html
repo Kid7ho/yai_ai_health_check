@@ -126,6 +126,11 @@ a{color:var(--accent)}
 .paper.s-REFUTE{border-color:color-mix(in srgb,var(--warning) 55%,var(--line))}
 .paper .title{font-weight:600;line-height:1.45;text-wrap:pretty}
 .paper .meta{font-size:12px;color:var(--ink-3)}
+.excerpt{background:var(--surface-2);border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.65}
+.excerpt small{display:block;font-size:12px;color:var(--ink-3);margin-bottom:4px}
+.excerpt p{margin:0}
+.excerpt p + p{margin-top:6px}
+mark{background:var(--caution-soft);color:inherit;border-radius:3px;padding:0 2px;font-weight:600}
 .paper details summary{font-size:13px;color:var(--ink-2);cursor:pointer}
 .paper details p{margin:6px 0 0;font-size:13px;color:var(--ink-2);line-height:1.6}
 .stance{display:flex;flex-wrap:wrap;gap:6px}
@@ -364,6 +369,15 @@ async function connect() {
 // ── 렌더 ──
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+// 초록 문장에서 주장의 성분·효능 단어(앞부분)를 강조한다. 원문은 조각마다 이스케이프한다.
+function hl(text, terms) {
+  const list = (terms || []).filter(Boolean).map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  if (!list.length) return esc(text);
+  const re = new RegExp("\\b(" + list.join("|") + ")[\\w-]*", "gi");
+  let out = "", last = 0;
+  String(text).replace(re, (m, _g, offset) => { out += esc(text.slice(last, offset)) + "<mark>" + esc(m) + "</mark>"; last = offset + m.length; return m; });
+  return out + esc(text.slice(last));
+}
 const pressed = b => `aria-pressed="${b ? "true" : "false"}"`;
 
 function renderAll() { renderTop(); renderMain(); renderDialog(); }
@@ -438,6 +452,7 @@ function renderCase() {
   host.innerHTML = `<article class="case">
     <header class="case-head">
       <div class="eyebrow">① 원문 · ${esc(cs.id)} · ${state.caseIdx + 1} / ${CASES.length}</div>
+      ${cs.source === "실제 링크" ? `<div class="hint">실제로 공유되는 글·영상입니다. 링크를 열어 전체를 볼 수 있고, 주장마다 앞뒤 문맥을 함께 보여 드려요.</div>` : ""}
       ${cs.source === "조회 실패 가정" ? `<div class="callout">식약처 조회가 실패했다고 가정한 사례입니다. 국가 인정 여부를 모르는 상태에서 어떻게 알릴지 판단해 주세요.</div>` : ""}
       <p class="source">${source}</p>
       <div class="q"><span>서비스가 놓친 주장이 있나요?</span>
@@ -463,6 +478,7 @@ function panel(cs, c, d) {
   if (state.step === "claim") {
     return `<h3>서비스가 원문에서 뽑은 주장</h3>
       <p class="quote">“${esc(c.statement || `${c.ingredient} ${c.effect}`)}”</p>
+      ${c.context ? `<div class="official"><small>원문에서 이 주장의 앞뒤</small>${esc(c.context)}</div>` : ""}
       <dl class="kv"><dt>성분</dt><dd>${esc(c.ingredient)}</dd><dt>효능</dt><dd>${esc(c.effect)}</dd>
         <dt>표현 강도</dt><dd>${esc({ SUGGESTIVE: "완화 (도움이 된다, 좋다 등)", ASSERTIVE: "단정 (낫는다, 없어진다 등)", UNCERTAIN: "추측 (~한다고 한다 등)" }[c.intensity] || c.intensity)}</dd></dl>
       <div class="ask"><p>원문에서 주장을 제대로 뽑았나요?</p>
@@ -505,7 +521,8 @@ function panel(cs, c, d) {
       return `<li class="paper s-${v}">
         <a class="title" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a>
         <div class="meta">${[p.journal, year, p.citations != null ? `인용 ${p.citations}회` : ""].filter(Boolean).map(esc).join(" · ")}</div>
-        ${p.abstract ? `<details><summary>초록 보기</summary><p>${esc(p.abstract)}${p.abstract.length >= 600 ? "…" : ""}</p></details>` : ""}
+        ${p.excerpt && p.excerpt.sentences.length ? `<div class="excerpt"><small>초록에서 주장이 나오는 부분 · ${esc(p.excerpt.basis)}</small>${p.excerpt.sentences.map(t => `<p>${hl(t, p.excerpt.terms)}</p>`).join("")}</div>` : ""}
+        ${p.abstract ? `<details><summary>초록 전체 보기</summary><p>${hl(p.abstract, p.excerpt ? p.excerpt.terms : [])}</p></details>` : ""}
         <div class="stance" role="group" aria-label="논문 ${i + 1} 판단">
           <button data-act="set-stance" data-idx="${i}" data-val="SUPPORT" ${pressed(v === "SUPPORT")}>뒷받침</button>
           <button data-act="set-stance" data-idx="${i}" data-val="REFUTE" ${pressed(v === "REFUTE")}>반박</button>
@@ -514,7 +531,7 @@ function panel(cs, c, d) {
     }).join("");
     return wrongNote + `<h3>Liner에서 찾은 관련 논문 ${c.papers.length}편</h3>
       <div class="ask"><p>논문마다 이 주장을 뒷받침하는지, 반박하는지 골라 주세요.</p>
-        <p class="hint">제목과 초록만 보고 판단합니다. 주장과 다른 효능·다른 성분을 다루면 '무관'입니다. 논문 판단은 1~2명만 맡아도 됩니다.</p>
+        <p class="hint">발췌 문장과 필요하면 초록 전체를 보고 판단합니다. 노란 표시는 주장의 성분·효능 단어입니다. 주장과 다른 효능·다른 성분을 다루거나, 동물·세포 실험만으로 사람에 대한 판단이 어렵다고 보면 그 이유를 한 줄 이유에 적어 주세요. 논문 판단은 1~2명만 맡아도 됩니다.</p>
         <div class="seg"><button data-act="toggle-skip" ${pressed(!!d?.skipPapers)}>이 주장은 논문 판단을 건너뜁니다</button></div>
         <div class="tally mono"><span>뒷받침 ${counts.SUPPORT}</span><span>반박 ${counts.REFUTE}</span><span>무관 ${counts.IRRELEVANT}</span><span>남음 ${c.papers.length - counts.SUPPORT - counts.REFUTE - counts.IRRELEVANT}</span></div>
       </div>
