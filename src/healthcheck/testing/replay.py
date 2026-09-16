@@ -36,9 +36,12 @@ def request_key(request: httpx.Request) -> str:
 
 
 class RecordReplayTransport(httpx.AsyncBaseTransport):
-    def __init__(self, path: Path | str, mode: Mode) -> None:
+    def __init__(self, path: Path | str, mode: Mode, *, reuse_recorded: bool = False) -> None:
         self._path = Path(path)
         self._mode = mode
+        # 녹화할 때 이미 있는 응답은 다시 부르지 않는다. 후보를 조금씩 늘리는 분류 시트용이다.
+        # 골든셋 재녹화는 외부 응답을 새로 받는 것이 목적이므로 기본은 끈다.
+        self._reuse_recorded = reuse_recorded
         self._entries: dict[str, dict] = {}
         if self._path.is_file():
             self._entries = json.loads(self._path.read_text(encoding="utf-8"))
@@ -61,6 +64,15 @@ class RecordReplayTransport(httpx.AsyncBaseTransport):
                 request=request,
             )
 
+        if self._reuse_recorded and key in self._entries:
+            entry = self._entries[key]
+            return httpx.Response(
+                entry["status"],
+                content=entry["body"].encode("utf-8"),
+                headers={"content-type": entry.get("content_type", "application/json")},
+                request=request,
+            )
+
         response = await self._inner.handle_async_request(request)
         body = await response.aread()
         self._entries[key] = {
@@ -68,9 +80,10 @@ class RecordReplayTransport(httpx.AsyncBaseTransport):
             "content_type": response.headers.get("content-type", "application/json"),
             "body": body.decode("utf-8", errors="replace"),
         }
-        return httpx.Response(
-            response.status_code, content=body, headers=response.headers, request=request
-        )
+        # aread()가 압축을 이미 풀었다. 원래 헤더의 content-encoding을 그대로 넘기면 호출 쪽이
+        # 한 번 더 풀려다 실패해 녹화 중 조회가 전부 실패로 잡혔다.
+        headers = {"content-type": response.headers.get("content-type", "application/json")}
+        return httpx.Response(response.status_code, content=body, headers=headers, request=request)
 
     def save(self) -> None:
         """이번 측정에 쓰인 요청만 남긴다. 버린 검색어가 쌓이지 않게 한다."""
@@ -82,13 +95,20 @@ class RecordReplayTransport(httpx.AsyncBaseTransport):
             await self._inner.aclose()
 
 
-def replay_orchestrator(path: Path | str, mode: Mode, *, liner_key: str = "replay", mfds_key: str = "replay"):
+def replay_orchestrator(
+    path: Path | str,
+    mode: Mode,
+    *,
+    liner_key: str = "replay",
+    mfds_key: str = "replay",
+    reuse_recorded: bool = False,
+):
     """골든셋용 조립. 규칙표·주장 추출·판정은 실제 것을 쓰고 학술·식약처만 녹화 응답을 쓴다."""
     from healthcheck.adapters.liner.academic import LinerAcademicSearchClient
     from healthcheck.adapters.mfds.foodsafetykorea import FoodSafetyKoreaDataSource
     from healthcheck.api.app import build_fake_orchestrator
 
-    transport = RecordReplayTransport(path, mode)
+    transport = RecordReplayTransport(path, mode, reuse_recorded=reuse_recorded)
     client = httpx.AsyncClient(transport=transport)
     orchestrator = build_fake_orchestrator()
     # 녹화 재생은 호출 간격을 둘 필요가 없다.
