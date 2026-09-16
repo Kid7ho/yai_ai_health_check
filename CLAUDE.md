@@ -135,6 +135,12 @@ pytest / Docker / 규칙표는 코드가 아닌 YAML / 의존성 관리는 uv.
    시트는 `labeling/claim_labeling.html`(아티팩트 4evf7nmjudRMXQRHmGFDtC). 한계: 반박 우세 칸은 논문 입장 분류가
    REFUTE를 드물게 내서 후보가 3~4건뿐이고 쏘팔메토 같은 같은 근거가 겹친다. 식약처 조회 실패 줄은 실제로 만들 수 없어
    같은 논문 근거에 조회 실패를 가정했다
+   - 2026-09-17 추가: 실제 공개 링크 20개(`labeling/links.yaml`) 중 주장이 뽑힌 15건(주장 40개), 본문은 `link_contents.json`에
+     저장. 논문은 초록에서 주장 단어가 나오는 문장을 최대 3개 발췌하고 Gemini 번역(`scripts/translate_excerpts.py`,
+     `excerpt_ko.json`)을 함께 보여 준다. 시트 76건
+   - **분류 시트 서버**: `LABELING_TOKEN`(fly secrets)이 있으면 `/labeling/{토큰}/`에서 시트를 열고 분류를 `/data/labeling.db`에
+     저장한다(`api/labeling.py`). 로그인 없이 추측할 수 없는 주소로만 막으므로 주소는 팀원에게만 준다. 토큰은 파일에 적지 않는다.
+     시트를 바꾸면 `scripts/build_labeling_cases.py`로 다시 만들고 배포해야 서버에 반영된다
 4. 16칸 판정표 확정, 교수님 자문
 5. 자문 결과에 따라 행정처분·브랜드 참고 알림·사용불가 원료를 붙인다
 
