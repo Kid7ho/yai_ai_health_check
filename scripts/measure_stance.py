@@ -37,7 +37,7 @@ LABELS_PATH = ROOT / "tests" / "stance_eval" / "labels.json"
 VALUES = ("SUPPORT", "REFUTE", "NONE")
 
 
-def build_classifier(model_name: str, samples: int = 1):
+def build_classifier(model_name: str, samples: int = 1, verify: str | None = None):
     from healthcheck.config import load_settings
     from healthcheck.pipeline.paper_stance import LlmStanceClassifier
     from measure_extraction import CachedModel
@@ -49,8 +49,13 @@ def build_classifier(model_name: str, samples: int = 1):
         effort = model_name.split(":", 1)[1] if ":" in model_name else "low"
         if not settings.liner_api_key:
             raise SystemExit("LINER_API_KEY가 없습니다")
+        verifier = (
+            CachedModel(LinerExtractionModel(settings.liner_api_key, reasoning_effort=verify)) if verify else None
+        )
         return LlmStanceClassifier(
-            CachedModel(LinerExtractionModel(settings.liner_api_key, reasoning_effort=effort)), samples=samples
+            CachedModel(LinerExtractionModel(settings.liner_api_key, reasoning_effort=effort)),
+            samples=samples,
+            verifier=verifier,
         )
     if model_name.startswith("gemini"):
         from healthcheck.adapters.gemini.extraction_model import GeminiExtractionModel
@@ -152,10 +157,16 @@ def main() -> int:
     parser.add_argument("--model", default="liner:low", help="liner:low, liner:none, gemini, gemini:<모델명>")
     parser.add_argument("--samples", type=int, default=1, help="같은 묶음을 동시에 보내는 횟수(과반 투표)")
     parser.add_argument("--parallel", type=int, default=3, help="동시에 분류하는 주장 수")
+    parser.add_argument("--verify", default=None, help="반박 후보를 다시 확인하는 Liner 추론 수준(예: low). 없으면 확인하지 않는다")
+    parser.add_argument("--split", choices=("all", "dev", "test"), default="all", help="평가셋 절반(dev: 조정용, test: 확인용)")
     parser.add_argument("--verbose", action="store_true", help="반박이 걸린 오분류를 보여 준다")
     args = parser.parse_args()
 
     pairs = json.loads(PAIRS_PATH.read_text(encoding="utf-8"))
+    if args.split != "all":
+        # 지시문·검사를 고칠 때는 dev만 보고, test는 결과 확인에만 쓴다. 정답이 AI 표시라 그 버릇에 맞추지 않기 위해서다.
+        want = 0 if args.split == "dev" else 1
+        pairs = [pair for pair in pairs if int(pair["id"][3:], 16) % 2 == want]
     labels = json.loads(LABELS_PATH.read_text(encoding="utf-8"))["labels"]
 
     if args.classifier == "rule":
@@ -164,12 +175,15 @@ def main() -> int:
         report(pairs, labels, predictions, args.verbose)
         return 0
 
-    classifier = build_classifier(args.model, args.samples)
+    classifier = build_classifier(args.model, args.samples, args.verify)
     print(f"분류기 {classifier.name}")
     started = time.monotonic()
     predictions, seconds = asyncio.run(predict_llm(pairs, classifier, args.parallel))
     report(pairs, labels, predictions, args.verbose)
-    usage = getattr(getattr(classifier, "_model", None), "usage", None) or {}
+    usage = dict(getattr(getattr(classifier, "_model", None), "usage", None) or {})
+    verify_usage = getattr(getattr(classifier, "_verifier", None), "usage", None) or {}
+    for key, value in verify_usage.items():
+        usage[key] = usage.get(key, 0) + value
     print(
         f"  시간 {time.monotonic() - started:.0f}초 · 주장 1건(논문 최대 10편) 중앙값 {statistics.median(seconds):.1f}초, "
         f"최대 {max(seconds):.1f}초 (저장된 응답은 0초)"

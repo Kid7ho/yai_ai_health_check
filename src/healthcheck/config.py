@@ -105,6 +105,9 @@ class Settings:
     paper_stance_classifier: str = "rule"
     # low는 정확도가 같고 최대 52초까지 걸렸다. 같은 요청 3번 투표도 정확도가 오르지 않았다.
     paper_stance_effort: str = "none"
+    # 반박 후보만 다시 확인하는 추론 수준. off면 확인하지 않는다. 평가셋(2026-09-17, 2회): 반박 정밀도 66~68%→83~88%,
+    # 반박 재현율 96%→83~88%, 주장 근거 판단 90~94%→94~97%. low는 정확도가 같고 확인 시간이 최대 13초였다.
+    paper_stance_verify_effort: str = "none"
     # 팀원 분류 시트. 토큰이 있을 때만 /labeling/{토큰}/ 주소로 연다. 누구나 쓰는 공개 화면이 되지 않게 한다.
     labeling_token: str | None = field(default=None, repr=False)
     labeling_db_path: Path = PROJECT_ROOT / "data" / "labeling.db"
@@ -218,6 +221,7 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         link_claim_samples=int(os.environ.get("LINK_CLAIM_SAMPLES") or 4),
         paper_stance_classifier=(os.environ.get("PAPER_STANCE_CLASSIFIER") or "rule").strip().lower(),
         paper_stance_effort=(os.environ.get("PAPER_STANCE_EFFORT") or "none").strip().lower(),
+        paper_stance_verify_effort=(os.environ.get("PAPER_STANCE_VERIFY_EFFORT") or "none").strip().lower(),
         labeling_token=_clean(os.environ.get("LABELING_TOKEN")),
         labeling_db_path=Path(os.environ.get("LABELING_DB_PATH") or PROJECT_ROOT / "data" / "labeling.db"),
         mfds_snapshot_path=Path(

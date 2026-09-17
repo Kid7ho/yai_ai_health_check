@@ -77,8 +77,16 @@ def _build_stance_classifier(settings: Settings):
     model = LinerExtractionModel(
         settings.liner_api_key, reasoning_effort=settings.paper_stance_effort, timeout=15.0, max_retries=1
     )
-    logger.info("논문 입장 분류: Liner Model API(%s)", settings.paper_stance_effort)
-    return LlmStanceClassifier(model)
+    verifier = None
+    if settings.paper_stance_verify_effort != "off":
+        # 반박 후보만 다시 본다. 10초 안에 답이 없으면 첫 분류의 반박을 그대로 쓴다.
+        verifier = LinerExtractionModel(
+            settings.liner_api_key, reasoning_effort=settings.paper_stance_verify_effort, timeout=10.0, max_retries=1
+        )
+    logger.info(
+        "논문 입장 분류: Liner Model API(%s), 반박 확인=%s", settings.paper_stance_effort, settings.paper_stance_verify_effort
+    )
+    return LlmStanceClassifier(model, verifier=verifier)
 
 
 def _build_link_claim_extractor(settings: Settings, live: bool):

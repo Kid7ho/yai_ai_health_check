@@ -20,6 +20,8 @@ primary_region = "nrt"
   # 논문 입장 분류: Liner Model API(none). 공개 논문과 성분·효능 영문 검색어만 보낸다(2026-09-17).
   PAPER_STANCE_CLASSIFIER = "liner"
   PAPER_STANCE_EFFORT = "none"
+  # 반박 후보만 한 번 더 확인한다(몸속 칼슘 신호·다른 질병·배경 문장이 반박으로 세어지던 문제).
+  PAPER_STANCE_VERIFY_EFFORT = "none"
   # 판정 기록과 식약처 사본은 볼륨에 둔다. 컨테이너 파일시스템은 배포할 때마다 초기화된다.
   DATABASE_PATH = "/data/healthcheck.db"
   MFDS_SNAPSHOT_PATH = "/data/mfds_i0040.json"

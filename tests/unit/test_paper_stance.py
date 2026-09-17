@@ -9,7 +9,13 @@ from healthcheck.adapters.liner.academic import LinerAcademicSearchClient
 from healthcheck.api.app import _build_stance_classifier
 from healthcheck.config import Settings
 from healthcheck.domain.types import Claim, Paper
-from healthcheck.pipeline.paper_stance import LlmStanceClassifier, evidence_in_paper, majority, parse_output
+from healthcheck.pipeline.paper_stance import (
+    LlmStanceClassifier,
+    evidence_in_paper,
+    majority,
+    parse_output,
+    refutation_checks,
+)
 
 SUPPORTING = Paper(
     title="Korean red ginseng reduces fatigue in adults",
@@ -121,4 +127,70 @@ async def test_학술_검색은_관련_논문만_분류기에_넘긴다():
 def test_설정이_rule이면_분류기를_만들지_않는다():
     assert _build_stance_classifier(Settings(liner_api_key="k")) is None
     built = _build_stance_classifier(Settings(liner_api_key="k", paper_stance_classifier="liner"))
-    assert built is not None and built.name.startswith("llm:liner-mark-1.0/none:")
+    assert built is not None and built.name.startswith("llm:liner-mark-1.0/none+verify:liner-mark-1.0/none:")
+    off = _build_stance_classifier(
+        Settings(liner_api_key="k", paper_stance_classifier="liner", paper_stance_verify_effort="off")
+    )
+    assert off is not None and "+verify" not in off.name
+
+
+REFUTING = Paper(
+    title="Calcium signaling in endothelial inflammation",
+    url="https://example.org/c",
+    description="Calcium influx drives endothelial inflammation and barrier disruption in this model.",
+    stance="NEUTRAL",
+)
+
+
+def check(**fields) -> dict:
+    entry = {
+        "paper": 1,
+        "same_ingredient": True,
+        "eaten_or_given": True,
+        "same_target": True,
+        "own_result": True,
+        "direction": "no_effect",
+    }
+    entry.update(fields)
+    return {"papers": [entry]}
+
+
+def test_반박_확인은_다섯_칸이_모두_반박일_때만_유지한다():
+    assert refutation_checks(check(), 1) == [True]
+    assert refutation_checks(check(direction="mixed"), 1) == [True]
+    # 몸속 칼슘 신호, 다른 질병, 배경 설명, 다른 성분, 효과 있음은 반박이 아니다
+    assert refutation_checks(check(eaten_or_given=False), 1) == [False]
+    assert refutation_checks(check(same_target=False), 1) == [False]
+    assert refutation_checks(check(own_result=False), 1) == [False]
+    assert refutation_checks(check(same_ingredient=False), 1) == [False]
+    assert refutation_checks(check(direction="better"), 1) == [False]
+    # 답이 빠진 후보는 확인하지 못한 것이다. 반박을 그대로 둔다
+    assert refutation_checks({"papers": []}, 1) == [None]
+
+
+def refute_first(document: str) -> dict:
+    return output((1, "REFUTE", "Calcium influx drives endothelial inflammation and barrier disruption"))
+
+
+async def test_반박_확인에서_아니라고_하면_중립으로_바꾼다():
+    verifier = FakeExtractionModel(responder=lambda _: check(eaten_or_given=False))
+    classifier = LlmStanceClassifier(FakeExtractionModel(responder=refute_first), verifier=verifier)
+    papers = await classifier.classify(ingredient="calcium", effect="inflammation", papers=(REFUTING,))
+    assert papers[0].stance == "NEUTRAL"
+    assert len(verifier.calls) == 1
+
+
+async def test_반박_확인이_실패하면_반박을_그대로_둔다():
+    """확인 실패로 반박을 지우면 믿을 만해요 쪽으로 기운다. 보수적으로 첫 분류를 쓴다."""
+    classifier = LlmStanceClassifier(
+        FakeExtractionModel(responder=refute_first), verifier=FakeExtractionModel(fail=True)
+    )
+    papers = await classifier.classify(ingredient="calcium", effect="inflammation", papers=(REFUTING,))
+    assert papers[0].stance == "REFUTE"
+
+
+async def test_반박_후보가_없으면_확인하지_않는다():
+    verifier = FakeExtractionModel(responder=lambda _: check())
+    classifier = LlmStanceClassifier(FakeExtractionModel(responder=lambda _: output()), verifier=verifier)
+    await classifier.classify(ingredient="garlic", effect="cholesterol", papers=(UNRELATED,))
+    assert verifier.calls == []
