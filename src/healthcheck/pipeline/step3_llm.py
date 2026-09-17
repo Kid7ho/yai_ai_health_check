@@ -90,6 +90,21 @@ SCHEMA: dict[str, Any] = {
 }
 
 
+FOODS_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {"foods": {"type": "array", "items": {"type": "string"}}},
+    "required": ["foods"],
+    "additionalProperties": False,
+}
+
+
+@lru_cache(maxsize=2)
+def load_two_stage_prompts(path: Path | str = DEFAULT_PROMPT_PATH) -> tuple[str, str]:
+    """(1단계 식품 목록 지시문, 2단계에 붙일 대상 식품 지시 틀)."""
+    raw = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+    return str(raw.get("식품_목록_지시문") or ""), str(raw.get("대상_식품_지시") or "")
+
+
 @lru_cache(maxsize=2)
 def load_prompt(path: Path | str = DEFAULT_PROMPT_PATH) -> tuple[str, str]:
     """(지시문 전체, 지시문 버전). 효능 대상 목록과 예시를 채워 넣는다."""
@@ -138,7 +153,11 @@ class LlmClaimExtractor:
         fallback: RuleBasedClaimExtractor | None = None,
         prompt_path: Path | str = DEFAULT_PROMPT_PATH,
         merge_rule_claims: bool = False,
+        two_stage: bool = False,
     ) -> None:
+        # 두 단계 추출: 식품 목록을 먼저 뽑고 그 식품마다 주장을 빠짐없이 뽑게 한다. 호출이 조각마다 두 번이다.
+        self._two_stage = two_stage
+        self._foods_instructions, self._target_hint = load_two_stage_prompts(prompt_path)
         self._model = model
         # 규칙 기반이 찾은 주장을 뒤에 합친다. 평가셋에서 Liner 단독보다 핵심 재현율이 높았다(66~73%).
         # 모델 호출마다 결과가 흔들리므로 규칙이 확실히 잡는 짧은 주장을 받쳐 준다.
@@ -152,7 +171,7 @@ class LlmClaimExtractor:
     @property
     def cache_namespace(self) -> str:
         """추출 캐시 키 앞에 붙는 값. 모델·지시문·검사 규칙이 바뀌면 이전 추출을 쓰지 않는다."""
-        merged = "+rule" if self._merge_rule_claims else ""
+        merged = ("+rule" if self._merge_rule_claims else "") + ("+2stage" if self._two_stage else "")
         return f"llm:{self._model.name}{merged}:{self._prompt_version}:{VALIDATOR_VERSION}"
 
     def extract(self, text: str) -> ClaimSet:
@@ -196,6 +215,8 @@ class LlmClaimExtractor:
             disease_cure_expression=disease_cure,
             prohibited_ad_expression=prohibited_ad,
             extraction_failed=not final,
+            # 모델이 인용·부정으로 표시한 식품 주장이라도 음식 이야기는 있는 글이다.
+            food_mentioned=bool(final) or bool(validation.non_asserted_quotes) or self._fallback.extract(text).food_mentioned,
             brands=_find_brands(text, self._patterns.brand_lookup),
             authority_roles=_find_roles(text, self._patterns.roles, self._patterns.role_exclusions),
         )
@@ -204,9 +225,21 @@ class LlmClaimExtractor:
         semaphore = asyncio.Semaphore(MAX_PARALLEL_CHUNKS)
 
         async def one(offset: int, part: str) -> ValidationResult:
+            instructions = self._instructions
             async with semaphore:
+                if self._two_stage and self._foods_instructions:
+                    found = await self._model.extract_json(
+                        instructions=self._foods_instructions,
+                        document=f"<본문>\n{part.replace('</본문>', '</ 본문>')}\n</본문>",
+                        schema=FOODS_SCHEMA,
+                    )
+                    source = normalize(part)
+                    # 원문에 있는 이름만 쓴다. 모델이 지어낸 이름을 2단계 지시에 넣지 않는다.
+                    foods = [f.strip() for f in (found.get("foods") or []) if isinstance(f, str) and f.strip() and normalize(f) in source]
+                    if foods:
+                        instructions = instructions + "\n" + self._target_hint.replace("{식품_목록}", ", ".join(dict.fromkeys(foods))[:500])
                 output = await self._model.extract_json(
-                    instructions=self._instructions,
+                    instructions=instructions,
                     # 본문에 끝 표시를 넣어 데이터 구역을 빠져나가려는 시도를 막는다. 검사는 원래 조각으로 한다.
                     document=f"<본문>\n{part.replace('</본문>', '</ 본문>')}\n</본문>",
                     schema=SCHEMA,

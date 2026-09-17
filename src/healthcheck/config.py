@@ -94,6 +94,8 @@ class Settings:
     # 링크 본문 주장 추출기. rule(규칙 기반) | liner(Liner Model API + 규칙 합치기) | gemini
     link_claim_extractor: str = "rule"
     liner_reasoning_effort: str = "medium"
+    # 두 단계 추출(식품 목록 → 식품별 주장). 평가셋 핵심 재현율 71% → 76~78%, 호출이 조각마다 두 번이다.
+    link_claim_two_stage: bool = True
     # 팀원 분류 시트. 토큰이 있을 때만 /labeling/{토큰}/ 주소로 연다. 누구나 쓰는 공개 화면이 되지 않게 한다.
     labeling_token: str | None = field(default=None, repr=False)
     labeling_db_path: Path = PROJECT_ROOT / "data" / "labeling.db"
@@ -202,6 +204,7 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         callback_probe_enabled=_flag(os.environ.get("CALLBACK_PROBE_ENABLED"), False),
         link_claim_extractor=(os.environ.get("LINK_CLAIM_EXTRACTOR") or "rule").strip().lower(),
         liner_reasoning_effort=(os.environ.get("LINER_REASONING_EFFORT") or "medium").strip().lower(),
+        link_claim_two_stage=_flag(os.environ.get("LINK_CLAIM_TWO_STAGE"), True),
         labeling_token=_clean(os.environ.get("LABELING_TOKEN")),
         labeling_db_path=Path(os.environ.get("LABELING_DB_PATH") or PROJECT_ROOT / "data" / "labeling.db"),
         mfds_snapshot_path=Path(

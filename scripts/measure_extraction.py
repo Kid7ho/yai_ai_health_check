@@ -88,7 +88,7 @@ def _verified(claims) -> list:
     return picked[:MAX_VERIFIED_CLAIMS]
 
 
-def build_extractor(kind: str, model_name: str, merge: bool = False):
+def build_extractor(kind: str, model_name: str, merge: bool = False, two_stage: bool = False):
     if kind == "rule":
         return RuleBasedClaimExtractor()
     from healthcheck.pipeline.step3_llm import LlmClaimExtractor
@@ -105,7 +105,7 @@ def build_extractor(kind: str, model_name: str, merge: bool = False):
         key = load_settings().liner_api_key
         if not key:
             raise SystemExit("LINER_API_KEY가 없습니다.")
-        return LlmClaimExtractor(CachedModel(LinerExtractionModel(key, reasoning_effort=effort)), merge_rule_claims=merge)
+        return LlmClaimExtractor(CachedModel(LinerExtractionModel(key, reasoning_effort=effort)), merge_rule_claims=merge, two_stage=two_stage)
     if model_name.startswith("gemini"):
         from healthcheck.adapters.gemini.extraction_model import GeminiExtractionModel
         from healthcheck.config import load_settings
@@ -114,7 +114,7 @@ def build_extractor(kind: str, model_name: str, merge: bool = False):
         name = model_name.split(":", 1)[1] if ":" in model_name else settings.gemini_model
         if not settings.gemini_api_key:
             raise SystemExit("GEMINI_API_KEY가 없습니다.")
-        return LlmClaimExtractor(CachedModel(GeminiExtractionModel(settings.gemini_api_key, model=name)), merge_rule_claims=merge)
+        return LlmClaimExtractor(CachedModel(GeminiExtractionModel(settings.gemini_api_key, model=name)), merge_rule_claims=merge, two_stage=two_stage)
     raise SystemExit(f"아직 연결하지 않은 모델입니다: {model_name}")
 
 
@@ -148,7 +148,21 @@ class CachedModel:
         return result
 
 
-async def measure(extractor, verbose: bool) -> Counter:
+ADJUDICATED_PATH = ROOT / "tests" / "extraction_eval" / "adjudicated.json"
+
+
+def adjudication_key(case_id: str, claim) -> str:
+    return f"{case_id}|{claim.ingredient}|{(claim.statement or '').replace(' ', '')}"
+
+
+def load_adjudicated() -> dict[str, bool]:
+    if not ADJUDICATED_PATH.is_file():
+        return {}
+    data = json.loads(ADJUDICATED_PATH.read_text(encoding="utf-8"))
+    return {item["key"]: bool(item["valid"]) for item in data.get("items", [])}
+
+
+async def measure(extractor, verbose: bool, unmatched: list | None = None) -> Counter:
     effect_targets = load_patterns().effect_targets
     evaluation = json.loads(EVAL_PATH.read_text(encoding="utf-8"))
     contents = json.loads(CONTENTS_PATH.read_text(encoding="utf-8"))
@@ -175,11 +189,20 @@ async def measure(extractor, verbose: bool) -> Counter:
         core_hit = [g for g in core if any(_matches(g, c, effect_targets) for c in claims)]
         core_verified = [g for g in core if any(_matches(g, c, effect_targets) for c in verified)]
         correct = [c for c in claims if any(_matches(g, c, effect_targets) for g in gold)]
+        # 정답 표시에 빠진 주장 보정: 어느 추출기가 뽑았는지 가린 채 원문 대조로 판정한 결과(adjudicated.json)
+        adjudicated = load_adjudicated()
+        extra_valid = [c for c in claims if c not in correct and adjudicated.get(adjudication_key(case["id"], c))]
+        if unmatched is not None:
+            unmatched.extend(
+                {"key": adjudication_key(case["id"], c), "case": case["id"], "content_key": case["content_key"],
+                 "ingredient": c.ingredient, "effect": c.claimed_effect, "statement": c.statement or ""}
+                for c in claims if c not in correct and adjudication_key(case["id"], c) not in adjudicated
+            )
 
         total.update(
             gold=len(gold), gold_dict=len(gold_dict), gold_outside_dict=len(gold) - len(gold_dict),
             hit=len(hit), core=len(core), core_hit=len(core_hit), core_verified=len(core_verified),
-            extracted=len(claims), correct=len(correct),
+            extracted=len(claims), correct=len(correct), adjudicated_valid=len(extra_valid),
             cases_with_core=int(bool(core)), cases_core_verified=int(bool(core_verified)),
         )
         for flag, value in (
@@ -208,19 +231,30 @@ def main() -> int:
     parser.add_argument("--model", default="fake", help="--extractor llm일 때 모델 (fake, liner:low, liner:medium, gemini, gemini:<모델명>)")
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--with-rule", action="store_true", help="언어 모델 주장 뒤에 규칙 기반 주장을 합친다(운영 설정)")
+    parser.add_argument("--two-stage", action="store_true", help="식품 목록을 먼저 뽑고 식품마다 주장을 뽑는다")
+    parser.add_argument("--dump-unmatched", help="정답과 맞지 않고 아직 판정하지 않은 추출을 이 파일에 덧붙인다")
     args = parser.parse_args()
     logging.disable(logging.WARNING)
 
-    extractor = build_extractor(args.extractor, args.model, args.with_rule)
+    extractor = build_extractor(args.extractor, args.model, args.with_rule, args.two_stage)
     started = time.monotonic()
-    total = asyncio.run(measure(extractor, args.verbose))
+    unmatched: list = []
+    total = asyncio.run(measure(extractor, args.verbose, unmatched))
+    if args.dump_unmatched:
+        path = Path(args.dump_unmatched)
+        existing = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else []
+        keys = {item["key"] for item in existing}
+        existing.extend(item for item in unmatched if item["key"] not in keys and not keys.add(item["key"]))
+        path.write_text(json.dumps(existing, ensure_ascii=False, indent=1), encoding="utf-8")
     elapsed = time.monotonic() - started
     usage = getattr(getattr(extractor, "_model", None), "usage", None)
-    label = args.extractor if args.extractor == "rule" else f"llm/{args.model}" + ("+rule" if args.with_rule else "")
+    label = args.extractor if args.extractor == "rule" else f"llm/{args.model}" + ("+rule" if args.with_rule else "") + ("+2stage" if args.two_stage else "")
     print(f"\n추출기 {label} · 평가셋 {EVAL_PATH.relative_to(ROOT)}")
     print(f"  핵심 재현율   {_ratio(total['core_hit'], total['core'])}")
     print(f"  전체 재현율   {_ratio(total['hit'], total['gold_dict'])}  (사전 밖 성분 주장 {total['gold_outside_dict']}건 제외)")
     print(f"  정밀도       {_ratio(total['correct'], total['extracted'])}")
+    if total["adjudicated_valid"]:
+        print(f"  정밀도(보정)  {_ratio(total['correct'] + total['adjudicated_valid'], total['extracted'])}  (정답 표시에 빠진 주장을 원문 대조로 인정)")
     print(f"  핵심 검증     {_ratio(total['core_verified'], total['core'])}, 글 기준 {_ratio(total['cases_core_verified'], total['cases_with_core'])}")
     for flag, name in (("disease_cure", "질병 치료"), ("prohibited_ad", "금지 광고"), ("replace_medicine", "약 대체")):
         tp, fn, fp = total[f"{flag}_tp"], total[f"{flag}_fn"], total[f"{flag}_fp"]
