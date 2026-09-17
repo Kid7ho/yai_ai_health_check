@@ -55,6 +55,10 @@ class Orchestrator:
     article: ArticleExtractor | None = None
     # 단축 링크를 푼다. 없으면 단축 링크는 풀지 않은 채 기사로 처리된다.
     link_resolver: LinkResolver | None = None
+    # 링크(유튜브·기사) 본문에만 쓰는 주장 추출기. 언어 모델 추출을 여기에 둔다.
+    # 어르신이 직접 붙여 넣은 글에는 개인 건강 이야기가 섞일 수 있어 외부 모델에 보내지 않는다
+    # (Liner API 약관 5.8 민감정보 조항, 법률 검토 전). 없으면 claim_extractor를 쓴다.
+    link_claim_extractor: ClaimExtractor | None = None
 
     async def cached(self, share_input: ShareInput) -> CheckResult | None:
         """캐시 1단만 조회한다. 5초 동기 응답 경로에서 쓴다.
@@ -115,7 +119,7 @@ class Orchestrator:
         _record(trace, "content", step)
 
         step = time.monotonic()
-        claims = await self._claims_of(content)
+        claims = await self._claims_of(content, from_link=share_input.kind != "PLAIN_TEXT")
         _record(trace, "claims", step)
 
         claim_checks = await self._check_claims(claims, content, trace)
@@ -348,14 +352,15 @@ class Orchestrator:
 
         return _no_content(), False
 
-    async def _claims_of(self, content: ExtractedContent) -> ClaimSet:
+    async def _claims_of(self, content: ExtractedContent, *, from_link: bool = False) -> ClaimSet:
         """③ 주장 구조화. 캐시 2단을 쓴다."""
+        extractor = self.link_claim_extractor if from_link and self.link_claim_extractor else self.claim_extractor
         if not content.has_transcript or not content.text.strip():
             return ClaimSet(claims=(), in_scope=True, disease_cure_expression=False, extraction_failed=True)
 
         # 언어 모델 추출은 모델·지시문 버전을 캐시 키에 넣는다. 바꾸면 이전 추출을 쓰지 않는다.
         # 규칙 기반은 앞말 없이 콘텐츠 해시만 쓴다(기존 캐시 유지).
-        namespace = getattr(self.claim_extractor, "cache_namespace", None)
+        namespace = getattr(extractor, "cache_namespace", None)
         cache_key = f"{namespace}:{content.content_hash}" if namespace and content.content_hash else content.content_hash
 
         if cache_key:
@@ -363,8 +368,8 @@ class Orchestrator:
             if found is not None:
                 return found
 
-        aextract = getattr(self.claim_extractor, "aextract", None)
-        claims = await aextract(content.text) if aextract else self.claim_extractor.extract(content.text)
+        aextract = getattr(extractor, "aextract", None)
+        claims = await aextract(content.text) if aextract else extractor.extract(content.text)
 
         if cache_key:
             await self.extraction_cache.set(cache_key, claims)

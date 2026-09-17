@@ -66,6 +66,28 @@ def build_fake_orchestrator() -> Orchestrator:
     )
 
 
+def _build_link_claim_extractor(settings: Settings, live: bool):
+    """링크 본문용 주장 추출기. 키가 없거나 rule이면 None(규칙 기반)을 돌려준다."""
+    choice = settings.link_claim_extractor
+    if not live or choice == "rule":
+        return None
+    from healthcheck.pipeline.step3_llm import LlmClaimExtractor
+
+    if choice == "liner" and settings.has_liner_key:
+        from healthcheck.adapters.liner.extraction_model import LinerExtractionModel
+
+        model = LinerExtractionModel(settings.liner_api_key, reasoning_effort=settings.liner_reasoning_effort)
+        logger.info("링크 주장 추출: Liner Model API(%s) + 규칙 기반 합치기", settings.liner_reasoning_effort)
+        return LlmClaimExtractor(model, merge_rule_claims=True)
+    if choice == "gemini" and settings.gemini_api_key:
+        from healthcheck.adapters.gemini.extraction_model import GeminiExtractionModel
+
+        logger.info("링크 주장 추출: Gemini(%s) + 규칙 기반 합치기", settings.gemini_model)
+        return LlmClaimExtractor(GeminiExtractionModel(settings.gemini_api_key, model=settings.gemini_model), merge_rule_claims=True)
+    logger.warning("LINK_CLAIM_EXTRACTOR=%s이지만 키가 없어 규칙 기반을 씁니다", choice)
+    return None
+
+
 def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
     """설정에 따라 실제 어댑터와 Fake를 골라 꽂는다.
 
@@ -137,10 +159,13 @@ def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
     else:
         article = None
 
+    link_claim_extractor = _build_link_claim_extractor(settings, live)
+
     return Orchestrator(
         transcript=transcript,
         academic=academic,
         mfds=mfds,
+        link_claim_extractor=link_claim_extractor,
         claim_extractor=RuleBasedClaimExtractor(),
         ruleset=load_ruleset(settings.rules_path),
         verdict_cache=InMemoryVerdictCache(),

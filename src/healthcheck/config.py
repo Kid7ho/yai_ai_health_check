@@ -91,6 +91,9 @@ class Settings:
     # 콜백 유효 시간 시험. "콜백시험 70"을 보내면 70초 뒤 콜백을 보내 받아지는지 기록한다.
     # 카카오 문서가 유효 시간을 1분과 5분으로 다르게 적어 실측하려고 둔다. 시험이 끝나면 끈다.
     callback_probe_enabled: bool = False
+    # 링크 본문 주장 추출기. rule(규칙 기반) | liner(Liner Model API + 규칙 합치기) | gemini
+    link_claim_extractor: str = "rule"
+    liner_reasoning_effort: str = "medium"
     # 팀원 분류 시트. 토큰이 있을 때만 /labeling/{토큰}/ 주소로 연다. 누구나 쓰는 공개 화면이 되지 않게 한다.
     labeling_token: str | None = field(default=None, repr=False)
     labeling_db_path: Path = PROJECT_ROOT / "data" / "labeling.db"
@@ -129,6 +132,7 @@ class Settings:
             "gemini_api_key": "설정됨" if self.gemini_api_key else "없음",
             "skill_auth_token": "설정됨" if self.has_skill_token else "없음",
             "skill_path": self.skill_path,
+            "link_claim_extractor": self.link_claim_extractor,
         }
 
 
@@ -196,6 +200,8 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         ),
         public_base_url=_public_url(os.environ.get("PUBLIC_BASE_URL")),
         callback_probe_enabled=_flag(os.environ.get("CALLBACK_PROBE_ENABLED"), False),
+        link_claim_extractor=(os.environ.get("LINK_CLAIM_EXTRACTOR") or "rule").strip().lower(),
+        liner_reasoning_effort=(os.environ.get("LINER_REASONING_EFFORT") or "medium").strip().lower(),
         labeling_token=_clean(os.environ.get("LABELING_TOKEN")),
         labeling_db_path=Path(os.environ.get("LABELING_DB_PATH") or PROJECT_ROOT / "data" / "labeling.db"),
         mfds_snapshot_path=Path(

@@ -88,7 +88,7 @@ def _verified(claims) -> list:
     return picked[:MAX_VERIFIED_CLAIMS]
 
 
-def build_extractor(kind: str, model_name: str):
+def build_extractor(kind: str, model_name: str, merge: bool = False):
     if kind == "rule":
         return RuleBasedClaimExtractor()
     from healthcheck.pipeline.step3_llm import LlmClaimExtractor
@@ -105,7 +105,16 @@ def build_extractor(kind: str, model_name: str):
         key = load_settings().liner_api_key
         if not key:
             raise SystemExit("LINER_API_KEY가 없습니다.")
-        return LlmClaimExtractor(CachedModel(LinerExtractionModel(key, reasoning_effort=effort)))
+        return LlmClaimExtractor(CachedModel(LinerExtractionModel(key, reasoning_effort=effort)), merge_rule_claims=merge)
+    if model_name.startswith("gemini"):
+        from healthcheck.adapters.gemini.extraction_model import GeminiExtractionModel
+        from healthcheck.config import load_settings
+
+        settings = load_settings()
+        name = model_name.split(":", 1)[1] if ":" in model_name else settings.gemini_model
+        if not settings.gemini_api_key:
+            raise SystemExit("GEMINI_API_KEY가 없습니다.")
+        return LlmClaimExtractor(CachedModel(GeminiExtractionModel(settings.gemini_api_key, model=name)), merge_rule_claims=merge)
     raise SystemExit(f"아직 연결하지 않은 모델입니다: {model_name}")
 
 
@@ -196,17 +205,18 @@ def _ratio(a: int, b: int) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description="주장 추출 정확도를 잰다.")
     parser.add_argument("--extractor", choices=["rule", "llm"], default="rule")
-    parser.add_argument("--model", default="fake", help="--extractor llm일 때 모델 (fake, liner:low, liner:medium)")
+    parser.add_argument("--model", default="fake", help="--extractor llm일 때 모델 (fake, liner:low, liner:medium, gemini, gemini:<모델명>)")
     parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--with-rule", action="store_true", help="언어 모델 주장 뒤에 규칙 기반 주장을 합친다(운영 설정)")
     args = parser.parse_args()
     logging.disable(logging.WARNING)
 
-    extractor = build_extractor(args.extractor, args.model)
+    extractor = build_extractor(args.extractor, args.model, args.with_rule)
     started = time.monotonic()
     total = asyncio.run(measure(extractor, args.verbose))
     elapsed = time.monotonic() - started
     usage = getattr(getattr(extractor, "_model", None), "usage", None)
-    label = args.extractor if args.extractor == "rule" else f"llm/{args.model}"
+    label = args.extractor if args.extractor == "rule" else f"llm/{args.model}" + ("+rule" if args.with_rule else "")
     print(f"\n추출기 {label} · 평가셋 {EVAL_PATH.relative_to(ROOT)}")
     print(f"  핵심 재현율   {_ratio(total['core_hit'], total['core'])}")
     print(f"  전체 재현율   {_ratio(total['hit'], total['gold_dict'])}  (사전 밖 성분 주장 {total['gold_outside_dict']}건 제외)")
@@ -216,7 +226,9 @@ def main() -> int:
         tp, fn, fp = total[f"{flag}_tp"], total[f"{flag}_fn"], total[f"{flag}_fp"]
         print(f"  {name:6} 적중 {tp} 놓침 {fn} 오탐 {fp}")
     print(f"  시간 {elapsed:.0f}초")
-    if usage:
+    if usage and args.model.startswith("gemini"):
+        print(f"  호출 {usage['calls']}회 · 입력 {usage['prompt_tokens']:,} · 출력 {usage['completion_tokens']:,} 토큰 (저장된 응답은 세지 않음)")
+    elif usage:
         # Liner Model API 단가(2026-09-17 문서): 입력 100만 토큰당 $1, 출력(추론 포함) $6
         cost = usage["prompt_tokens"] / 1e6 * 1 + usage["completion_tokens"] / 1e6 * 6
         print(f"  호출 {usage['calls']}회 · 입력 {usage['prompt_tokens']:,} · 출력 {usage['completion_tokens']:,} 토큰 · 약 ${cost:.3f}")

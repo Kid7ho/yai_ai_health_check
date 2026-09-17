@@ -180,3 +180,39 @@ async def test_파이프라인이_언어_모델_추출을_쓰고_모델별로_�
     first = await orchestrator.run(step1_input.classify(text))
     assert [c.claim.ingredient for c in first.claim_checks] == ["홍삼"]
     assert len(model.calls) == 1
+
+
+# ── 링크 입력에만 언어 모델 추출 (A안, 2026-09-17) ─────────────────
+
+
+async def test_직접_붙여_넣은_글에는_언어_모델을_쓰지_않는다():
+    """어르신이 붙여 넣은 글에는 개인 건강 이야기가 섞일 수 있어 외부 모델에 보내지 않는다."""
+    orchestrator = build_fake_orchestrator()
+    model = FakeExtractionModel()
+    orchestrator.link_claim_extractor = LlmClaimExtractor(model, merge_rule_claims=True)
+
+    result = await orchestrator.run(step1_input.classify("홍삼이 면역력 증진에 도움을 줄 수 있습니다"))
+
+    assert model.calls == []
+    assert [c.claim.ingredient for c in result.claim_checks] == ["홍삼"]
+
+
+async def test_링크_본문에는_언어_모델_추출을_쓴다():
+    orchestrator = build_fake_orchestrator()
+    model = FakeExtractionModel()
+    orchestrator.link_claim_extractor = LlmClaimExtractor(model, merge_rule_claims=True)
+
+    from healthcheck.domain.types import ExtractedContent
+
+    content = ExtractedContent(text="홍삼이 면역력 증진에 도움을 줄 수 있습니다", has_transcript=True, confidence=1.0, content_hash="h1")
+    await orchestrator._claims_of(content, from_link=True)
+    await orchestrator._claims_of(content, from_link=False)
+
+    assert len(model.calls) == 1
+
+
+async def test_규칙_기반_주장을_중복_없이_뒤에_합친다():
+    text = "홍삼은 면역력 증진에 도움을 줄 수 있습니다. 마늘이 혈압을 낮추는 데 좋다고 합니다."
+    out = output(item("홍삼은 면역력 증진에 도움을 줄 수 있습니다", "홍삼", "면역력 증진에 도움", target="면역력"))
+    claim_set = await LlmClaimExtractor(FakeExtractionModel(lambda d: out), merge_rule_claims=True).aextract(text)
+    assert [c.ingredient for c in claim_set.claims] == ["홍삼", "마늘"]

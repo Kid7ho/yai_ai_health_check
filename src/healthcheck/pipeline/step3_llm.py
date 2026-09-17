@@ -131,8 +131,18 @@ def chunks(text: str, size: int = CHUNK_CHARS, overlap: int = CHUNK_OVERLAP) -> 
 class LlmClaimExtractor:
     """ClaimExtractor 인터페이스. 비동기 추출(aextract)을 함께 둔다."""
 
-    def __init__(self, model: ExtractionModel, *, fallback: RuleBasedClaimExtractor | None = None, prompt_path: Path | str = DEFAULT_PROMPT_PATH) -> None:
+    def __init__(
+        self,
+        model: ExtractionModel,
+        *,
+        fallback: RuleBasedClaimExtractor | None = None,
+        prompt_path: Path | str = DEFAULT_PROMPT_PATH,
+        merge_rule_claims: bool = False,
+    ) -> None:
         self._model = model
+        # 규칙 기반이 찾은 주장을 뒤에 합친다. 평가셋에서 Liner 단독보다 핵심 재현율이 높았다(66~73%).
+        # 모델 호출마다 결과가 흔들리므로 규칙이 확실히 잡는 짧은 주장을 받쳐 준다.
+        self._merge_rule_claims = merge_rule_claims
         self._fallback = fallback or RuleBasedClaimExtractor()
         self._patterns = load_patterns()
         self._validator = ClaimValidator(self._patterns)
@@ -142,7 +152,8 @@ class LlmClaimExtractor:
     @property
     def cache_namespace(self) -> str:
         """추출 캐시 키 앞에 붙는 값. 모델·지시문·검사 규칙이 바뀌면 이전 추출을 쓰지 않는다."""
-        return f"llm:{self._model.name}:{self._prompt_version}:{VALIDATOR_VERSION}"
+        merged = "+rule" if self._merge_rule_claims else ""
+        return f"llm:{self._model.name}{merged}:{self._prompt_version}:{VALIDATOR_VERSION}"
 
     def extract(self, text: str) -> ClaimSet:
         """동기 호출 경로는 규칙 기반으로 대신한다. 파이프라인은 aextract를 쓴다."""
@@ -168,12 +179,23 @@ class LlmClaimExtractor:
             sorted({r.reason for r in validation.rejected}),
         )
         disease_cure, prohibited_ad, out_of_scope = self._expression_flags(masked, validation)
+        final = [v.claim for v in claims]
+        if self._merge_rule_claims:
+            seen = {(c.ingredient, c.claimed_effect.replace(" ", "")) for c in final}
+            seen_ingredients_targets = {(v.claim.ingredient, v.effect_target) for v in claims}
+            for rule_claim in self._fallback.extract(text).claims:
+                key = (rule_claim.ingredient, rule_claim.claimed_effect.replace(" ", ""))
+                targets = [t for t in self._patterns.effect_targets if t in rule_claim.claimed_effect]
+                if key in seen or any((rule_claim.ingredient, t) in seen_ingredients_targets for t in targets):
+                    continue
+                seen.add(key)
+                final.append(rule_claim)
         return ClaimSet(
-            claims=tuple(v.claim for v in claims),
+            claims=tuple(final[:MAX_CLAIMS]),
             in_scope=not out_of_scope,
             disease_cure_expression=disease_cure,
             prohibited_ad_expression=prohibited_ad,
-            extraction_failed=not claims,
+            extraction_failed=not final,
             brands=_find_brands(text, self._patterns.brand_lookup),
             authority_roles=_find_roles(text, self._patterns.roles, self._patterns.role_exclusions),
         )
