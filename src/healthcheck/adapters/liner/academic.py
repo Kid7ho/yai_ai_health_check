@@ -41,6 +41,7 @@ import httpx
 import yaml
 
 from healthcheck.domain.types import Claim, Paper
+from healthcheck.ports.academic import PaperStanceClassifier
 
 logger = logging.getLogger(__name__)
 
@@ -227,6 +228,7 @@ class LinerAcademicSearchClient:
         max_qps: float = 2.0,
         rate_limit_wait: float = 1.0,
         cache_ttl: float = 24 * 3600,
+        stance_classifier: PaperStanceClassifier | None = None,
     ) -> None:
         if not api_key:
             raise ValueError("LINER_API_KEY가 없습니다. .env를 확인하세요.")
@@ -245,6 +247,8 @@ class LinerAcademicSearchClient:
         # 토큰과 호출 제한을 아낀다. 성공한 결과만 담는다.
         self._cache: dict[tuple[str, int], tuple[float, tuple]] = {}
         self._cache_ttl = cache_ttl
+        # 없으면 표현 목록 분류(classify_stance)를 그대로 쓴다.
+        self._stance_classifier = stance_classifier
         self.cache_hits = 0
         self._client = client
         self._owns_client = client is None
@@ -284,6 +288,7 @@ class LinerAcademicSearchClient:
 
         # 관련 논문이 0편이면 대체 영문 표기로 한 번 더 찾는다. 수식어가 붙은 영문명("Korean red ginseng")이
         # 품질·성분 논문으로 쏠려 효능 논문을 놓쳤다. 대체 검색이 실패해도 원래 결과(0편)를 그대로 쓴다.
+        matched_ingredient = ingredient
         alternative = _load_alternative_names().get(claim.ingredient)
         if not papers and effect and alternative and alternative != ingredient:
             alt_query = f"{alternative} {effect}"
@@ -295,7 +300,12 @@ class LinerAcademicSearchClient:
                 alt_papers = tuple(_to_paper(item) for item in alt_data.get("results") or [] if isinstance(item, dict))
                 papers = tuple(p for p in alt_papers if is_relevant(p.title, p.description, alternative, effect))
                 all_papers = all_papers + alt_papers
+                matched_ingredient = alternative
                 query = f"{query} → {alt_query}"
+
+        if self._stance_classifier is not None and papers:
+            # 관련 논문만 분류한다. 관련 없는 논문까지 보내면 호출 비용과 시간만 는다.
+            papers = await self._stance_classifier.classify(ingredient=matched_ingredient, effect=effect, papers=papers)
 
         self._cache[cache_key] = (time.monotonic(), papers)
         logger.info(

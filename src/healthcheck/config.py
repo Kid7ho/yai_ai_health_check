@@ -100,6 +100,11 @@ class Settings:
     link_claim_two_stage: bool = False
     # 같은 요청을 동시에 여러 번 보내 합친다. 평가셋 핵심 재현율: 1회 66~74%, 3회 77~81%, 4회 79~82%(2026-09-17).
     link_claim_samples: int = 4
+    # 논문 입장 분류기. rule(표현 목록) | liner(Liner Model API). 평가셋 383쌍(2026-09-17): 표현 목록은 논문 정확도 64%·
+    # 반박 정밀도 31%·주장 근거 판단 76%, Liner none은 87~88%·66~68%·90~93%, 주장 1건 중앙값 2.5초.
+    paper_stance_classifier: str = "rule"
+    # low는 정확도가 같고 최대 52초까지 걸렸다. 같은 요청 3번 투표도 정확도가 오르지 않았다.
+    paper_stance_effort: str = "none"
     # 팀원 분류 시트. 토큰이 있을 때만 /labeling/{토큰}/ 주소로 연다. 누구나 쓰는 공개 화면이 되지 않게 한다.
     labeling_token: str | None = field(default=None, repr=False)
     labeling_db_path: Path = PROJECT_ROOT / "data" / "labeling.db"
@@ -139,6 +144,7 @@ class Settings:
             "skill_auth_token": "설정됨" if self.has_skill_token else "없음",
             "skill_path": self.skill_path,
             "link_claim_extractor": self.link_claim_extractor,
+            "paper_stance_classifier": self.paper_stance_classifier,
         }
 
 
@@ -210,6 +216,8 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         liner_reasoning_effort=(os.environ.get("LINER_REASONING_EFFORT") or "low").strip().lower(),
         link_claim_two_stage=_flag(os.environ.get("LINK_CLAIM_TWO_STAGE"), False),
         link_claim_samples=int(os.environ.get("LINK_CLAIM_SAMPLES") or 4),
+        paper_stance_classifier=(os.environ.get("PAPER_STANCE_CLASSIFIER") or "rule").strip().lower(),
+        paper_stance_effort=(os.environ.get("PAPER_STANCE_EFFORT") or "none").strip().lower(),
         labeling_token=_clean(os.environ.get("LABELING_TOKEN")),
         labeling_db_path=Path(os.environ.get("LABELING_DB_PATH") or PROJECT_ROOT / "data" / "labeling.db"),
         mfds_snapshot_path=Path(

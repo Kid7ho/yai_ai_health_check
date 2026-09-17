@@ -17,6 +17,9 @@ primary_region = "nrt"
   # 직접 붙여 넣은 글은 규칙 기반만 쓴다(Liner 약관 5.8 민감정보 조항, 법률 검토 전).
   LINK_CLAIM_EXTRACTOR = "liner"
   LINER_REASONING_EFFORT = "low"
+  # 논문 입장 분류: Liner Model API(none). 공개 논문과 성분·효능 영문 검색어만 보낸다(2026-09-17).
+  PAPER_STANCE_CLASSIFIER = "liner"
+  PAPER_STANCE_EFFORT = "none"
   # 판정 기록과 식약처 사본은 볼륨에 둔다. 컨테이너 파일시스템은 배포할 때마다 초기화된다.
   DATABASE_PATH = "/data/healthcheck.db"
   MFDS_SNAPSHOT_PATH = "/data/mfds_i0040.json"

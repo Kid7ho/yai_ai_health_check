@@ -24,3 +24,15 @@ class AcademicSearchClient(Protocol):
     """
 
     async def search(self, claim: Claim, *, max_results: int = 10) -> tuple[Paper, ...]: ...
+
+
+class PaperStanceClassifier(Protocol):
+    """관련 논문마다 주장(성분, 효능)에 대한 입장을 고른다.
+
+    학술 검색 클라이언트가 관련성 검사를 마친 논문을 넘긴다. 입장만 바꾼 같은 순서의 목록을 돌려준다.
+    판단할 수 없는 논문은 NEUTRAL로 두고, 호출이 실패한 논문은 받은 입장을 그대로 둔다.
+    """
+
+    name: str
+
+    async def classify(self, *, ingredient: str, effect: str, papers: tuple[Paper, ...]) -> tuple[Paper, ...]: ...

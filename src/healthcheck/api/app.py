@@ -66,6 +66,21 @@ def build_fake_orchestrator() -> Orchestrator:
     )
 
 
+def _build_stance_classifier(settings: Settings):
+    """논문 입장 분류기. rule이면 None(표현 목록 분류)을 돌려준다."""
+    if settings.paper_stance_classifier != "liner":
+        return None
+    from healthcheck.adapters.liner.extraction_model import LinerExtractionModel
+    from healthcheck.pipeline.paper_stance import LlmStanceClassifier
+
+    # 평가셋 실측 주장 1건 최대 6.5초. 15초 안에 답이 없으면 그 묶음은 표현 목록 분류를 쓴다.
+    model = LinerExtractionModel(
+        settings.liner_api_key, reasoning_effort=settings.paper_stance_effort, timeout=15.0, max_retries=1
+    )
+    logger.info("논문 입장 분류: Liner Model API(%s)", settings.paper_stance_effort)
+    return LlmStanceClassifier(model)
+
+
 def _build_link_claim_extractor(settings: Settings, live: bool):
     """링크 본문용 주장 추출기. 키가 없거나 rule이면 None(규칙 기반)을 돌려준다."""
     choice = settings.link_claim_extractor
@@ -116,7 +131,9 @@ def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
     live = settings.adapter_mode == "live"
 
     if live and settings.has_liner_key:
-        academic = LinerAcademicSearchClient(settings.liner_api_key)
+        academic = LinerAcademicSearchClient(
+            settings.liner_api_key, stance_classifier=_build_stance_classifier(settings)
+        )
         logger.info("학술 검증: Liner 실제 호출")
     else:
         academic = FakeAcademicSearchClient()
