@@ -132,6 +132,10 @@ class ClaimSet:
     prohibited_ad_expression: bool = False
     # 규칙 기반 추출이 주장을 하나도 못 뽑았으면 True. UNKNOWN으로 이어진다.
     extraction_failed: bool = False
+    # 본문에 성분 사전의 음식·식품 이름이 한 번이라도 나오는가(언어 모델 추출은 모델이 찾은 식품 포함).
+    # 주장이 없고 음식 이야기도 없으면 "알 수 없어요" 대신 서비스 확인 대상이 아니라고 안내한다.
+    # 기본값 True는 안전한 쪽이다. 값을 채우지 않은 추출기는 지금처럼 판정 보류가 된다.
+    food_mentioned: bool = True
     # 본문에 언급된 브랜드. 근거 화면에만 보여 주고 판정에는 쓰지 않는다.
     brands: tuple[str, ...] = ()
     # 본문에 언급된 전문가 역할(의사, 약사 등). 실명은 뽑지 않는다.

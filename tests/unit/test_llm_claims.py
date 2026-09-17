@@ -216,3 +216,25 @@ async def test_규칙_기반_주장을_중복_없이_뒤에_합친다():
     out = output(item("홍삼은 면역력 증진에 도움을 줄 수 있습니다", "홍삼", "면역력 증진에 도움", target="면역력"))
     claim_set = await LlmClaimExtractor(FakeExtractionModel(lambda d: out), merge_rule_claims=True).aextract(text)
     assert [c.ingredient for c in claim_set.claims] == ["홍삼", "마늘"]
+
+
+# ── 확인 대상이 아닌 글 ─────────────────────────────────────────
+
+
+async def test_음식_이야기가_없는_글은_확인_대상이_아니라고_안내한다():
+    from healthcheck.pipeline.step6_response import render
+
+    orchestrator = build_fake_orchestrator()
+    result = await orchestrator.run(step1_input.classify("오늘은 날씨가 맑아서 공원에서 산책을 했습니다. 내일은 비가 온다고 하네요."))
+
+    assert result.notice == "not_target"
+    text = str(render(result))
+    assert "본 서비스에서 확인하는 대상이 아니에요" in text
+    assert "참고용" in text  # 면책 문구는 안내에도 붙는다
+
+
+async def test_음식_이야기는_있지만_주장을_못_찾으면_판정_보류로_둔다():
+    """'확인 대상 아님'은 음식 이야기가 전혀 없을 때만이다. 추출이 놓친 글을 대상 밖으로 몰지 않는다."""
+    orchestrator = build_fake_orchestrator()
+    result = await orchestrator.run(step1_input.classify("어제 홍삼을 한 박스 샀습니다."))
+    assert result.notice is None

@@ -252,6 +252,7 @@ class RuleBasedClaimExtractor:
             brands=_find_brands(text, patterns.brand_lookup),
             authority_roles=_find_roles(text, patterns.roles, patterns.role_exclusions),
             extraction_failed=not claims,
+            food_mentioned=bool(claims) or bool(_find_ingredients(text, patterns.ingredient_lookup, patterns.strict_left_ingredients)),
         )
 
     def _is_disease_cure(self, sentence: str) -> bool:

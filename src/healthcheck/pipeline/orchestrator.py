@@ -124,6 +124,21 @@ class Orchestrator:
 
         claim_checks = await self._check_claims(claims, content, trace)
 
+        # 확인 대상이 아닌 글: 주장도 음식 이야기도 없고, 질병 치료·광고 표현이나 범위 밖(약·시술) 표시도 없다.
+        # "알 수 없어요"로 답하면 판정이 불확실한 것처럼 보이므로 서비스가 확인하는 대상이 아니라고 안내한다.
+        if (
+            not claim_checks
+            and content.has_transcript
+            and content.text.strip()
+            and not retryable_failure
+            and claims.in_scope
+            and not claims.claims
+            and not claims.food_mentioned
+            and not claims.disease_cure_expression
+            and not claims.prohibited_ad_expression
+        ):
+            return self._notice_result(share_input, "not_target")
+
         step = time.monotonic()
         if claim_checks:
             # 가장 엄한 결과를 쓴다. 뒤에 나온 주장이 더 위험해도 반영되게 한다.
