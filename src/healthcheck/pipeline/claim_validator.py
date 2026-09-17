@@ -22,7 +22,7 @@ from typing import Any
 
 from healthcheck.domain.types import Claim
 
-VALIDATOR_VERSION = "v4"
+VALIDATOR_VERSION = "v5"
 QUOTE_MAX = 120
 # 성분 이름이 구절 바로 앞 문맥에 있으면 인정하는 거리(정규화 글자 수). "루테인은 … 시력 저하를 막아줘요"처럼
 # 모델이 효능 부분만 옮기면 성분 이름이 구절 밖에 남아 올바른 주장이 버려졌다(운영 실측 10건 중 9건).
@@ -128,10 +128,16 @@ class ClaimValidator:
                 result.non_asserted_quotes.append(quote)
                 result.rejected.append(Rejection(quote, f"voice={voice}"))
                 continue
+            display = source[index_map[position] : index_map[position + len(normalized_quote) - 1] + 1]
+            if "흡수" in display and not any(t in display for t in self._patterns.effect_targets):
+                # 운영 실측: "달걀 노른자와 올리브유의 지방이 시금치 속 루테인 흡수를 완벽히 도와줘요"가 주장으로 뽑혀
+                # 판정 근거가 없는 '알 수 없어요'가 글 전체 판정을 끌어내렸다. 효능 대상 없이 흡수만 말하면 섭취 요령이다.
+                # "칼슘 흡수를 돕는다"처럼 효능 대상이 있는 문장은 그대로 둔다.
+                result.rejected.append(Rejection(quote, "섭취 요령"))
+                continue
             if _GENERIC_INGREDIENT.match(ingredient_text):
                 result.rejected.append(Rejection(quote, "이름 없는 대상"))
                 continue
-            display = source[index_map[position] : index_map[position + len(normalized_quote) - 1] + 1]
             if self._mentions_business_or_person(display):
                 result.rejected.append(Rejection(quote, "업체·브랜드·인물 서술 포함"))
                 continue

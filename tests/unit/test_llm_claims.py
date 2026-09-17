@@ -248,3 +248,15 @@ async def test_음식_이야기는_있지만_주장을_못_찾으면_판정_보�
     orchestrator = build_fake_orchestrator()
     result = await orchestrator.run(step1_input.classify("어제 홍삼을 한 박스 샀습니다."))
     assert result.notice is None
+
+
+def test_흡수를_돕는다는_섭취_요령은_주장으로_쓰지_않는다():
+    """운영 실측: 섭취 요령 문장이 '알 수 없어요'를 만들어 루테인 글 전체 판정을 끌어내렸다."""
+    source = "달걀 노른자와 올리브유의 지방이 시금치 속 루테인 흡수를 완벽히 도와줘요. 비타민D는 칼슘 흡수를 도와줍니다."
+    out = output(
+        item("달걀 노른자와 올리브유의 지방이 시금치 속 루테인 흡수를 완벽히 도와줘요", "시금치", "루테인 흡수", target="눈"),
+        item("비타민D는 칼슘 흡수를 도와줍니다", "비타민D", "칼슘 흡수", target="칼슘 흡수"),
+    )
+    result = validate(out, source)
+    assert [v.claim.ingredient for v in result.claims] == ["비타민D"]
+    assert any(r.reason == "섭취 요령" for r in result.rejected)
