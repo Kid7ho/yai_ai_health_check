@@ -212,7 +212,7 @@ def test_어디에도_맞지_않으면_알_수_없어요():
 
 def test_판정_결과에_역추적_정보가_담긴다():
     verdict = load_ruleset().evaluate(vi(in_scope=False))
-    assert verdict.rules_version == "v0.17"
+    assert verdict.rules_version == "v0.18"
     assert verdict.rule_id
     assert verdict.reasons and all(verdict.reasons)
     assert verdict.inputs is not None

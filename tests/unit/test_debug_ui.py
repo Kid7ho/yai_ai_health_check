@@ -44,7 +44,7 @@ def test_발화를_넣으면_판정과_중간_산출물을_돌려준다(monkeypa
     assert body["verdict"]["label"] == "WARNING"
     # Fake 식약처 데이터에 블루베리·당뇨 부당광고 이력이 있어 R-020이 먼저 잡는다.
     assert body["verdict"]["rule_id"] == "R-020"
-    assert body["verdict"]["rules_version"] == "v0.17"
+    assert body["verdict"]["rules_version"] == "v0.18"
     assert body["input"]["kind"] == "PLAIN_TEXT"
     assert body["claims"]["disease_cure_expression"] is True
     assert body["verdict"]["inputs"]["transcript_quality"] == "ok"

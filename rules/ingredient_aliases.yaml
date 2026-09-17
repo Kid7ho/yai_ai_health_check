@@ -139,6 +139,18 @@ version: v0
   철분: iron
   콜라겐: collagen
 
+# ────────────────────────────────────────────────────────────────────
+# 비타민_표기 — 논문이 이 비타민을 다루는지 볼 때 "vitamin X" 말고도 인정하는 표기입니다.
+# 비타민은 이름 앞부분이 같아서 앞 5글자(vitam)로 찾으면 다른 비타민 논문이 섞입니다.
+# 실측(2026-09-18): 비타민B 전립선 주장에 "Vitamin D in prostate cancer" 등 8편이 관련 논문으로 들어왔습니다.
+# 그래서 "vitamin D", "vitamin D3", "D vitamins"처럼 글자까지 맞아야 하고, 아래 표기도 인정합니다.
+# ⚠ 개발자 판단이다. 자문의 검수 대상이다.
+# ────────────────────────────────────────────────────────────────────
+비타민_표기:
+  c: [ascorbic acid, ascorbate]
+  d: [cholecalciferol, ergocalciferol, calcitriol, 25(oh)d, 25-hydroxyvitamin d]
+  b: [b-complex, thiamine, riboflavin, niacin, pyridoxine, cobalamin]
+
 영문명:
   홍삼: Korean red ginseng
   프로바이오틱스: probiotics

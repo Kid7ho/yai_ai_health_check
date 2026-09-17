@@ -90,6 +90,35 @@ def _load_alternative_names(path: Path | str = DEFAULT_ALIASES_PATH) -> dict[str
     return {str(k): str(v) for k, v in (raw.get("영문명_대체") or {}).items()}
 
 
+@lru_cache(maxsize=2)
+def _load_vitamin_forms(path: Path | str = DEFAULT_ALIASES_PATH) -> dict[str, tuple[str, ...]]:
+    raw = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+    table = raw.get("비타민_표기") or {}
+    return {str(k).lower(): tuple(str(v).lower() for v in values or ()) for k, values in table.items()}
+
+
+_VITAMIN = re.compile(r"^vitamin\s+([a-z])", re.IGNORECASE)
+
+
+def _vitamin_mentioned(ingredient: str, text: str) -> bool | None:
+    """비타민 성분이면 그 비타민이 본문에 있는지. 비타민이 아니면 None.
+
+    앞 5글자(vitam)로는 비타민 D 논문이 비타민 B 주장에 걸린다. "vitamin D3", "B vitamins",
+    "B12"처럼 글자까지 맞아야 한다. 다른 표기(cholecalciferol 등)는 ingredient_aliases.yaml의 비타민_표기에 둔다.
+    """
+    match = _VITAMIN.match(ingredient.strip())
+    if not match:
+        return None
+    letter = match.group(1).lower()
+    patterns = (
+        rf"\bvitamins?\s*-?\s*{letter}\d*\b",
+        rf"\b{letter}\d*\s*-?\s*vitamins?\b",
+    )
+    if any(re.search(pattern, text) for pattern in patterns):
+        return True
+    return any(form in text for form in _load_vitamin_forms().get(letter, ()))
+
+
 def _word_in(word: str, text: str) -> bool:
     """3글자 이하는 단어 전체로, 그보다 길면 앞 5글자로 찾는다."""
     if len(word) <= 3:
@@ -181,7 +210,11 @@ def is_relevant(paper_title: str, description: str | None, ingredient: str, effe
     # 성분도 제목이나 초록에 나와야 한다. 효능만 같고 다른 성분을 다룬 논문을
     # 이 성분의 근거로 세면 안 된다. 영문 표기가 없는 성분은 영어 논문에서 찾을
     # 수 없으므로 이 검사를 건너뛴다.
-    if ingredient and ingredient.isascii():
+    vitamin = _vitamin_mentioned(ingredient, text) if ingredient else None
+    if vitamin is not None:
+        if not vitamin:
+            return False
+    elif ingredient and ingredient.isascii():
         ingredient_stems = [w[:_STEM_LENGTH] for w in ingredient.lower().split() if len(w) > 3]
         if ingredient_stems and not any(stem in text for stem in ingredient_stems):
             return False

@@ -219,3 +219,15 @@ async def test_조회_실패는_판정_단계에서_UNKNOWN으로_흡수된다()
 def test_키가_없으면_클라이언트를_만들_수_없다():
     with pytest.raises(ValueError, match="LINER_API_KEY"):
         LinerAcademicSearchClient("")
+
+
+def test_비타민은_글자까지_같아야_관련_논문이다():
+    """앞 5글자(vitam)로 찾아 비타민 D 논문이 비타민 B 주장의 근거로 들어왔다(2026-09-18 평가셋)."""
+    assert is_relevant("Vitamin D in prostate cancer", None, "vitamin B complex", "prostate") is False
+    assert is_relevant("Abstract 623: Prostate cancer and B-vitamins", None, "vitamin B complex", "prostate") is True
+    assert is_relevant("Vitamin B12 and prostate health", None, "vitamin B complex", "prostate") is True
+    assert is_relevant("Vitamin D3 supplementation and bone health", None, "vitamin D", "bone health") is True
+    assert is_relevant("Cholecalciferol and bone health", None, "vitamin D", "bone health") is True
+    assert is_relevant("Vitamin C and immune function", None, "vitamin D", "immune function") is False
+    # 비타민이 아닌 성분은 이전처럼 앞 5글자로 찾는다
+    assert is_relevant("Red ginseng and immunity in mice", None, "Korean red ginseng", "immune function") is True
