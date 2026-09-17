@@ -50,6 +50,9 @@ _SYNONYMS = {
     "콜레스테롤": ["중성지질", "혈중 지질", "고지혈증"],
     "기억력": ["치매", "인지기능", "뇌"],
     "체지방": ["다이어트", "체중"],
+    # 2026-09-17 추가: 정답은 "배뇨 기능"·"노화 방지"로, 서비스는 효능 대상 목록의 "요로"·"항산화"로 적은 같은 주장이 어긋났다.
+    "요로": ["배뇨"],
+    "항산화": ["노화 방지", "노화"],
 }
 
 
@@ -88,7 +91,7 @@ def _verified(claims) -> list:
     return picked[:MAX_VERIFIED_CLAIMS]
 
 
-def build_extractor(kind: str, model_name: str, merge: bool = False, two_stage: bool = False):
+def build_extractor(kind: str, model_name: str, merge: bool = False, two_stage: bool = False, samples: int = 1):
     if kind == "rule":
         return RuleBasedClaimExtractor()
     from healthcheck.pipeline.step3_llm import LlmClaimExtractor
@@ -105,7 +108,7 @@ def build_extractor(kind: str, model_name: str, merge: bool = False, two_stage: 
         key = load_settings().liner_api_key
         if not key:
             raise SystemExit("LINER_API_KEY가 없습니다.")
-        return LlmClaimExtractor(CachedModel(LinerExtractionModel(key, reasoning_effort=effort)), merge_rule_claims=merge, two_stage=two_stage)
+        return LlmClaimExtractor(CachedModel(LinerExtractionModel(key, reasoning_effort=effort)), merge_rule_claims=merge, two_stage=two_stage, samples=samples)
     if model_name.startswith("gemini"):
         from healthcheck.adapters.gemini.extraction_model import GeminiExtractionModel
         from healthcheck.config import load_settings
@@ -114,7 +117,7 @@ def build_extractor(kind: str, model_name: str, merge: bool = False, two_stage: 
         name = model_name.split(":", 1)[1] if ":" in model_name else settings.gemini_model
         if not settings.gemini_api_key:
             raise SystemExit("GEMINI_API_KEY가 없습니다.")
-        return LlmClaimExtractor(CachedModel(GeminiExtractionModel(settings.gemini_api_key, model=name)), merge_rule_claims=merge, two_stage=two_stage)
+        return LlmClaimExtractor(CachedModel(GeminiExtractionModel(settings.gemini_api_key, model=name)), merge_rule_claims=merge, two_stage=two_stage, samples=samples)
     raise SystemExit(f"아직 연결하지 않은 모델입니다: {model_name}")
 
 
@@ -134,17 +137,19 @@ class CachedModel:
         self._dir = ROOT / "data" / "extraction_cache"
         self._dir.mkdir(parents=True, exist_ok=True)
 
-    async def extract_json(self, *, instructions: str, document: str, schema: dict, quick: bool = False) -> dict:
+    async def extract_json(self, *, instructions: str, document: str, schema: dict, quick: bool = False, sample: int = 0) -> dict:
         import os
 
         # 같은 입력을 여러 번 부른 결과를 따로 모을 때 MEASURE_SAMPLE을 바꾼다(모델 결과가 매번 달라 흔들림을 재기 위해).
-        sample = os.environ.get("MEASURE_SAMPLE", "0")
+        # 같은 요청을 여러 번 보내 합치는 운영 설정(samples)은 호출 순번마다 다른 응답을 받아야 한다.
+        base = int(os.environ.get("MEASURE_SAMPLE", "0"))
+        sample = str(base + sample)
         speed = "\nquick" if quick else ""
         key = self._hash(f"{self.name}\n{sample}{speed}\n{instructions}\n{document}".encode()).hexdigest()[:32]
         path = self._dir / f"{key}.json"
         if path.is_file():
             return json.loads(path.read_text(encoding="utf-8"))
-        result = await self._inner.extract_json(instructions=instructions, document=document, schema=schema, quick=quick)
+        result = await self._inner.extract_json(instructions=instructions, document=document, schema=schema, quick=quick, sample=sample)
         path.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
         return result
 
@@ -241,11 +246,12 @@ def main() -> int:
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--with-rule", action="store_true", help="언어 모델 주장 뒤에 규칙 기반 주장을 합친다(운영 설정)")
     parser.add_argument("--two-stage", action="store_true", help="식품 목록을 먼저 뽑고 식품마다 주장을 뽑는다")
+    parser.add_argument("--samples", type=int, default=1, help="같은 요청을 동시에 여러 번 보내 주장을 합친다")
     parser.add_argument("--dump-unmatched", help="정답과 맞지 않고 아직 판정하지 않은 추출을 이 파일에 덧붙인다")
     args = parser.parse_args()
     logging.disable(logging.WARNING)
 
-    extractor = build_extractor(args.extractor, args.model, args.with_rule, args.two_stage)
+    extractor = build_extractor(args.extractor, args.model, args.with_rule, args.two_stage, args.samples)
     started = time.monotonic()
     unmatched: list = []
     total = asyncio.run(measure(extractor, args.verbose, unmatched))
@@ -257,7 +263,7 @@ def main() -> int:
         path.write_text(json.dumps(existing, ensure_ascii=False, indent=1), encoding="utf-8")
     elapsed = time.monotonic() - started
     usage = getattr(getattr(extractor, "_model", None), "usage", None)
-    label = args.extractor if args.extractor == "rule" else f"llm/{args.model}" + ("+rule" if args.with_rule else "") + ("+2stage" if args.two_stage else "")
+    label = args.extractor if args.extractor == "rule" else f"llm/{args.model}" + ("+rule" if args.with_rule else "") + ("+2stage" if args.two_stage else "") + (f"×{args.samples}" if args.samples > 1 else "")
     print(f"\n추출기 {label} · 평가셋 {EVAL_PATH.relative_to(ROOT)}")
     print(f"  핵심 재현율   {_ratio(total['core_hit'], total['core'])}")
     print(f"  전체 재현율   {_ratio(total['hit'], total['gold_dict'])}  (사전 밖 성분 주장 {total['gold_outside_dict']}건 제외)")

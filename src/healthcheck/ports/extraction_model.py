@@ -27,7 +27,7 @@ class ExtractionModel(Protocol):
     name: str
 
     async def extract_json(
-        self, *, instructions: str, document: str, schema: dict[str, Any], quick: bool = False
+        self, *, instructions: str, document: str, schema: dict[str, Any], quick: bool = False, sample: int = 0
     ) -> dict[str, Any]:
         """본문은 데이터로만 다루고, schema 형식의 JSON 객체를 돌려준다.
 

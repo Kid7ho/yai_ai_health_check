@@ -274,3 +274,16 @@ def test_함량_설명처럼_효과_표현이_없는_구절은_주장으로_쓰�
     )
     result = validate(out, source)
     assert [v.claim.ingredient for v in result.claims] == ["루테인"]
+
+
+async def test_같은_요청을_여러_번_보내_주장을_합친다():
+    """Liner는 호출마다 뽑는 주장이 달라 여러 번 보내 합치면 놓치는 주장이 줄어든다."""
+    text = "홍삼은 면역력 증진에 도움을 줍니다. 마늘은 혈압을 낮추는 데 좋습니다."
+    replies = iter([
+        output(item("홍삼은 면역력 증진에 도움을 줍니다", "홍삼", "면역력", target="면역력")),
+        output(item("마늘은 혈압을 낮추는 데 좋습니다", "마늘", "혈압", target="혈압")),
+    ])
+    model = FakeExtractionModel(lambda document: next(replies))
+    claim_set = await LlmClaimExtractor(model, samples=2).aextract(text)
+    assert len(model.calls) == 2
+    assert sorted(c.ingredient for c in claim_set.claims) == ["마늘", "홍삼"]

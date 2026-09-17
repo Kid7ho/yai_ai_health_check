@@ -144,7 +144,11 @@ class LlmClaimExtractor:
         prompt_path: Path | str = DEFAULT_PROMPT_PATH,
         merge_rule_claims: bool = False,
         two_stage: bool = False,
+        samples: int = 1,
     ) -> None:
+        # 같은 요청을 동시에 여러 번 보내 주장을 합친다. Liner는 temperature·seed를 적용하지 않아 호출마다
+        # 뽑는 주장이 달라진다. 평가셋에서 1회 66~74%, 3회 합치기 81%였다(2026-09-17). 동시에 보내 대기 시간은 거의 같다.
+        self._samples = max(1, samples)
         # 두 단계 추출: 식품 목록을 먼저 뽑고 그 식품마다 주장을 빠짐없이 뽑게 한다. 호출이 조각마다 두 번이다.
         self._two_stage = two_stage
         self._foods_instructions, self._target_hint = load_two_stage_prompts(prompt_path)
@@ -161,7 +165,7 @@ class LlmClaimExtractor:
     @property
     def cache_namespace(self) -> str:
         """추출 캐시 키 앞에 붙는 값. 모델·지시문·검사 규칙이 바뀌면 이전 추출을 쓰지 않는다."""
-        merged = ("+rule" if self._merge_rule_claims else "") + ("+2stage" if self._two_stage else "")
+        merged = ("+rule" if self._merge_rule_claims else "") + ("+2stage" if self._two_stage else "") + (f"x{self._samples}" if self._samples > 1 else "")
         return f"llm:{self._model.name}{merged}:{self._prompt_version}:{VALIDATOR_VERSION}"
 
     def extract(self, text: str) -> ClaimSet:
@@ -229,12 +233,20 @@ class LlmClaimExtractor:
                     foods = [f.strip() for f in (found.get("foods") or []) if isinstance(f, str) and f.strip() and normalize(f) in source]
                     if foods:
                         instructions = instructions + "\n" + self._target_hint.replace("{식품_목록}", ", ".join(dict.fromkeys(foods))[:500])
-                output = await self._model.extract_json(
-                    instructions=instructions,
-                    # 본문에 끝 표시를 넣어 데이터 구역을 빠져나가려는 시도를 막는다. 검사는 원래 조각으로 한다.
-                    document=f"<본문>\n{part.replace('</본문>', '</ 본문>')}\n</본문>",
-                    schema=SCHEMA,
+                document = f"<본문>\n{part.replace('</본문>', '</ 본문>')}\n</본문>"
+                results = await asyncio.gather(
+                    *(
+                        self._model.extract_json(instructions=instructions, document=document, schema=SCHEMA, sample=i)
+                        for i in range(self._samples)
+                    ),
+                    return_exceptions=True,
                 )
+            outputs = [r for r in results if isinstance(r, dict)]
+            if not outputs:
+                error = next((r for r in results if isinstance(r, ExtractionModelError)), None)
+                raise error or ExtractionModelError("모든 호출이 실패했습니다")
+            # 여러 응답의 주장을 합친다. 중복은 검사기가 (성분, 효능 대상)으로 합친다.
+            output = {"claims": [claim for out in outputs for claim in (out.get("claims") or [])]}
             return self._validator.validate(output, part, offset=offset)
 
         results = await asyncio.gather(*(one(offset, part) for offset, part in chunks(text)))

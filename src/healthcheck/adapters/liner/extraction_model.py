@@ -57,7 +57,7 @@ class LinerExtractionModel:
     def name(self) -> str:
         return f"{MODEL}/{self._effort}"
 
-    async def extract_json(self, *, instructions: str, document: str, schema: dict[str, Any], quick: bool = False) -> dict[str, Any]:
+    async def extract_json(self, *, instructions: str, document: str, schema: dict[str, Any], quick: bool = False, sample: int = 0) -> dict[str, Any]:
         body = {
             "model": MODEL,
             "messages": [

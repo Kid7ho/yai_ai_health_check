@@ -20,7 +20,7 @@ class FakeExtractionModel:
         self._fail = fail
         self.calls: list[str] = []
 
-    async def extract_json(self, *, instructions: str, document: str, schema: dict[str, Any], quick: bool = False) -> dict[str, Any]:
+    async def extract_json(self, *, instructions: str, document: str, schema: dict[str, Any], quick: bool = False, sample: int = 0) -> dict[str, Any]:
         self.calls.append(document)
         if self._fail:
             raise ExtractionModelError("가짜 모델 실패")

@@ -98,6 +98,8 @@ class Settings:
     # 두 단계 추출(식품 목록 → 식품별 주장). 검사 v3(성분이 앞 문맥에 있으면 인정) 뒤에는 한 단계와 재현율이 같고
     # 시간·비용이 두 배라 기본은 끈다(2026-09-17 평가셋: 한 단계 80~85%, 두 단계 80%).
     link_claim_two_stage: bool = False
+    # 같은 요청을 동시에 여러 번 보내 합친다. 평가셋 핵심 재현율: 1회 66~74%, 3회 77~81%, 4회 79~82%(2026-09-17).
+    link_claim_samples: int = 4
     # 팀원 분류 시트. 토큰이 있을 때만 /labeling/{토큰}/ 주소로 연다. 누구나 쓰는 공개 화면이 되지 않게 한다.
     labeling_token: str | None = field(default=None, repr=False)
     labeling_db_path: Path = PROJECT_ROOT / "data" / "labeling.db"
@@ -207,6 +209,7 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         link_claim_extractor=(os.environ.get("LINK_CLAIM_EXTRACTOR") or "rule").strip().lower(),
         liner_reasoning_effort=(os.environ.get("LINER_REASONING_EFFORT") or "low").strip().lower(),
         link_claim_two_stage=_flag(os.environ.get("LINK_CLAIM_TWO_STAGE"), False),
+        link_claim_samples=int(os.environ.get("LINK_CLAIM_SAMPLES") or 4),
         labeling_token=_clean(os.environ.get("LABELING_TOKEN")),
         labeling_db_path=Path(os.environ.get("LABELING_DB_PATH") or PROJECT_ROOT / "data" / "labeling.db"),
         mfds_snapshot_path=Path(

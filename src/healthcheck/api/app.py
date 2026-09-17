@@ -81,11 +81,17 @@ def _build_link_claim_extractor(settings: Settings, live: bool):
             settings.liner_api_key, reasoning_effort=settings.liner_reasoning_effort, timeout=30.0, max_retries=1
         )
         logger.info(
-            "링크 주장 추출: Liner Model API(%s) + 규칙 기반 합치기, 두 단계=%s",
+            "링크 주장 추출: Liner Model API(%s) × %d회 + 규칙 기반 합치기, 두 단계=%s",
             settings.liner_reasoning_effort,
+            settings.link_claim_samples,
             settings.link_claim_two_stage,
         )
-        return LlmClaimExtractor(model, merge_rule_claims=True, two_stage=settings.link_claim_two_stage)
+        return LlmClaimExtractor(
+            model,
+            merge_rule_claims=True,
+            two_stage=settings.link_claim_two_stage,
+            samples=settings.link_claim_samples,
+        )
     if choice == "gemini" and settings.gemini_api_key:
         from healthcheck.adapters.gemini.extraction_model import GeminiExtractionModel
 
