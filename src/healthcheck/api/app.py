@@ -76,7 +76,10 @@ def _build_link_claim_extractor(settings: Settings, live: bool):
     if choice == "liner" and settings.has_liner_key:
         from healthcheck.adapters.liner.extraction_model import LinerExtractionModel
 
-        model = LinerExtractionModel(settings.liner_api_key, reasoning_effort=settings.liner_reasoning_effort)
+        # 평가셋 실측 최대 17초. 30초 안에 답이 없으면 규칙 기반 추출로 대신한다(어르신 대기 시간 상한).
+        model = LinerExtractionModel(
+            settings.liner_api_key, reasoning_effort=settings.liner_reasoning_effort, timeout=30.0, max_retries=1
+        )
         logger.info(
             "링크 주장 추출: Liner Model API(%s) + 규칙 기반 합치기, 두 단계=%s",
             settings.liner_reasoning_effort,

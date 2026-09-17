@@ -16,7 +16,7 @@ primary_region = "nrt"
   # 링크(유튜브·기사) 본문 주장 추출: Liner Model API + 규칙 기반 합치기(2026-09-17 A안).
   # 직접 붙여 넣은 글은 규칙 기반만 쓴다(Liner 약관 5.8 민감정보 조항, 법률 검토 전).
   LINK_CLAIM_EXTRACTOR = "liner"
-  LINER_REASONING_EFFORT = "medium"
+  LINER_REASONING_EFFORT = "low"
   # 판정 기록과 식약처 사본은 볼륨에 둔다. 컨테이너 파일시스템은 배포할 때마다 초기화된다.
   DATABASE_PATH = "/data/healthcheck.db"
   MFDS_SNAPSHOT_PATH = "/data/mfds_i0040.json"

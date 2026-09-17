@@ -54,6 +54,8 @@ MAX_CLAIMS = 12
 _PHONE = re.compile(r"(?<!\d)0\d{1,2}[-.\s]?\d{3,4}[-.\s]?\d{4}(?!\d)")
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
 
+# 출력 형식(지시문 p4). 판정에 쓰지 않던 칸(영문 이름, 효능 문구, 주장 종류, 광고 표현)을 뺐다.
+# 이전 형식은 응답 JSON이 중앙값 2,750자였고 그중 약 40%가 이 칸이었다. 출력이 길수록 모델 응답이 늦다.
 SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -64,27 +66,15 @@ SCHEMA: dict[str, Any] = {
                 "properties": {
                     "quote": {"type": "string"},
                     "ingredient_text": {"type": "string"},
-                    "ingredient_en": {"type": "string"},
-                    "effect_text": {"type": "string"},
                     "effect_target": {"type": "string"},
-                    "claim_kind": {"type": "string", "enum": ["효능", "질병치료", "질병예방"]},
                     "voice": {"type": "string", "enum": ["주장", "인용", "부정", "질문"]},
                 },
-                "required": ["quote", "ingredient_text", "ingredient_en", "effect_text", "effect_target", "claim_kind", "voice"],
+                "required": ["quote", "ingredient_text", "effect_target", "voice"],
                 "additionalProperties": False,
             },
         },
-        "expressions": {
-            "type": "object",
-            "properties": {
-                "medicine_replacement": {"type": "array", "items": {"type": "string"}},
-                "ad_like": {"type": "array", "items": {"type": "string"}},
-            },
-            "required": ["medicine_replacement", "ad_like"],
-            "additionalProperties": False,
-        },
     },
-    "required": ["claims", "expressions"],
+    "required": ["claims"],
     # 출력 형식 강제(strict)는 정의하지 않은 칸을 허용하지 않아야 한다. 모델이 평가·요약 칸을 덧붙일 수 없다.
     "additionalProperties": False,
 }

@@ -93,7 +93,8 @@ class Settings:
     callback_probe_enabled: bool = False
     # 링크 본문 주장 추출기. rule(규칙 기반) | liner(Liner Model API + 규칙 합치기) | gemini
     link_claim_extractor: str = "rule"
-    liner_reasoning_effort: str = "medium"
+    # 짧은 출력 형식(지시문 p4)에서 low가 medium보다 약 3배 빠르고 재현율은 비슷했다(2026-09-17 평가셋).
+    liner_reasoning_effort: str = "low"
     # 두 단계 추출(식품 목록 → 식품별 주장). 검사 v3(성분이 앞 문맥에 있으면 인정) 뒤에는 한 단계와 재현율이 같고
     # 시간·비용이 두 배라 기본은 끈다(2026-09-17 평가셋: 한 단계 80~85%, 두 단계 80%).
     link_claim_two_stage: bool = False
@@ -204,7 +205,7 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         public_base_url=_public_url(os.environ.get("PUBLIC_BASE_URL")),
         callback_probe_enabled=_flag(os.environ.get("CALLBACK_PROBE_ENABLED"), False),
         link_claim_extractor=(os.environ.get("LINK_CLAIM_EXTRACTOR") or "rule").strip().lower(),
-        liner_reasoning_effort=(os.environ.get("LINER_REASONING_EFFORT") or "medium").strip().lower(),
+        liner_reasoning_effort=(os.environ.get("LINER_REASONING_EFFORT") or "low").strip().lower(),
         link_claim_two_stage=_flag(os.environ.get("LINK_CLAIM_TWO_STAGE"), False),
         labeling_token=_clean(os.environ.get("LABELING_TOKEN")),
         labeling_db_path=Path(os.environ.get("LABELING_DB_PATH") or PROJECT_ROOT / "data" / "labeling.db"),
