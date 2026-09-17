@@ -123,8 +123,8 @@ def excerpt(abstract: str, claim) -> dict:
     # 화면 강조용. 'vitamin d'의 d처럼 짧은 조각은 아무 단어에나 걸리므로 뺀다.
     terms = sorted(
         {t for t in ingredient_terms if len(t) >= 3} | {t for terms in effect_sets for t in terms if len(t) >= 3},
-        key=len,
-        reverse=True,
+        # 길이가 같은 단어는 글자순으로 둔다. 집합 순서가 실행마다 달라 다시 만들 때마다 시트 파일이 바뀌었다.
+        key=lambda term: (-len(term), term),
     )
     picked = [sentences[i] for i in chosen]
     return {"sentences": picked, "ko": [_translations().get(s, "") for s in picked], "terms": terms, "basis": basis}
