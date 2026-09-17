@@ -22,7 +22,7 @@ from typing import Any
 
 from healthcheck.domain.types import Claim
 
-VALIDATOR_VERSION = "v1"
+VALIDATOR_VERSION = "v2"
 QUOTE_MAX = 120
 VOICES = ("주장", "인용", "부정", "질문")
 KINDS = ("효능", "질병치료", "질병예방")
@@ -33,6 +33,8 @@ KINDS = ("효능", "질병치료", "질병예방")
 _PERSON = re.compile(r"(?<![가-힣])[가-힣]{2,3} (?:원장|교수|박사|기자)(?:님)?(?=[은는이가의께도과와]|\s|[,.!?)]|$)")
 # 업체·판매를 가리키는 말. 주장 구절에 섞이면 특정 업체 서술일 수 있어 버린다.
 _BUSINESS = re.compile(r"회사|업체|기업|상사|판매자|판매처|쇼핑몰|㈜|\(주\)|주식회사|대리점")
+# 이름이 없는 대상. "이 음료가 암을 없앤다"는 무엇에 대한 주장인지 검증할 수 없다.
+_GENERIC_INGREDIENT = re.compile(r"^(?:이|그|저)?\s*(?:것|거|걸|이것|이거|음료|음식|식품|제품|영양제|약|성분|재료|이런\s*것|이런\s*걸)$")
 _QUOTE_CHARS = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"', "「": "'", "」": "'"})
 
 
@@ -110,6 +112,9 @@ class ClaimValidator:
             if voice != "주장":
                 result.non_asserted_quotes.append(quote)
                 result.rejected.append(Rejection(quote, f"voice={voice}"))
+                continue
+            if _GENERIC_INGREDIENT.match(ingredient_text):
+                result.rejected.append(Rejection(quote, "이름 없는 대상"))
                 continue
             if self._mentions_business_or_person(quote):
                 result.rejected.append(Rejection(quote, "업체·브랜드·인물 서술 포함"))

@@ -71,6 +71,7 @@ SCHEMA: dict[str, Any] = {
                     "voice": {"type": "string", "enum": ["주장", "인용", "부정", "질문"]},
                 },
                 "required": ["quote", "ingredient_text", "ingredient_en", "effect_text", "effect_target", "claim_kind", "voice"],
+                "additionalProperties": False,
             },
         },
         "expressions": {
@@ -80,9 +81,12 @@ SCHEMA: dict[str, Any] = {
                 "ad_like": {"type": "array", "items": {"type": "string"}},
             },
             "required": ["medicine_replacement", "ad_like"],
+            "additionalProperties": False,
         },
     },
     "required": ["claims", "expressions"],
+    # 출력 형식 강제(strict)는 정의하지 않은 칸을 허용하지 않아야 한다. 모델이 평가·요약 칸을 덧붙일 수 없다.
+    "additionalProperties": False,
 }
 
 

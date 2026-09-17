@@ -24,6 +24,7 @@ import asyncio
 import json
 import logging
 import sys
+import time
 from collections import Counter
 from pathlib import Path
 
@@ -60,8 +61,14 @@ def _targets(text: str, effect_targets: tuple[str, ...]) -> set[str]:
     return found
 
 
+def _same_ingredient(gold: str, service: str) -> bool:
+    """사전 밖 성분은 표기가 조금씩 달라("등푸른생선", "등푸른 생선") 한쪽이 다른 쪽을 포함하면 같다고 본다."""
+    a, b = gold.replace(" ", ""), service.replace(" ", "")
+    return a == b or (len(a) >= 2 and len(b) >= 2 and (a in b or b in a))
+
+
 def _matches(gold: dict, claim, effect_targets: tuple[str, ...]) -> bool:
-    if gold["ingredient"] != claim.ingredient:
+    if not _same_ingredient(gold["ingredient"], claim.ingredient):
         return False
     gold_targets = _targets(gold["effect"], effect_targets)
     claim_targets = _targets(claim.claimed_effect, effect_targets)
@@ -90,7 +97,46 @@ def build_extractor(kind: str, model_name: str):
         from healthcheck.adapters.fake.extraction_model import FakeExtractionModel
 
         return LlmClaimExtractor(FakeExtractionModel())
+    if model_name.startswith("liner"):
+        from healthcheck.adapters.liner.extraction_model import LinerExtractionModel
+        from healthcheck.config import load_settings
+
+        effort = model_name.split(":", 1)[1] if ":" in model_name else "low"
+        key = load_settings().liner_api_key
+        if not key:
+            raise SystemExit("LINER_API_KEY가 없습니다.")
+        return LlmClaimExtractor(CachedModel(LinerExtractionModel(key, reasoning_effort=effort)))
     raise SystemExit(f"아직 연결하지 않은 모델입니다: {model_name}")
+
+
+class CachedModel:
+    """측정용 모델 응답 저장. 검사·순서 규칙만 바꿔 다시 잴 때 같은 응답으로 돈을 쓰지 않고 잰다.
+
+    저장 위치는 data/extraction_cache/(git에 올리지 않음). 지시문을 바꾸면 키가 달라져 새로 부른다.
+    """
+
+    def __init__(self, inner) -> None:
+        import hashlib
+
+        self._inner = inner
+        self._hash = hashlib.sha256
+        self.name = inner.name
+        self.usage = getattr(inner, "usage", None)
+        self._dir = ROOT / "data" / "extraction_cache"
+        self._dir.mkdir(parents=True, exist_ok=True)
+
+    async def extract_json(self, *, instructions: str, document: str, schema: dict) -> dict:
+        import os
+
+        # 같은 입력을 여러 번 부른 결과를 따로 모을 때 MEASURE_SAMPLE을 바꾼다(모델 결과가 매번 달라 흔들림을 재기 위해).
+        sample = os.environ.get("MEASURE_SAMPLE", "0")
+        key = self._hash(f"{self.name}\n{sample}\n{instructions}\n{document}".encode()).hexdigest()[:32]
+        path = self._dir / f"{key}.json"
+        if path.is_file():
+            return json.loads(path.read_text(encoding="utf-8"))
+        result = await self._inner.extract_json(instructions=instructions, document=document, schema=schema)
+        path.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
+        return result
 
 
 async def measure(extractor, verbose: bool) -> Counter:
@@ -99,10 +145,17 @@ async def measure(extractor, verbose: bool) -> Counter:
     contents = json.loads(CONTENTS_PATH.read_text(encoding="utf-8"))
     total: Counter = Counter()
 
-    for case in evaluation["cases"]:
+    # 언어 모델은 글 여러 건을 동시에 보낸다(Liner Model API 초당 10건 제한 안).
+    semaphore = asyncio.Semaphore(4)
+
+    async def extract(case):
         text = contents[case["content_key"]]["text"]
         aextract = getattr(extractor, "aextract", None)
-        claim_set = await aextract(text) if aextract else extractor.extract(text)
+        async with semaphore:
+            return await aextract(text) if aextract else extractor.extract(text)
+
+    claim_sets = await asyncio.gather(*(extract(case) for case in evaluation["cases"]))
+    for case, claim_set in zip(evaluation["cases"], claim_sets):
         claims = list(claim_set.claims)
         verified = _verified(claims)
 
@@ -143,12 +196,16 @@ def _ratio(a: int, b: int) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description="주장 추출 정확도를 잰다.")
     parser.add_argument("--extractor", choices=["rule", "llm"], default="rule")
-    parser.add_argument("--model", default="fake", help="--extractor llm일 때 모델 (fake)")
+    parser.add_argument("--model", default="fake", help="--extractor llm일 때 모델 (fake, liner:low, liner:medium)")
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
     logging.disable(logging.WARNING)
 
-    total = asyncio.run(measure(build_extractor(args.extractor, args.model), args.verbose))
+    extractor = build_extractor(args.extractor, args.model)
+    started = time.monotonic()
+    total = asyncio.run(measure(extractor, args.verbose))
+    elapsed = time.monotonic() - started
+    usage = getattr(getattr(extractor, "_model", None), "usage", None)
     label = args.extractor if args.extractor == "rule" else f"llm/{args.model}"
     print(f"\n추출기 {label} · 평가셋 {EVAL_PATH.relative_to(ROOT)}")
     print(f"  핵심 재현율   {_ratio(total['core_hit'], total['core'])}")
@@ -158,6 +215,11 @@ def main() -> int:
     for flag, name in (("disease_cure", "질병 치료"), ("prohibited_ad", "금지 광고"), ("replace_medicine", "약 대체")):
         tp, fn, fp = total[f"{flag}_tp"], total[f"{flag}_fn"], total[f"{flag}_fp"]
         print(f"  {name:6} 적중 {tp} 놓침 {fn} 오탐 {fp}")
+    print(f"  시간 {elapsed:.0f}초")
+    if usage:
+        # Liner Model API 단가(2026-09-17 문서): 입력 100만 토큰당 $1, 출력(추론 포함) $6
+        cost = usage["prompt_tokens"] / 1e6 * 1 + usage["completion_tokens"] / 1e6 * 6
+        print(f"  호출 {usage['calls']}회 · 입력 {usage['prompt_tokens']:,} · 출력 {usage['completion_tokens']:,} 토큰 · 약 ${cost:.3f}")
     return 0
 
 
