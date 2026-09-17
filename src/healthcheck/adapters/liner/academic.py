@@ -83,6 +83,12 @@ def _load_title_expressions(path: Path | str = DEFAULT_ALIASES_PATH) -> dict[str
     return {str(k).lower(): tuple(str(v).lower() for v in values or ()) for k, values in table.items()}
 
 
+@lru_cache(maxsize=2)
+def _load_alternative_names(path: Path | str = DEFAULT_ALIASES_PATH) -> dict[str, str]:
+    raw = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+    return {str(k): str(v) for k, v in (raw.get("영문명_대체") or {}).items()}
+
+
 def _word_in(word: str, text: str) -> bool:
     """3글자 이하는 단어 전체로, 그보다 길면 앞 5글자로 찾는다."""
     if len(word) <= 3:
@@ -275,6 +281,21 @@ class LinerAcademicSearchClient:
             for paper in all_papers
             if is_relevant(paper.title, paper.description, ingredient, effect)
         )
+
+        # 관련 논문이 0편이면 대체 영문 표기로 한 번 더 찾는다. 수식어가 붙은 영문명("Korean red ginseng")이
+        # 품질·성분 논문으로 쏠려 효능 논문을 놓쳤다. 대체 검색이 실패해도 원래 결과(0편)를 그대로 쓴다.
+        alternative = _load_alternative_names().get(claim.ingredient)
+        if not papers and effect and alternative and alternative != ingredient:
+            alt_query = f"{alternative} {effect}"
+            try:
+                alt_data = await self._post({**payload, "query": alt_query}, query=alt_query)
+            except AcademicSearchError as error:
+                logger.warning("대체 학술 검색 실패 query=%r: %s", alt_query, error)
+            else:
+                alt_papers = tuple(_to_paper(item) for item in alt_data.get("results") or [] if isinstance(item, dict))
+                papers = tuple(p for p in alt_papers if is_relevant(p.title, p.description, alternative, effect))
+                all_papers = all_papers + alt_papers
+                query = f"{query} → {alt_query}"
 
         self._cache[cache_key] = (time.monotonic(), papers)
         logger.info(

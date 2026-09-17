@@ -77,7 +77,8 @@ async def test_요청_시작_간격을_초당_요청_수에_맞춘다():
 
     client = client_with(handler, max_qps=20, cache_ttl=0)  # 간격 0.05초
     claims = [
-        Claim(ingredient="홍삼", claimed_effect=f"면역력 {i}", intensity="SUGGESTIVE", span=(0, 1))
+        # 대체 영문 표기가 없는 성분을 쓴다. 홍삼은 관련 논문 0편이면 대체 검색을 한 번 더 보낸다.
+        Claim(ingredient="루테인", claimed_effect=f"눈 {i}", intensity="SUGGESTIVE", span=(0, 1))
         for i in range(4)
     ]
     await asyncio.gather(*(client.search(claim, max_results=i + 1) for i, claim in enumerate(claims)))
@@ -159,3 +160,23 @@ def test_파일_목록처럼_보이는_결과는_근거가_아니다():
     """실측에서 "vitamin c immunity pdf"가 뒷받침 논문으로 세어졌다."""
     assert is_relevant("vitamin c immunity pdf", None, "vitamin C", "immune function") is False
     assert is_relevant("Vitamin C and Immune Function", None, "vitamin C", "immune function") is True
+
+
+async def test_관련_논문이_0편이면_대체_영문_표기로_한_번_더_찾는다():
+    """운영 실측: 'Korean red ginseng fatigue'는 품질·성분 논문만 나와 관련 0편, 'red ginseng fatigue'는 4편이었다."""
+    queries: list[str] = []
+
+    def handler(request):
+        import json as _json
+
+        query = _json.loads(request.content)["query"]
+        queries.append(query)
+        if query.startswith("red ginseng"):
+            return httpx.Response(200, json={"results": [{"title": "Anti-fatigue effects of red ginseng", "url": "https://x", "description": "red ginseng reduced fatigue"}]})
+        return httpx.Response(200, json={"results": [{"title": "Quality of Korean red ginseng", "url": "https://y", "description": "ginsenoside content"}]})
+
+    papers = await client_with(handler, max_qps=1000, cache_ttl=0).search(
+        Claim(ingredient="홍삼", claimed_effect="피로", intensity="SUGGESTIVE", span=(0, 1))
+    )
+    assert queries == ["Korean red ginseng fatigue", "red ginseng fatigue"]
+    assert [p.title for p in papers] == ["Anti-fatigue effects of red ginseng"]
