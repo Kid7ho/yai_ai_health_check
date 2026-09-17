@@ -23,7 +23,7 @@ from typing import Any
 from healthcheck.domain.types import Claim
 from healthcheck.pipeline.step3_claims import _effect_matches
 
-VALIDATOR_VERSION = "v6"
+VALIDATOR_VERSION = "v7"
 QUOTE_MAX = 120
 # 성분 이름이 구절 바로 앞 문맥에 있으면 인정하는 거리(정규화 글자 수). "루테인은 … 시력 저하를 막아줘요"처럼
 # 모델이 효능 부분만 옮기면 성분 이름이 구절 밖에 남아 올바른 주장이 버려졌다(운영 실측 10건 중 9건).
@@ -155,11 +155,13 @@ class ClaimValidator:
 
             ingredient = self._standard_ingredient(ingredient_text)
             target = _text(item.get("effect_target")) or "기타"
-            claimed_effect = effect_text
-            # 효능 대상 단어가 효능 표현에 없으면 식약처 일치도와 학술 검색어를 만들 수 없다.
-            # 모델이 목록에서 고른 효능 대상을 괄호로 붙인다. 목록 밖 값은 붙이지 않는다.
-            if target != "기타" and target in self._patterns.effect_targets and target not in claimed_effect:
-                claimed_effect = f"{claimed_effect} ({target})"
+            # 식약처 일치도 비교와 학술 검색어는 claimed_effect에서 효능 대상 단어를 찾는다. 원문 구절 전체를 넣으면
+            # "면역기능을 유지"가 인정 문구의 "면역력"과 맞지 않거나, 효능이 여럿 섞여 검색이 흐려졌다(운영 실측:
+            # 홍삼 블로그가 미인정·논문 0편으로 '조심하세요'). 목록에서 고른 효능 대상 하나만 쓴다. 구절은 statement로 보여 준다.
+            if target != "기타" and target in self._patterns.effect_targets:
+                claimed_effect = target
+            else:
+                claimed_effect = effect_text[:30]
             key = (ingredient, target if target != "기타" else normalize(effect_text))
             if key in seen:
                 result.rejected.append(Rejection(quote, "중복"))

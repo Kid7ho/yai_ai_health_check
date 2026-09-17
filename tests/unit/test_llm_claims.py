@@ -78,7 +78,8 @@ def test_효능_대상이_표현에_없으면_목록에서_고른_대상을_붙�
     """'시력 저하를 막아줘요'는 효능 대상 단어가 없어 식약처 일치도와 검색어를 만들 수 없었다."""
     source = "루테인은 황반 색소 밀도를 유지해 시력 저하를 막아줘요."
     result = validate(output(item("루테인은 황반 색소 밀도를 유지해 시력 저하를 막아줘요", "루테인", "시력 저하를 막아줘요", target="눈")), source)
-    assert result.claims[0].claim.claimed_effect == "시력 저하를 막아줘요 (눈)"
+    # 비교·검색에는 효능 대상 하나만 쓰고, 원문 구절은 statement로 보여 준다.
+    assert result.claims[0].claim.claimed_effect == "눈"
 
 
 # ── 업체·인물 서술 ─────────────────────────────────────────────
