@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """분류 시트 사례를 만든다.
 
-labeling/candidates.yaml의 문장을 실제 파이프라인(주장 추출 → 식약처 → Liner)으로 돌려
+labeling/candidates.yaml의 문장을 실제 파이프라인(주장 추출 → 식약처 → Liner, 논문 입장은 운영과 같은 언어 모델 분류)으로 돌려
 판정표 16칸(국가 인정 4줄 × 논문 근거 등급 4열)으로 나누고, 칸마다 골고루 뽑는다.
 
 학술·식약처 응답은 labeling/recordings.json에 녹화한다. 팀원 다섯 명이 같은 근거를 보고
@@ -248,9 +248,10 @@ async def run(mode: str) -> list[dict]:
             liner_key=settings.liner_api_key or "",
             mfds_key=settings.mfds_api_key or "",
             reuse_recorded=True,
+            stance_model=True,
         )
     else:
-        orchestrator, transport = replay_orchestrator(RECORDINGS, "replay")
+        orchestrator, transport = replay_orchestrator(RECORDINGS, "replay", stance_model=True)
 
     store = json.loads(LINK_CONTENTS.read_text(encoding="utf-8")) if LINK_CONTENTS.is_file() else {}
     live_transcript = live_article = None
@@ -272,6 +273,9 @@ async def run(mode: str) -> list[dict]:
             print(f"⚠ 건너뜀 {text}: {type(error).__name__} {str(error)[:120]}")
             continue
         results.append({"group": group, "input": text, "result": result})
+    if transport.missing:
+        # 입장 분류 호출이 녹화에 없으면 표현 목록 분류로 대신한 채 칸이 나뉜다. 조용히 섞이지 않게 멈춘다.
+        raise SystemExit(f"녹화에 없는 요청 {len(transport.missing)}건. 19시~9시에 --mode record로 다시 녹화하세요.")
     if mode == "record":
         transport.save()
         LINK_CONTENTS.write_text(json.dumps(store, ensure_ascii=False, indent=1), encoding="utf-8")

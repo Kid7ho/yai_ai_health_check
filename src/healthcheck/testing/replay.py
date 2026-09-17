@@ -49,6 +49,9 @@ class RecordReplayTransport(httpx.AsyncBaseTransport):
             raise FileNotFoundError(f"녹화 파일이 없습니다: {self._path}")
         self._inner = httpx.AsyncHTTPTransport() if mode == "record" else None
         self.used: set[str] = set()
+        # 재생 중 녹화에 없던 요청. 언어 모델 입장 분류는 호출이 실패하면 표현 목록 분류로 조용히 대신하므로,
+        # 부르는 쪽이 이 목록으로 녹화 누락을 확인해야 한다.
+        self.missing: set[str] = set()
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
         key = request_key(request)
@@ -56,6 +59,7 @@ class RecordReplayTransport(httpx.AsyncBaseTransport):
         if self._mode == "replay":
             entry = self._entries.get(key)
             if entry is None:
+                self.missing.add(key)
                 raise ReplayMissingError(f"녹화에 없는 요청입니다. 다시 녹화하세요: {key}")
             return httpx.Response(
                 entry["status"],
@@ -75,6 +79,12 @@ class RecordReplayTransport(httpx.AsyncBaseTransport):
 
         response = await self._inner.handle_async_request(request)
         body = await response.aread()
+        # 호출 제한(429)과 서버 오류는 녹화하지 않는다. 녹화하면 일시적인 실패가 재생마다 굳는다.
+        if response.status_code == 429 or response.status_code >= 500:
+            headers = {"content-type": response.headers.get("content-type", "application/json")}
+            if "retry-after" in response.headers:
+                headers["retry-after"] = response.headers["retry-after"]
+            return httpx.Response(response.status_code, content=body, headers=headers, request=request)
         self._entries[key] = {
             "status": response.status_code,
             "content_type": response.headers.get("content-type", "application/json"),
@@ -102,8 +112,13 @@ def replay_orchestrator(
     liner_key: str = "replay",
     mfds_key: str = "replay",
     reuse_recorded: bool = False,
+    stance_model: bool = False,
 ):
-    """골든셋용 조립. 규칙표·주장 추출·판정은 실제 것을 쓰고 학술·식약처만 녹화 응답을 쓴다."""
+    """골든셋용 조립. 규칙표·주장 추출·판정은 실제 것을 쓰고 학술·식약처만 녹화 응답을 쓴다.
+
+    stance_model=True면 논문 입장 분류도 운영과 같은 언어 모델 분류(반박 확인 포함)를 쓰고 그 응답도 녹화한다.
+    분류 시트가 운영 서비스와 같은 입장 분류로 칸을 나누게 하려는 것이다. 골든셋은 표현 목록 분류 그대로 둔다.
+    """
     from healthcheck.adapters.liner.academic import LinerAcademicSearchClient
     from healthcheck.adapters.mfds.foodsafetykorea import FoodSafetyKoreaDataSource
     from healthcheck.api.app import build_fake_orchestrator
@@ -111,9 +126,32 @@ def replay_orchestrator(
     transport = RecordReplayTransport(path, mode, reuse_recorded=reuse_recorded)
     client = httpx.AsyncClient(transport=transport)
     orchestrator = build_fake_orchestrator()
+    stance_classifier = None
+    if stance_model:
+        from healthcheck.adapters.liner.extraction_model import LinerExtractionModel
+        from healthcheck.config import Settings
+        from healthcheck.pipeline.paper_stance import LlmStanceClassifier
+
+        defaults = Settings()
+        retries = 3 if mode == "record" else 0
+        stance_classifier = LlmStanceClassifier(
+            LinerExtractionModel(
+                liner_key, reasoning_effort=defaults.paper_stance_effort, client=client, timeout=60.0, max_retries=retries
+            ),
+            verifier=LinerExtractionModel(
+                liner_key,
+                reasoning_effort=defaults.paper_stance_verify_effort,
+                client=client,
+                timeout=60.0,
+                max_retries=retries,
+            ),
+        )
     # 녹화 재생은 호출 간격을 둘 필요가 없다.
     orchestrator.academic = LinerAcademicSearchClient(
-        liner_key, client=client, max_qps=1000.0 if mode == "replay" else 2.0
+        liner_key,
+        client=client,
+        max_qps=1000.0 if mode == "replay" else 2.0,
+        stance_classifier=stance_classifier,
     )
     # 사본을 쓰지 않고 API 응답을 녹화한다. 사본 날짜에 따라 결과가 달라지지 않게 한다.
     orchestrator.mfds = FoodSafetyKoreaDataSource(mfds_key, client=client, snapshot_path=None)
