@@ -54,7 +54,7 @@ class GeminiExtractionModel:
     def name(self) -> str:
         return self._model
 
-    async def extract_json(self, *, instructions: str, document: str, schema: dict[str, Any]) -> dict[str, Any]:
+    async def extract_json(self, *, instructions: str, document: str, schema: dict[str, Any], quick: bool = False) -> dict[str, Any]:
         body = {
             "systemInstruction": {"parts": [{"text": instructions}]},
             "contents": [{"role": "user", "parts": [{"text": document}]}],

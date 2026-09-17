@@ -22,8 +22,12 @@ from typing import Any
 
 from healthcheck.domain.types import Claim
 
-VALIDATOR_VERSION = "v2"
+VALIDATOR_VERSION = "v3"
 QUOTE_MAX = 120
+# 성분 이름이 구절 바로 앞 문맥에 있으면 인정하는 거리(정규화 글자 수). "루테인은 … 시력 저하를 막아줘요"처럼
+# 모델이 효능 부분만 옮기면 성분 이름이 구절 밖에 남아 올바른 주장이 버려졌다(운영 실측 10건 중 9건).
+INGREDIENT_LOOKBACK = 100
+STATEMENT_MAX = 160
 VOICES = ("주장", "인용", "부정", "질문")
 KINDS = ("효능", "질병치료", "질병예방")
 
@@ -103,9 +107,19 @@ class ClaimValidator:
                 result.rejected.append(Rejection(quote, "원문에 없는 구절"))
                 continue
             normalized_quote = normalize(quote)
-            if normalize(ingredient_text) not in normalized_quote or normalize(effect_text) not in normalized_quote:
-                result.rejected.append(Rejection(quote, "성분·효능이 구절 안에 없음"))
+            normalized_ingredient = normalize(ingredient_text)
+            if normalize(effect_text) not in normalized_quote:
+                result.rejected.append(Rejection(quote, "효능이 구절 안에 없음"))
                 continue
+            if normalized_ingredient not in normalized_quote:
+                # 성분 이름이 바로 앞 문맥에 있으면 그 자리부터를 주장 구절로 넓힌다.
+                window_start = max(0, position - INGREDIENT_LOOKBACK)
+                found = normalized_source.rfind(normalized_ingredient, window_start, position)
+                if found < 0 or (position + len(normalized_quote)) - found > STATEMENT_MAX:
+                    result.rejected.append(Rejection(quote, "성분이 구절과 앞 문맥에 없음"))
+                    continue
+                normalized_quote = normalized_source[found : position + len(normalized_quote)]
+                position = found
             if voice not in VOICES or kind not in KINDS:
                 result.rejected.append(Rejection(quote, "분류 값이 목록 밖"))
                 continue
@@ -116,7 +130,8 @@ class ClaimValidator:
             if _GENERIC_INGREDIENT.match(ingredient_text):
                 result.rejected.append(Rejection(quote, "이름 없는 대상"))
                 continue
-            if self._mentions_business_or_person(quote):
+            display = source[index_map[position] : index_map[position + len(normalized_quote) - 1] + 1]
+            if self._mentions_business_or_person(display):
                 result.rejected.append(Rejection(quote, "업체·브랜드·인물 서술 포함"))
                 continue
 

@@ -26,8 +26,12 @@ class ExtractionModel(Protocol):
     # 로그와 추출 캐시 키에 남기는 모델 식별자. 예: "gemini-3.5-flash-lite"
     name: str
 
-    async def extract_json(self, *, instructions: str, document: str, schema: dict[str, Any]) -> dict[str, Any]:
+    async def extract_json(
+        self, *, instructions: str, document: str, schema: dict[str, Any], quick: bool = False
+    ) -> dict[str, Any]:
         """본문은 데이터로만 다루고, schema 형식의 JSON 객체를 돌려준다.
+
+        quick=True는 식품 이름 목록처럼 가벼운 일이다. 공급자가 지원하면 추론을 줄여 빨리 답한다.
 
         실패하면 ExtractionModelError를 올린다.
         """

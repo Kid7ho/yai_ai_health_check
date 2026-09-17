@@ -55,6 +55,16 @@ def test_성분이나_효능이_구절_밖이면_버린다():
     assert result.claims == []
 
 
+def test_성분_이름이_바로_앞_문맥에_있으면_구절을_넓혀_인정한다():
+    """운영 실측: 모델이 '시력 저하를 막아줘요'만 옮겨 루테인 주장이 버려졌다."""
+    source = "루테인은 황반 중심부의 색소 밀도를 유지해 시력 저하를 막아줘요."
+    result = validate(output(item("시력 저하를 막아줘요", "루테인", "시력 저하를 막아줘요", target="눈")), source)
+    assert len(result.claims) == 1
+    assert result.claims[0].claim.statement == "루테인은 황반 중심부의 색소 밀도를 유지해 시력 저하를 막아줘요"
+    far = "루테인은 좋은 성분입니다. " + "가" * 120 + " 시력 저하를 막아줘요."
+    assert validate(output(item("시력 저하를 막아줘요", "루테인", "시력 저하를 막아줘요")), far).claims == []
+
+
 def test_띄어쓰기와_따옴표_모양이_달라도_원문으로_인정하고_원문_표기를_보여_준다():
     source = "블루베리는  ‘눈 건강’에 도움이 될 수 있어요."
     result = validate(output(item("블루베리는 '눈 건강'에 도움이 될 수 있어요", "블루베리", "눈 건강", target="눈")), source)

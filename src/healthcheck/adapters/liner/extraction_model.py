@@ -57,7 +57,7 @@ class LinerExtractionModel:
     def name(self) -> str:
         return f"{MODEL}/{self._effort}"
 
-    async def extract_json(self, *, instructions: str, document: str, schema: dict[str, Any]) -> dict[str, Any]:
+    async def extract_json(self, *, instructions: str, document: str, schema: dict[str, Any], quick: bool = False) -> dict[str, Any]:
         body = {
             "model": MODEL,
             "messages": [
@@ -68,7 +68,8 @@ class LinerExtractionModel:
                 "type": "json_schema",
                 "json_schema": {"name": "claim_extraction", "strict": True, "schema": schema},
             },
-            "reasoning_effort": self._effort,
+            # 식품 이름 목록(quick)은 추론을 low로 줄인다. 운영 실측에서 두 단계 추출이 44초 걸렸다.
+            "reasoning_effort": "low" if quick and self._effort not in ("none", "low") else self._effort,
         }
         client = self._ensure_client()
         headers = {"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json"}

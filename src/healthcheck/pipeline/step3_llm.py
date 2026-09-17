@@ -232,6 +232,7 @@ class LlmClaimExtractor:
                         instructions=self._foods_instructions,
                         document=f"<본문>\n{part.replace('</본문>', '</ 본문>')}\n</본문>",
                         schema=FOODS_SCHEMA,
+                        quick=True,
                     )
                     source = normalize(part)
                     # 원문에 있는 이름만 쓴다. 모델이 지어낸 이름을 2단계 지시에 넣지 않는다.

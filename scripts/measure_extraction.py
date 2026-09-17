@@ -134,16 +134,17 @@ class CachedModel:
         self._dir = ROOT / "data" / "extraction_cache"
         self._dir.mkdir(parents=True, exist_ok=True)
 
-    async def extract_json(self, *, instructions: str, document: str, schema: dict) -> dict:
+    async def extract_json(self, *, instructions: str, document: str, schema: dict, quick: bool = False) -> dict:
         import os
 
         # 같은 입력을 여러 번 부른 결과를 따로 모을 때 MEASURE_SAMPLE을 바꾼다(모델 결과가 매번 달라 흔들림을 재기 위해).
         sample = os.environ.get("MEASURE_SAMPLE", "0")
-        key = self._hash(f"{self.name}\n{sample}\n{instructions}\n{document}".encode()).hexdigest()[:32]
+        speed = "\nquick" if quick else ""
+        key = self._hash(f"{self.name}\n{sample}{speed}\n{instructions}\n{document}".encode()).hexdigest()[:32]
         path = self._dir / f"{key}.json"
         if path.is_file():
             return json.loads(path.read_text(encoding="utf-8"))
-        result = await self._inner.extract_json(instructions=instructions, document=document, schema=schema)
+        result = await self._inner.extract_json(instructions=instructions, document=document, schema=schema, quick=quick)
         path.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
         return result
 
@@ -168,6 +169,7 @@ async def measure(extractor, verbose: bool, unmatched: list | None = None) -> Co
     contents = json.loads(CONTENTS_PATH.read_text(encoding="utf-8"))
     total: Counter = Counter()
 
+    durations: list[float] = []
     # 언어 모델은 글 여러 건을 동시에 보낸다(Liner Model API 초당 10건 제한 안).
     semaphore = asyncio.Semaphore(4)
 
@@ -175,9 +177,16 @@ async def measure(extractor, verbose: bool, unmatched: list | None = None) -> Co
         text = contents[case["content_key"]]["text"]
         aextract = getattr(extractor, "aextract", None)
         async with semaphore:
-            return await aextract(text) if aextract else extractor.extract(text)
+            started = time.monotonic()
+            result = await aextract(text) if aextract else extractor.extract(text)
+            durations.append(time.monotonic() - started)
+            return result
 
     claim_sets = await asyncio.gather(*(extract(case) for case in evaluation["cases"]))
+    if durations:
+        ordered = sorted(durations)
+        total["time_median_ms"] = int(ordered[len(ordered) // 2] * 1000)
+        total["time_max_ms"] = int(ordered[-1] * 1000)
     for case, claim_set in zip(evaluation["cases"], claim_sets):
         claims = list(claim_set.claims)
         verified = _verified(claims)
@@ -259,7 +268,7 @@ def main() -> int:
     for flag, name in (("disease_cure", "질병 치료"), ("prohibited_ad", "금지 광고"), ("replace_medicine", "약 대체")):
         tp, fn, fp = total[f"{flag}_tp"], total[f"{flag}_fn"], total[f"{flag}_fp"]
         print(f"  {name:6} 적중 {tp} 놓침 {fn} 오탐 {fp}")
-    print(f"  시간 {elapsed:.0f}초")
+    print(f"  시간 {elapsed:.0f}초 · 글 1건 추출 중앙값 {total['time_median_ms'] / 1000:.1f}초, 최대 {total['time_max_ms'] / 1000:.1f}초 (저장된 응답은 0초)")
     if usage and args.model.startswith("gemini"):
         print(f"  호출 {usage['calls']}회 · 입력 {usage['prompt_tokens']:,} · 출력 {usage['completion_tokens']:,} 토큰 (저장된 응답은 세지 않음)")
     elif usage:
