@@ -353,15 +353,21 @@ class Orchestrator:
         if not content.has_transcript or not content.text.strip():
             return ClaimSet(claims=(), in_scope=True, disease_cure_expression=False, extraction_failed=True)
 
-        if content.content_hash:
-            found = await self.extraction_cache.get(content.content_hash)
+        # 언어 모델 추출은 모델·지시문 버전을 캐시 키에 넣는다. 바꾸면 이전 추출을 쓰지 않는다.
+        # 규칙 기반은 앞말 없이 콘텐츠 해시만 쓴다(기존 캐시 유지).
+        namespace = getattr(self.claim_extractor, "cache_namespace", None)
+        cache_key = f"{namespace}:{content.content_hash}" if namespace and content.content_hash else content.content_hash
+
+        if cache_key:
+            found = await self.extraction_cache.get(cache_key)
             if found is not None:
                 return found
 
-        claims = self.claim_extractor.extract(content.text)
+        aextract = getattr(self.claim_extractor, "aextract", None)
+        claims = await aextract(content.text) if aextract else self.claim_extractor.extract(content.text)
 
-        if content.content_hash:
-            await self.extraction_cache.set(content.content_hash, claims)
+        if cache_key:
+            await self.extraction_cache.set(cache_key, claims)
 
         return claims
 
