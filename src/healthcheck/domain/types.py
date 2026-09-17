@@ -113,6 +113,8 @@ class Claim:
     # 어르신에게 보여 줄 원문 구절. "홍삼이 면역력 증진에 도움을 줄 수 있다"처럼
     # 성분부터 효능 표현이 끝나는 곳까지다. 검증에는 쓰지 않는다.
     statement: str | None = None
+    # 성분 사전에 없는 성분의 영문 이름. 언어 모델 추출이 채우며 학술 검색어에만 쓴다.
+    ingredient_en: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

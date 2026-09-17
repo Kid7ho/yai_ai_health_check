@@ -119,7 +119,8 @@ def query_terms_of(claim: Claim) -> tuple[str, str]:
     관련 있는 논문을 버리거나 없는 논문을 통과시킨다.
     """
     ingredient_terms, target_terms = _load_query_terms()
-    ingredient = ingredient_terms.get(claim.ingredient, claim.ingredient)
+    # 사전에 없는 성분은 언어 모델 추출이 준 영문 이름을 쓴다. 둘 다 없으면 한국어 표기 그대로.
+    ingredient = ingredient_terms.get(claim.ingredient) or getattr(claim, "ingredient_en", None) or claim.ingredient
 
     # 긴 표기를 먼저 본다. '혈당'이 '혈당 조절'을 가로채지 않게 한다.
     for korean in sorted(target_terms, key=len, reverse=True):
