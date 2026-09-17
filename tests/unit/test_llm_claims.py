@@ -97,7 +97,9 @@ def test_업체_브랜드_실명이_든_구절은_주장으로_쓰지_않는다(
     )
     result = validate(out, source)
     assert [v.claim.statement for v in result.claims] == ["홍삼은 면역력에 좋다고 알려져 있습니다"]
-    assert sum(r.reason == "업체·브랜드·인물 서술 포함" for r in result.rejected) == 3
+    # 업체 비방 문장은 효과 표현이 없어 그보다 먼저 걸러질 수 있다. 어느 이유로든 셋 다 빠져야 한다.
+    assert len(result.rejected) == 3
+    assert sum(r.reason == "업체·브랜드·인물 서술 포함" for r in result.rejected) >= 2
 
 
 def test_이름_없는_역할_표현은_막지_않는다():
@@ -260,3 +262,14 @@ def test_흡수를_돕는다는_섭취_요령은_주장으로_쓰지_않는다()
     result = validate(out, source)
     assert [v.claim.ingredient for v in result.claims] == ["비타민D"]
     assert any(r.reason == "섭취 요령" for r in result.rejected)
+
+
+def test_함량_설명처럼_효과_표현이_없는_구절은_주장으로_쓰지_않는다():
+    """운영 실측: '시금치 100g만 섭취해도 하루 루테인이 채워져요'에 효능 대상 '눈'이 붙어 주장이 됐다."""
+    source = "시금치 100g만 섭취해도 하루 루테인이 채워져요. 루테인은 시력 저하를 막아줘요."
+    out = output(
+        item("시금치 100g만 섭취해도 하루 루테인이 채워져요", "시금치", "루테인이 채워져요", target="눈"),
+        item("루테인은 시력 저하를 막아줘요", "루테인", "시력 저하를 막아줘요", target="눈"),
+    )
+    result = validate(out, source)
+    assert [v.claim.ingredient for v in result.claims] == ["루테인"]

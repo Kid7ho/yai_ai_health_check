@@ -21,8 +21,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from healthcheck.domain.types import Claim
+from healthcheck.pipeline.step3_claims import _effect_matches
 
-VALIDATOR_VERSION = "v5"
+VALIDATOR_VERSION = "v6"
 QUOTE_MAX = 120
 # 성분 이름이 구절 바로 앞 문맥에 있으면 인정하는 거리(정규화 글자 수). "루테인은 … 시력 저하를 막아줘요"처럼
 # 모델이 효능 부분만 옮기면 성분 이름이 구절 밖에 남아 올바른 주장이 버려졌다(운영 실측 10건 중 9건).
@@ -39,6 +40,8 @@ _PERSON = re.compile(r"(?<![가-힣])[가-힣]{2,3} (?:원장|교수|박사|기�
 _BUSINESS = re.compile(r"회사|업체|기업|상사|판매자|판매처|쇼핑몰|㈜|\(주\)|주식회사|대리점")
 # 이름이 없는 대상. "이 음료가 암을 없앤다"는 무엇에 대한 주장인지 검증할 수 없다.
 _GENERIC_INGREDIENT = re.compile(r"^(?:이|그|저)?\s*(?:것|거|걸|이것|이거|음료|음식|식품|제품|영양제|약|성분|재료|이런\s*것|이런\s*걸)$")
+# 이로운 효과를 말하는 동사 어간. 규칙 기반 효능 표현 목록에 없는 활용("막아줘요", "지켜줍니다")을 검사에서만 보탠다.
+_BENEFIT_VERBS = ("막아", "막는", "막고", "도와", "지켜", "보호", "줄여", "낮춰", "높여", "개선", "완화", "회복", "예방", "효과", "효능", "좋아", "좋은", "좋다")
 _QUOTE_CHARS = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"', "「": "'", "」": "'"})
 
 
@@ -129,6 +132,14 @@ class ClaimValidator:
                 result.rejected.append(Rejection(quote, f"voice={voice}"))
                 continue
             display = source[index_map[position] : index_map[position + len(normalized_quote) - 1] + 1]
+            has_target = any(t in display for t in self._patterns.effect_targets)
+            if not has_target and not any(verb in display for verb in _BENEFIT_VERBS) and not _effect_matches(
+                display, self._patterns.effect_by_intensity
+            ):
+                # 운영 실측: "시금치 100g만 섭취해도 하루 루테인이 채워져요"(함량 설명)에 모델이 효능 대상 '눈'을 붙여
+                # 주장이 됐다. 효능 대상 단어도 효과 표현도 없는 구절은 주장이 아니다.
+                result.rejected.append(Rejection(quote, "효능 표현 없음"))
+                continue
             if "흡수" in display and not any(t in display for t in self._patterns.effect_targets):
                 # 운영 실측: "달걀 노른자와 올리브유의 지방이 시금치 속 루테인 흡수를 완벽히 도와줘요"가 주장으로 뽑혀
                 # 판정 근거가 없는 '알 수 없어요'가 글 전체 판정을 끌어내렸다. 효능 대상 없이 흡수만 말하면 섭취 요령이다.
@@ -200,7 +211,7 @@ class ClaimValidator:
                 return True
         return False
 
-    def _standard_ingredient(self, ingredient_text: str) -> str:
+    def _standard_ingredient(self, ingredient_text: str) -> str:  # noqa: D401
         """성분 사전에 있으면 표준명으로, 없으면 원문 표기 그대로."""
         from healthcheck.pipeline.step3_claims import _find_ingredients
 
