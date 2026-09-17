@@ -109,3 +109,53 @@ def test_예방은_추측_표현과_함께여도_주장이다(extractor):
     claim = extractor.extract("루테인을 먹으면 치매도 예방된다고 합니다").claims[0]
     assert claim.ingredient == "루테인"
     assert "치매" in claim.claimed_effect
+
+
+# ── 실제 링크 점검(2026-09-17): 질병 치료 표현 놓침과 글자 포함 오매칭 ─────────
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "매일 이 음료를 한잔 마시면 암이 사라집니다",
+        "약사가 실제 섭취 중인 당뇨병을 없애주는 영양제",
+        "이미 발생한 암세포를 죽이는 마늘의 항암 효과",
+        "3개월 먹었을 뿐인데 관절염이 싹 사라지는 놀라운 음식",
+    ],
+)
+def test_활용형이_다른_질병_치료_표현도_질병_이름과_함께면_잡는다(extractor, text):
+    """목록이 '사라진다'처럼 한 활용형만 담아 실제 영상 제목을 놓쳤다."""
+    assert extractor.extract(text).disease_cure_expression is True
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "홍삼을 먹으면 피로가 싹 사라집니다",
+        "단순 영양제보다 낫습니다. 신경과 의사들이 챙겨 먹는 치매 예방 음식",
+        "그 제품은 내 류마티스를 고쳐주기는커녕 증상을 키웠다",
+    ],
+)
+def test_질병이_아니거나_비교·부정이면_질병_치료_표현이_아니다(extractor, text):
+    assert extractor.extract(text).disease_cure_expression is False
+
+
+def test_긴_글의_성분_없는_제목에_있는_완치_표현도_잡는다(extractor):
+    """긴 글은 성분 주변 문장만 읽어 제목의 '당뇨 완치'를 놓쳤다."""
+    body = " ".join(["여주는 쓴맛이 강한 채소로 여름철에 많이 먹습니다."] * 60)
+    text = f"당뇨 완치 환자들이 먹은 이것. {body}"
+    assert len(text) > 1500
+    assert extractor.extract(text).disease_cure_expression is True
+
+
+def test_동사_안의_여주는_성분으로_보지_않는다(extractor):
+    """크릴오일 기사의 '콜레스테롤을 줄여주고'에서 여주 주장이 생겼다."""
+    claims = extractor.extract("크릴오일은 나쁜 콜레스테롤을 줄여주고 혈관 건강에 도움을 줍니다").claims
+    assert "여주" not in {claim.ingredient for claim in claims}
+    assert "여주" in {c.ingredient for c in extractor.extract("여주가 혈당을 낮추는 데 도움을 줍니다").claims}
+
+
+def test_마약_끊는_이야기는_약_중단_권유가_아니다(extractor):
+    """관절 영상 자막의 '마약 끊어내는 과정'이 즉시 거절에 걸렸다."""
+    assert extractor.extract("마치 마약 끊어내는 과정처럼 단맛을 끊어내세요").in_scope is True
+    assert extractor.extract("혈압약 끊고 마늘즙만 드세요").in_scope is False

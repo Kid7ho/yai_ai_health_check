@@ -51,6 +51,9 @@ class _Patterns:
     """규칙 파일에서 읽어 온 표현 목록."""
 
     disease_cure: tuple[str, ...]
+    # 활용형이 많은 치료 동사의 어간. 같은 문장에 질병 이름이 있을 때만 질병 치료 표현으로 본다.
+    disease_cure_stems: tuple[str, ...]
+    disease_names: tuple[str, ...]
     # 이 표현이 있는 문장은 주장으로 읽지 않는다. 오정보를 바로잡는 문장이다.
     negation: tuple[str, ...]
     # 법령이 금지하는 광고 표현. 적발 기록 조회가 아니라 표현 매칭이다.
@@ -66,9 +69,13 @@ class _Patterns:
     out_of_scope_immediate: tuple[str, ...]
     # 성분 주장이 담긴 문장 안에 함께 있을 때만 거절하는 표현
     out_of_scope_contextual: tuple[str, ...]
+    # '약'으로 끝나는 다른 단어(마약, 예약). 즉시 거절 표현이 이 단어의 일부면 거절하지 않는다
+    out_of_scope_excluded_words: tuple[str, ...]
     effect_targets: tuple[str, ...]
     # 표기 → 표준 성분명
     ingredient_lookup: dict[str, str]
+    # 바로 앞에 한글이 붙으면 성분으로 보지 않는 표기. "줄여주고"의 "여주"
+    strict_left_ingredients: frozenset[str] = frozenset()
 
 
 @lru_cache(maxsize=4)
@@ -99,6 +106,7 @@ def load_patterns(
     scope = raw.get("범위_밖_표현") or {}
     immediate = tuple(scope.get("즉시_거절") or ())
     contextual = tuple(scope.get("문맥_판단") or ())
+    excluded_words = tuple(scope.get("즉시_거절_제외_단어") or ())
 
     targets: list[str] = []
     for group in (raw.get("효능_대상") or {}).values():
@@ -130,8 +138,17 @@ def load_patterns(
         for variant in variants or ():
             lookup[variant] = standard
 
+    strict_left = frozenset(
+        variant
+        for standard in (aliases.get("앞말_붙으면_제외") or ())
+        for variant, mapped in lookup.items()
+        if mapped == standard
+    )
+
     return _Patterns(
         disease_cure=disease_cure,
+        disease_cure_stems=tuple(raw.get("질병_치료_어간") or ()),
+        disease_names=tuple(raw.get("질병_이름") or ()),
         negation=tuple(raw.get("부정_표현") or ()),
         prohibited_ad=tuple(prohibited_ad),
         brand_lookup=brand_lookup,
@@ -140,9 +157,11 @@ def load_patterns(
         effect_by_intensity=tuple(by_intensity),
         out_of_scope_immediate=immediate,
         out_of_scope_contextual=contextual,
+        out_of_scope_excluded_words=excluded_words,
         # 긴 표기를 먼저 맞춰야 '혈당'이 '혈당 조절'을 가로채지 않는다.
         effect_targets=tuple(sorted(set(targets), key=len, reverse=True)),
         ingredient_lookup=lookup,
+        strict_left_ingredients=strict_left,
     )
 
 
@@ -165,12 +184,14 @@ class RuleBasedClaimExtractor:
 
         # 의약품을 대체하라는 표현은 어디에 한 번만 나와도 거절한다.
         # 가장 위험한 유형이므로 문맥을 따지지 않는다.
-        out_of_scope = _contains_any(text, patterns.out_of_scope_immediate)
+        out_of_scope = _contains_refusal(
+            text, patterns.out_of_scope_immediate, patterns.out_of_scope_excluded_words
+        )
 
         # 긴 글에서는 성분이 언급된 문장 주변만 본다. 4천 자 블로그 글에서
         # 성분과 아무 관계 없는 문장까지 훑으면 엉뚱한 짝이 생기고, 곁가지
         # 문장 하나 때문에 글 전체 판정이 뒤집힌다.
-        sentences = _focus(text, patterns.ingredient_lookup)
+        sentences = _focus(text, patterns.ingredient_lookup, patterns.strict_left_ingredients)
 
         claims: list[Claim] = []
         seen: set[tuple[str, str]] = set()
@@ -178,6 +199,19 @@ class RuleBasedClaimExtractor:
         prohibited_ad = False
         # 의료 단어가 섞인 문장에서만 주장이 나왔는지 따지기 위해 둔다.
         medical_context = False
+
+        # 질병 치료 표현과 금지 광고 표현은 글 전체 문장에서 찾는다. 주장처럼 성분 주변만 보면
+        # 성분 이름이 없는 제목("당뇨 완치 환자들이 먹은 '이것'")을 놓친다(2026-09-17 실제 링크 점검).
+        # 문장 단위 조건(부정문 제외, 성분·효능 대상·질병 이름 동반)은 그대로 둔다.
+        for sentence, offset in _sentences(text):
+            if _contains_any(sentence, patterns.negation):
+                continue
+            if self._is_disease_cure(sentence):
+                disease_cure = True
+            # 법령이 금지하는 광고 표현. 부정문은 위에서 건너뛰었으므로
+            # "부작용이 없다는 말은 거짓"과 같은 문장은 여기 오지 않는다.
+            if _contains_any(sentence, patterns.prohibited_ad):
+                prohibited_ad = True
 
         for sentence, offset in sentences:
             # 오정보를 바로잡는 문장은 주장으로 읽지 않는다. 이 처리가 없으면
@@ -188,17 +222,6 @@ class RuleBasedClaimExtractor:
                 continue
 
             sentence_claims = self._claims_in_sentence(sentence, offset)
-
-            # 질병 치료 표현도 문장 단위로 본다. 글 전체에서 찾으면 4천 자
-            # 홍삼 가이드 글에 '완치'가 한 번 나온 것만으로 '주의하세요'가
-            # 됐다. 성분이나 효능 대상이 같은 문장에 있을 때만 인정한다.
-            if _contains_any(sentence, patterns.disease_cure) and self._is_about_effect(sentence):
-                disease_cure = True
-
-            # 법령이 금지하는 광고 표현. 부정문은 위에서 이미 건너뛰었으므로
-            # "부작용이 없다는 말은 거짓"과 같은 문장은 여기 오지 않는다.
-            if _contains_any(sentence, patterns.prohibited_ad):
-                prohibited_ad = True
 
             # 의료 이야기에 흔히 나오는 단어가 주장이 실린 문장에 섞이면 그
             # 문장의 주장은 검증하지 않는다. 글 전체를 거절하지는 않는다.
@@ -231,6 +254,23 @@ class RuleBasedClaimExtractor:
             extraction_failed=not claims,
         )
 
+    def _is_disease_cure(self, sentence: str) -> bool:
+        """이 문장이 질병을 낫게 한다고 말하는가.
+
+        확정 표현('완치', '낫는다')은 성분이나 효능 대상이 같은 문장에 있으면 인정한다.
+        글 전체에서 찾으면 4천 자 홍삼 가이드 글에 '완치'가 한 번 나온 것만으로 '주의하세요'가 됐다.
+        활용형이 많은 어간('사라지', '없애', '죽이')은 질병 이름이 같은 문장에 있을 때만 인정한다.
+        "피로가 싹 사라집니다"는 질병 치료 주장이 아니다.
+        """
+        patterns = self._patterns
+        # "영양제보다 낫습니다"의 '낫다'는 비교이지 병이 낫는다는 말이 아니다.
+        sentence = _COMPARATIVE_BETTER.sub("", sentence)
+        if _contains_any(sentence, patterns.disease_cure) and self._is_about_effect(sentence):
+            return True
+        return _contains_any(sentence, patterns.disease_cure_stems) and _contains_any(
+            sentence, patterns.disease_names
+        )
+
     def _is_about_effect(self, sentence: str) -> bool:
         """이 문장이 성분이나 효능 대상을 말하고 있는가.
 
@@ -240,14 +280,14 @@ class RuleBasedClaimExtractor:
         효능 대상(당뇨)이 잡혀서 그대로 걸린다.
         """
         patterns = self._patterns
-        if _find_ingredients(sentence, patterns.ingredient_lookup):
+        if _find_ingredients(sentence, patterns.ingredient_lookup, patterns.strict_left_ingredients):
             return True
         return bool(_find_first_each(sentence, patterns.effect_targets))
 
     def _claims_in_sentence(self, sentence: str, offset: int) -> list[Claim]:
         patterns = self._patterns
 
-        ingredients = _find_ingredients(sentence, patterns.ingredient_lookup)
+        ingredients = _find_ingredients(sentence, patterns.ingredient_lookup, patterns.strict_left_ingredients)
         if not ingredients:
             return []
 
@@ -357,7 +397,9 @@ _FOCUS_MIN_LENGTH = 1500
 _FOCUS_WINDOW = 1
 
 
-def _focus(text: str, lookup: dict[str, str]) -> list[tuple[str, int]]:
+def _focus(
+    text: str, lookup: dict[str, str], strict_left: frozenset[str] = frozenset()
+) -> list[tuple[str, int]]:
     """볼 문장을 고른다.
 
     짧은 글은 전부 본다. 긴 글은 성분이 언급된 문장과 그 앞뒤 한 문장만
@@ -374,7 +416,7 @@ def _focus(text: str, lookup: dict[str, str]) -> list[tuple[str, int]]:
     hits = [
         index
         for index, (sentence, _) in enumerate(sentences)
-        if _find_ingredients(sentence, lookup)
+        if _find_ingredients(sentence, lookup, strict_left)
     ]
     if not hits:
         return sentences
@@ -444,10 +486,35 @@ def _contains_any(text: str, needles: tuple[str, ...]) -> bool:
     return any(needle in text for needle in needles)
 
 
+_COMPARATIVE_BETTER = re.compile(r"보다\s*(훨씬\s*|더\s*)?낫\w*")
+
+
+def _contains_refusal(text: str, needles: tuple[str, ...], excluded_words: tuple[str, ...]) -> bool:
+    """즉시 거절 표현이 있는가. '마약 끊'처럼 '약'으로 끝나는 다른 단어의 일부면 세지 않는다."""
+    for needle in needles:
+        start = text.find(needle)
+        while start >= 0:
+            part_of_other_word = needle.startswith("약") and any(
+                text[max(0, start - len(word) + 1) : start] == word[:-1] for word in excluded_words
+            )
+            if not part_of_other_word:
+                return True
+            start = text.find(needle, start + 1)
+    return False
+
+
+def _is_hangul(char: str) -> bool:
+    return "가" <= char <= "힣"
+
+
 def _find_ingredients(
-    sentence: str, lookup: dict[str, str]
+    sentence: str, lookup: dict[str, str], strict_left: frozenset[str] = frozenset()
 ) -> list[tuple[str, str, int]]:
-    """(표준 성분명, 원문 표기, 위치) 목록. 긴 표기를 먼저 맞춘다."""
+    """(표준 성분명, 원문 표기, 위치) 목록. 긴 표기를 먼저 맞춘다.
+
+    strict_left에 있는 표기는 바로 앞에 한글이 붙으면 성분으로 보지 않는다.
+    "줄여주고"의 "여주"가 성분으로 잡혔다.
+    """
     found: list[tuple[str, str, int]] = []
     taken: list[tuple[int, int]] = []
 
@@ -455,6 +522,9 @@ def _find_ingredients(
         start = sentence.find(variant)
         while start >= 0:
             end = start + len(variant)
+            if variant in strict_left and start > 0 and _is_hangul(sentence[start - 1]):
+                start = sentence.find(variant, end)
+                continue
             # '홍삼'이 '홍삼농축액' 안에서 다시 잡히는 것을 막는다.
             if not any(a <= start and end <= b for a, b in taken):
                 taken.append((start, end))
