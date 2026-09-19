@@ -3,8 +3,9 @@
 이 서비스는 진단하지 않는다. 결과는 "진단"이 아니라 "근거 제시"다.
 그래서 면책 문구는 선택 항목이 아니라 구조다.
 
-카카오 카드를 만들 수 있는 공개 함수는 render()와 render_reason() 둘뿐이고,
+판정 결과를 카카오 카드로 만드는 공개 함수는 render()와 render_reason() 둘뿐이고,
 두 함수 모두 마지막에 면책 블록을 무조건 덧붙인다. 끌 수 있는 인자를 두지 않는다.
+사용법·처음 인사·사진 안내(render_guide 등)는 판정이 아니라서 면책 문구를 붙이지 않는다.
 호출자가 outputs를 직접 조립할 수 없게 내부 함수는 밑줄로 감춘다.
 
 확인된 카카오 응답 포맷 제약:
@@ -38,6 +39,7 @@ from healthcheck.domain.types import CheckResult
 logger = logging.getLogger(__name__)
 
 GUARD_PATH = Path(__file__).resolve().parents[3] / "rules" / "response_guard.yaml"
+GUIDE_PATH = Path(__file__).resolve().parents[3] / "rules" / "guide.yaml"
 
 # 면책 문구. 모든 응답에 들어간다. 이 값을 비우거나 우회할 경로를 만들지 않는다.
 DISCLAIMER = "이 결과는 참고용이며 진단이 아닙니다."
@@ -155,10 +157,10 @@ def render(result: CheckResult, *, image_base_url: str | None = None) -> dict:
         return _wrap([_simple_text(_RETRY_TEXT)])
 
     if result.notice:
-        return _wrap([_simple_text(_notice_text(result.notice))])
+        return _wrap([_simple_text(_notice_text(result.notice))], quick_replies=_guide_quick_replies())
 
     if not _is_in_scope(result):
-        return _wrap([_simple_text(_OUT_OF_SCOPE_TEXT)])
+        return _wrap([_simple_text(_OUT_OF_SCOPE_TEXT)], quick_replies=_guide_quick_replies())
 
     checked = _checked_claim_text(result)
     checked_title = _checked_title(result)
@@ -177,7 +179,7 @@ def render(result: CheckResult, *, image_base_url: str | None = None) -> dict:
                 "buttons": _buttons(),
             }
         }
-        return _wrap([card])
+        return _wrap([card], quick_replies=_unknown_quick_replies(label))
 
     card = {
         "textCard": {
@@ -187,7 +189,7 @@ def render(result: CheckResult, *, image_base_url: str | None = None) -> dict:
             "buttons": _buttons(),
         }
     }
-    return _wrap([card])
+    return _wrap([card], quick_replies=_unknown_quick_replies(label))
 
 
 def render_reason(result: CheckResult, *, image_base_url: str | None = None) -> dict:
@@ -244,7 +246,106 @@ def render_reason(result: CheckResult, *, image_base_url: str | None = None) -> 
 # ─────────────────────────────────────────────────────────────
 
 
-def _wrap(outputs: list[dict]) -> dict:
+# ─────────────────────────────────────────────────────────────
+# 사용법 안내 — 판정 결과가 아니다
+# ─────────────────────────────────────────────────────────────
+
+
+@lru_cache(maxsize=2)
+def load_guide(path: Path | str = GUIDE_PATH) -> dict:
+    """rules/guide.yaml. 문구를 코드 밖에 두어 개발자가 아니어도 고칠 수 있게 한다."""
+    return yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+
+
+def render_guide() -> dict:
+    """사용법 카드(넘겨 보는 카드 4장). 마지막 장에 [한번 해 보기] 버튼을 단다."""
+    guide = load_guide()
+    cards = guide.get("사용법_카드") or []
+    items = []
+    for index, card in enumerate(cards):
+        item = {
+            "title": _clip(str(card.get("제목", "")), _MAX_TITLE),
+            "description": _clip(str(card.get("설명", "")), _MAX_DESCRIPTION),
+        }
+        if index == len(cards) - 1:
+            item["buttons"] = [_message_button(guide["버튼"]["체험"])]
+        items.append(item)
+    # TODO(확인필요): textCard 캐러셀이 휴대폰에서 넘겨 보기로 보이는지 실채널에서 확인한다.
+    carousel = {"carousel": {"type": "textCard", "items": items}}
+    return _wrap_info([carousel], quick_replies=[_quick_reply(guide["버튼"]["체험"])])
+
+
+def render_welcome() -> dict:
+    """처음 인사. 채널에 처음 들어오거나 "처음"을 보냈을 때."""
+    guide = load_guide()
+    return _wrap_info(
+        [_simple_text(str(guide.get("처음_인사", "")))],
+        quick_replies=[_quick_reply(guide["버튼"]["사용법"]), _quick_reply(guide["버튼"]["체험"])],
+    )
+
+
+def render_media_notice() -> dict:
+    """사진·파일을 보냈을 때. 이미지 판독은 범위 밖이다."""
+    return _wrap_info([_simple_text(str(load_guide().get("사진_안내", "")))], quick_replies=_guide_quick_replies())
+
+
+def guide_command(utterance: str) -> str | None:
+    """사용법·처음 인사·체험 버튼 중 어느 말인지. 해당하지 않으면 None.
+
+    띄어쓰기·문장부호·물음표를 빼고 비교한다. "사용법?", "어떻게 써요?"도 같은 말로 본다.
+    """
+    key = _command_key(utterance)
+    if not key:
+        return None
+    guide = load_guide()
+    if key == _command_key(guide["버튼"]["체험"]):
+        return "try"
+    if key in {_command_key(w) for w in guide.get("사용법_말") or ()} | {_command_key(guide["버튼"]["사용법"])}:
+        return "guide"
+    if key in {_command_key(w) for w in guide.get("처음_말") or ()}:
+        return "welcome"
+    return None
+
+
+def try_sentence() -> str:
+    """[한번 해 보기]를 누르면 대신 확인하는 예시 문장."""
+    return str(load_guide().get("체험_문장", ""))
+
+
+def _command_key(text: str) -> str:
+    return "".join(ch for ch in (text or "") if ch.isalnum())
+
+
+def _quick_reply(label: str) -> dict:
+    return {"label": _clip(label, _MAX_BUTTON_LABEL), "action": "message", "messageText": label}
+
+
+def _message_button(label: str) -> dict:
+    return {"action": "message", "label": _clip(label, _MAX_BUTTON_LABEL), "messageText": label}
+
+
+def _guide_quick_replies() -> list[dict]:
+    return [_quick_reply(load_guide()["버튼"]["사용법"])]
+
+
+def _unknown_quick_replies(label: Label) -> list[dict] | None:
+    """'알 수 없어요'는 어르신이 무엇을 잘못 보냈는지 모를 수 있어 사용법 버튼을 단다."""
+    return _guide_quick_replies() if label == Label.UNKNOWN else None
+
+
+def _wrap_info(outputs: list[dict], *, quick_replies: list[dict] | None = None) -> dict:
+    """판정이 아닌 안내 응답. 금지 표현 검사는 똑같이 하고, 면책 문구는 붙이지 않는다.
+
+    안내에 면책 문구를 붙이지 않는 것은 skill.py의 안내 문구(_simple)와 같은 기준이다.
+    판정 결과는 반드시 _wrap()을 지나며 거기서 면책 문구가 붙는다.
+    """
+    template: dict = {"outputs": [_guard(output) for output in outputs]}
+    if quick_replies:
+        template["quickReplies"] = quick_replies
+    return {"version": "2.0", "template": template}
+
+
+def _wrap(outputs: list[dict], *, quick_replies: list[dict] | None = None) -> dict:
     """응답을 감싸는 유일한 지점.
 
     여기서 두 가지를 강제한다. 면책 문구를 무조건 덧붙이고, 진단처럼 읽히는
@@ -256,7 +357,10 @@ def _wrap(outputs: list[dict]) -> dict:
     # 확인 한 번마다 말풍선이 여러 개 쌓여 가독성이 떨어졌다. 붙이는 곳만 바뀌었고
     # 모든 응답에 무조건 붙는다는 점은 그대로다.
     guarded[-1] = _with_disclaimer(guarded[-1])
-    return {"version": "2.0", "template": {"outputs": guarded}}
+    template: dict = {"outputs": guarded}
+    if quick_replies:
+        template["quickReplies"] = quick_replies
+    return {"version": "2.0", "template": template}
 
 
 def _with_disclaimer(output: dict) -> dict:
@@ -494,6 +598,11 @@ __all__ = [
     "ack_response",
     "render",
     "render_reason",
+    "render_guide",
+    "render_welcome",
+    "render_media_notice",
+    "guide_command",
+    "try_sentence",
     "find_forbidden",
     "verdict_image_url",
     "IMAGE_FILES",

@@ -166,7 +166,7 @@ def test_사진을_보내면_조회하지_않고_바로_안내한다():
 
     payload = response.json()
     assert payload.get("useCallback") is not True
-    assert "사진은 아직 확인할 수 없어요" in texts(payload)[0]
+    assert "사진은 아직 못 봐요" in texts(payload)[0]
     assert sender.sent == []
 
 
@@ -176,4 +176,4 @@ def test_트리거만_업로드여도_사진으로_본다():
     app = create_app(orchestrator=build_fake_orchestrator(), callback_sender=RecordingCallbackSender())
     with TestClient(app) as client:
         payload = client.post("/skill", json=body).json()
-    assert "사진은 아직 확인할 수 없어요" in texts(payload)[0]
+    assert "사진은 아직 못 봐요" in texts(payload)[0]

@@ -105,6 +105,12 @@ def test_응답을_만드는_공개_함수를_늘리지_않는다():
         "verdict_image_url",
         "IMAGE_FILES",
         "IMAGE_VERSION",
+        # 사용법·처음 인사·사진 안내. 판정 결과를 담지 않는 안내다(rules/guide.yaml 문구만 쓴다).
+        "render_guide",
+        "render_welcome",
+        "render_media_notice",
+        "guide_command",
+        "try_sentence",
     }
 
 

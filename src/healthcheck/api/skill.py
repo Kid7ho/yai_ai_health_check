@@ -26,7 +26,17 @@ from healthcheck.api.auth import SkillAuth
 from healthcheck.adapters.inprocess_queue import QueueFull
 from healthcheck.pipeline import step1_input
 from healthcheck.pipeline.orchestrator import Orchestrator
-from healthcheck.pipeline.step6_response import _REASON_BUTTON, ack_response, render, render_reason
+from healthcheck.pipeline.step6_response import (
+    _REASON_BUTTON,
+    ack_response,
+    guide_command,
+    render,
+    render_guide,
+    render_media_notice,
+    render_reason,
+    render_welcome,
+    try_sentence,
+)
 from healthcheck.ports.queue import CheckJob, JobQueue
 from healthcheck.ports.repository import CheckRepository
 from healthcheck.storage.record import build_record
@@ -44,10 +54,8 @@ def build_router(path: str = "/skill") -> APIRouter:
     return router
 
 _BUSY_TEXT = "지금 확인 요청이 많아요.\n잠시 뒤에 다시 보내 주세요."
-_MEDIA_TEXT = (
-    "사진은 아직 확인할 수 없어요.\n"
-    "영상이나 글의 링크, 또는 글 내용을 보내 주세요."
-)
+# 오픈빌더 기본 블록 이름. 채널에 처음 들어오면 이 블록이 불린다.
+_WELCOME_INTENT = "웰컴 블록"
 _NO_CALLBACK_TEXT = (
     "지금은 바로 확인해 드릴 수 없어요.\n잠시 뒤에 다시 보내 주세요."
 )
@@ -144,7 +152,19 @@ async def skill(request: Request) -> dict:
     # '알 수 없어요'를 돌려준다. 이미지 판독은 범위 밖이므로 조회 없이 안내한다.
     if _is_media_upload(body):
         logger.info("사진·파일 입력이라 확인하지 않는다")
-        return _simple(_MEDIA_TEXT)
+        return render_media_notice()
+
+    # 사용법·처음 인사. 외부 호출 없이 바로 답한다.
+    # 오픈빌더 웰컴 블록을 이 스킬에 연결하면 채널에 처음 들어온 어르신에게 처음 인사가 나간다.
+    # TODO(확인필요): 웰컴 블록 요청의 intent.name이 "웰컴 블록"인지 실채널에서 확인한다.
+    command = guide_command(utterance)
+    if _dig(body, "intent", "name") == _WELCOME_INTENT or command == "welcome":
+        return render_welcome()
+    if command == "guide":
+        return render_guide()
+    if command == "try":
+        # [한번 해 보기]는 예시 문장을 대신 확인한다. 한 번 확인한 뒤로는 캐시로 바로 답한다.
+        utterance = try_sentence()
 
     # "왜 그런지 보기" 버튼. 새 확인 요청이 아니라 직전 결과의 근거를 돌려준다.
     # 외부 호출 없이 바로 답하므로 5초 안에 끝난다.
