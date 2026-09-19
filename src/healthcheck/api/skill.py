@@ -164,6 +164,9 @@ async def skill(request: Request) -> dict:
     # 오픈빌더 웰컴 블록을 이 스킬에 연결하면 채널에 처음 들어온 어르신에게 처음 인사가 나간다.
     # TODO(확인필요): 웰컴 블록 요청의 intent.name이 "웰컴 블록"인지 실채널에서 확인한다.
     command = guide_command(utterance)
+    if command:
+        # 채팅방 메뉴·버튼이 제대로 오는지 로그로 확인할 수 있게 남긴다. 말 자체는 남기지 않는다.
+        logger.info("안내 응답 kind=%s", command)
     if _dig(body, "intent", "name") == _WELCOME_INTENT or command == "welcome":
         return render_welcome()
     if command == "guide":
