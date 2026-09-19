@@ -169,6 +169,7 @@ async def skill(request: Request) -> dict:
         # 채팅방 메뉴·버튼이 제대로 오는지 로그로 확인할 수 있게 남긴다. 말 자체는 남기지 않는다.
         logger.info("안내 응답 kind=%s", command)
     if _dig(body, "intent", "name") == _WELCOME_INTENT or command == "welcome":
+        logger.info("안내 응답 kind=welcome intent=%s", _dig(body, "intent", "name"))
         return render_welcome()
     if command == "guide":
         return render_guide(services.image_base_url)
