@@ -87,3 +87,57 @@ def test_일반_문장은_사용법_말로_보지_않는다():
     assert guide_command("홍삼이 면역력에 좋다") is None
     assert guide_command("https://youtu.be/abc") is None
     assert guide_command("") is None
+
+
+# ─────────────────────────────────────────────────────────────
+# 주소가 아닌 말
+# ─────────────────────────────────────────────────────────────
+
+from healthcheck.pipeline.small_talk import classify_small_talk  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("안녕하세요", "greeting"),
+        ("안녕하세요~", "greeting"),
+        ("반갑습니다", "greeting"),
+        ("감사합니다", "thanks"),
+        ("고마워요 ㅎㅎ", "thanks"),
+        ("네 알겠습니다", "thanks"),
+        ("홍삼 먹어도 돼요?", "question"),
+        ("당뇨에 뭐가 좋아요", "question"),
+        ("오늘 날씨가 좋네요 산책 다녀왔어요", "off_topic"),
+        ("점심 뭐 먹을까", "off_topic"),
+        # 확인 과정으로 보내는 말
+        ("홍삼이 면역력 증진에 도움을 줄 수 있다", None),
+        ("홍삼이 면역력에 좋다는데 사실인가요?", None),
+        ("혈압약 끊고 양파즙 먹으면 되나요", None),
+        ("블루베리로 당뇨 완치", None),
+        ("", None),
+    ],
+)
+def test_주소가_아닌_말을_가른다(text, expected):
+    assert classify_small_talk(text) == expected
+
+
+@pytest.mark.parametrize(
+    ("utterance", "starts"),
+    [
+        ("안녕하세요", "안녕하세요! 받은 건강 정보를"),
+        ("감사합니다", "도움이 되셨다니 다행이에요."),
+        ("홍삼 먹어도 돼요?", "궁금한 점에 직접 답해 드리진 못해요."),
+        ("오늘 날씨가 좋네요", "건강 정보가 담긴"),
+    ],
+)
+def test_주소가_아닌_말은_기다리지_않고_바로_답한다(utterance, starts):
+    payload, sender = post(kakao_request(utterance))
+    assert payload.get("useCallback") is not True
+    assert payload["template"]["outputs"][0]["simpleText"]["text"].startswith(starts)
+    assert quick_labels(payload) == ["사용법 보기", "한번 해 보기"]
+    assert sender.sent == []
+
+
+def test_건강_주장_문장은_지금처럼_확인_과정으로_간다():
+    payload, _ = post(kakao_request("홍삼이 면역력 증진에 도움을 줄 수 있다"))
+    assert payload.get("useCallback") is True

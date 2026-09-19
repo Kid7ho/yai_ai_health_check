@@ -130,7 +130,8 @@ def test_요청_본문이_비어_있어도_500을_내지_않는다():
         response = client.post("/skill", json={})
 
     assert response.status_code == 200
-    assert "잠시 뒤에 다시" in texts_of(response.json())[0]
+    # 보낸 말이 없으면 처음 인사로 답한다
+    assert texts_of(response.json())[0].startswith("안녕하세요")
 
 
 def test_health_에_규칙표_버전이_나온다():

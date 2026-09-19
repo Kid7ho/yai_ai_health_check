@@ -284,6 +284,17 @@ def render_welcome() -> dict:
     )
 
 
+def render_small_talk(kind: str) -> dict:
+    """주소가 아닌 짧은 말에 바로 답한다(인사·감사·질문·무관). 판정이 아니다."""
+    guide = load_guide()
+    text = str((guide.get("답") or {}).get(
+        {"greeting": "인사", "thanks": "감사", "question": "질문", "off_topic": "무관"}[kind], ""))
+    return _wrap_info(
+        [_simple_text(text)],
+        quick_replies=[_quick_reply(guide["버튼"]["사용법"]), _quick_reply(guide["버튼"]["체험"])],
+    )
+
+
 def render_media_notice() -> dict:
     """사진·파일을 보냈을 때. 이미지 판독은 범위 밖이다."""
     return _wrap_info([_simple_text(str(load_guide().get("사진_안내", "")))], quick_replies=_guide_quick_replies())
@@ -601,6 +612,7 @@ __all__ = [
     "render_guide",
     "render_welcome",
     "render_media_notice",
+    "render_small_talk",
     "guide_command",
     "try_sentence",
     "find_forbidden",

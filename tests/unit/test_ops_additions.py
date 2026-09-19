@@ -88,12 +88,11 @@ def test_시험이_꺼져_있으면_일반_문장으로_처리한다(monkeypatch
     sender = RecordingCallbackSender()
     app = create_app(orchestrator=build_fake_orchestrator(), callback_sender=sender)
     with TestClient(app) as client:
-        client.post("/skill", json=body("콜백시험 0"))
-        for _ in range(40):
-            if sender.sent:
-                break
-            time.sleep(0.05)
-    assert "콜백 시험" not in json.dumps(sender.last.payload, ensure_ascii=False)
+        payload = client.post("/skill", json=body("콜백시험 0")).json()
+    # 시험이 꺼져 있으면 건강과 무관한 일반 문장으로 보고 바로 안내한다. 콜백은 보내지 않는다.
+    assert "콜백 시험" not in json.dumps(payload, ensure_ascii=False)
+    assert "영상 주소나 글을 보내 주세요" in payload["template"]["outputs"][0]["simpleText"]["text"]
+    assert sender.sent == []
 
 
 def test_시험을_켜면_지정한_시간_뒤_콜백을_보낸다(monkeypatch):

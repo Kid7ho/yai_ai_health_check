@@ -34,9 +34,12 @@ from healthcheck.pipeline.step6_response import (
     render_guide,
     render_media_notice,
     render_reason,
+    render_small_talk,
     render_welcome,
     try_sentence,
 )
+from healthcheck.pipeline.small_talk import classify_small_talk
+from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
 from healthcheck.ports.queue import CheckJob, JobQueue
 from healthcheck.ports.repository import CheckRepository
 from healthcheck.storage.record import build_record
@@ -106,6 +109,8 @@ class SkillServices:
     repository: CheckRepository | None = None
     auth: SkillAuth = field(default_factory=SkillAuth)
     last_results: LastResults = field(default_factory=LastResults)
+    # 주소가 아닌 말을 가를 때 쓰는 규칙 기반 추출기. 규칙 파일을 한 번만 읽도록 공유한다.
+    small_talk_extractor: RuleBasedClaimExtractor = field(default_factory=RuleBasedClaimExtractor)
     # 결과 카드 머리 이미지의 공개 주소. 없으면 이미지 없는 카드로 답한다.
     image_base_url: str | None = None
 
@@ -177,6 +182,15 @@ async def skill(request: Request) -> dict:
         return render_reason(previous, image_base_url=services.image_base_url)
 
     share_input = step1_input.classify(utterance)
+
+    # 주소가 아닌 말. 인사·감사·질문·건강과 무관한 말은 확인 과정(약 15초)에 넣지 않고 바로 답한다.
+    if share_input.kind == "PLAIN_TEXT":
+        if not share_input.raw_text.strip():
+            return render_welcome()
+        small_talk = classify_small_talk(share_input.raw_text, services.small_talk_extractor)
+        if small_talk is not None:
+            logger.info("바로 답하는 말 kind=%s", small_talk)
+            return render_small_talk(small_talk)
 
     # 예외 경로: 캐시가 맞으면 외부 호출 없이 바로 답한다.
     cached = await services.orchestrator.cached(share_input)
