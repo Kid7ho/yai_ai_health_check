@@ -141,3 +141,25 @@ def test_주소가_아닌_말은_기다리지_않고_바로_답한다(utterance,
 def test_건강_주장_문장은_지금처럼_확인_과정으로_간다():
     payload, _ = post(kakao_request("홍삼이 면역력 증진에 도움을 줄 수 있다"))
     assert payload.get("useCallback") is True
+
+
+# ─────────────────────────────────────────────────────────────
+# 채팅방 아래 고정 메뉴(사용법 · 한 번 해보기 · 주의사항)
+# ─────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize("label", ["사용법", "한 번 해보기", "주의사항"])
+def test_고정_메뉴_세_버튼이_보내는_말에_바로_답한다(label):
+    payload, _ = post(kakao_request(label))
+    if label == "한 번 해보기":
+        # 띄어쓰기가 달라도 [한번 해 보기]와 같은 말로 본다
+        assert payload.get("useCallback") is True
+        return
+    assert payload.get("useCallback") is not True
+    output = payload["template"]["outputs"][0]
+    if label == "사용법":
+        assert "carousel" in output
+    else:
+        assert output["textCard"]["title"] == "꼭 알아 두세요"
+        assert "진단이 아닙니다" in output["textCard"]["description"]
+        assert len(output["textCard"]["description"]) <= 400

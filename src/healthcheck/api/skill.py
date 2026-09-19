@@ -30,6 +30,7 @@ from healthcheck.pipeline.step6_response import (
     _REASON_BUTTON,
     ack_response,
     guide_command,
+    render_caution,
     render,
     render_guide,
     render_media_notice,
@@ -167,6 +168,8 @@ async def skill(request: Request) -> dict:
         return render_welcome()
     if command == "guide":
         return render_guide()
+    if command == "caution":
+        return render_caution()
     if command == "try":
         # [한번 해 보기]는 예시 문장을 대신 확인한다. 한 번 확인한 뒤로는 캐시로 바로 답한다.
         utterance = try_sentence()

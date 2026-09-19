@@ -275,6 +275,19 @@ def render_guide() -> dict:
     return _wrap_info([carousel], quick_replies=[_quick_reply(guide["버튼"]["체험"])])
 
 
+def render_caution() -> dict:
+    """주의사항 카드. 진단이 아니라는 점과 약은 의사에게 묻는다는 점을 먼저 둔다."""
+    guide = load_guide()
+    caution = guide.get("주의사항") or {}
+    card = {
+        "textCard": {
+            "title": _clip(str(caution.get("제목", "")), _MAX_TITLE),
+            "description": _clip(str(caution.get("설명", "")), _MAX_DESCRIPTION),
+        }
+    }
+    return _wrap_info([card], quick_replies=[_quick_reply(guide["버튼"]["사용법"]), _quick_reply(guide["버튼"]["체험"])])
+
+
 def render_welcome() -> dict:
     """처음 인사. 채널에 처음 들어오거나 "처음"을 보냈을 때."""
     guide = load_guide()
@@ -315,6 +328,8 @@ def guide_command(utterance: str) -> str | None:
         return "guide"
     if key in {_command_key(w) for w in guide.get("처음_말") or ()}:
         return "welcome"
+    if key in {_command_key(w) for w in guide.get("주의사항_말") or ()}:
+        return "caution"
     return None
 
 
@@ -613,6 +628,7 @@ __all__ = [
     "render_welcome",
     "render_media_notice",
     "render_small_talk",
+    "render_caution",
     "guide_command",
     "try_sentence",
     "find_forbidden",

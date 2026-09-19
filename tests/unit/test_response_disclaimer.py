@@ -110,6 +110,7 @@ def test_응답을_만드는_공개_함수를_늘리지_않는다():
         "render_welcome",
         "render_media_notice",
         "render_small_talk",
+        "render_caution",
         "guide_command",
         "try_sentence",
     }
