@@ -274,7 +274,7 @@ def load_guide(path: Path | str = GUIDE_PATH) -> dict:
 
 
 # 사용법 카드 사진. 사진을 바꾸면 버전을 올린다. 카카오가 같은 주소의 이미지를 오래 기억한다.
-GUIDE_IMAGE_VERSION = "v1"
+GUIDE_IMAGE_VERSION = "v2"
 
 
 def guide_image_names() -> tuple[str, ...]:

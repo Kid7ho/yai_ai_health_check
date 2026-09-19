@@ -36,6 +36,13 @@ def blur(img: Image.Image, box: tuple[int, int, int, int]) -> None:
     img.paste(region, box[:2])
 
 
+def mosaic(img: Image.Image, box: tuple[int, int, int, int], cell: int = 14) -> None:
+    """모자이크. 글자 모양은 남기되 읽을 수 없게 한다."""
+    region = img.crop(box)
+    small = region.resize((max(1, region.width // cell), max(1, region.height // cell)), Image.NEAREST)
+    img.paste(small.resize(region.size, Image.NEAREST), box[:2])
+
+
 def ring(draw: ImageDraw.ImageDraw, box, *, rounded: bool = False) -> None:
     if rounded:
         draw.rounded_rectangle(box, radius=28, outline=RED, width=9)
@@ -67,8 +74,10 @@ def make(src: Path) -> None:
     ring(draw, (34, 1750, 350, 1878), rounded=True)
     fit(img.crop((20, 1320, 900, 1925))).save(OUT / "2_copy.png", optimize=True)
 
-    # 3. 여기에 붙여 넣고 보내기
+    # 3. 여기에 붙여 넣고 보내기. 주소는 youtube.com만 읽히게 두고 영상 번호 부분은 모자이크한다
     img = chat.copy()
+    mosaic(img, (462, 1158, 760, 1198))
+    mosaic(img, (128, 1198, 760, 1242))
     draw = ImageDraw.Draw(img)
     ring(draw, (118, 1148, 770, 1252), rounded=True)
     ring(draw, (786, 1161, 898, 1273))

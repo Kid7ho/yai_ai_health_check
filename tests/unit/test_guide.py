@@ -205,7 +205,7 @@ def test_공개_주소가_있으면_사용법을_사진_카드로_보낸다():
     carousel = payload["template"]["outputs"][0]["carousel"]
     assert carousel["type"] == "basicCard"
     for item in carousel["items"]:
-        assert item["thumbnail"]["imageUrl"].startswith("https://example.org/static/guide/v1/")
+        assert item["thumbnail"]["imageUrl"].startswith("https://example.org/static/guide/v2/")
         assert len(item["description"]) <= 230
 
 
@@ -218,4 +218,4 @@ def test_사용법_사진은_정해진_파일만_내보낸다():
             response = client.get(f"/static/guide/{GUIDE_IMAGE_VERSION}/{name}.png")
             assert response.status_code == 200 and response.headers["content-type"] == "image/png"
         assert client.get(f"/static/guide/{GUIDE_IMAGE_VERSION}/..%2Fdebug.png").status_code == 404
-        assert client.get("/static/guide/v0/1_forward.png").status_code == 404
+        assert client.get("/static/guide/v1/1_forward.png").status_code == 404
