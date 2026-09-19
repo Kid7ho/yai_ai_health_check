@@ -87,7 +87,7 @@ _OUT_OF_SCOPE_TEXT = (
 )
 
 _REASON_BUTTON = "왜 그런지 보기"
-_SHARE_BUTTON = "가족에게 보내기"
+_SHARE_BUTTON = "친구에게 보내기"
 _CHECKED_TITLE = "확인한 내용"
 _REASON_TITLE = "왜 그런가요"
 

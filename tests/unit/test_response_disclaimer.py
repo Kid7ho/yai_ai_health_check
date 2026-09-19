@@ -166,7 +166,7 @@ def test_버튼은_세로_배치로_라벨_14자를_지킨다():
 
 
 def test_결과_공유_버튼은_share_액션을_쓴다():
-    """발표 자료의 '가족에게 보내기' 동선이다."""
+    """결과를 친구에게 보내는 동선이다(발표 자료의 '가족에게 보내기'에서 2026-09-19 이름을 바꿨다)."""
     buttons = render(result(Label.CAUTION))["template"]["outputs"][0]["textCard"]["buttons"]
     assert any(button["action"] == "share" for button in buttons)
 

@@ -42,7 +42,7 @@ async def test_이미지_주소가_있으면_라벨_이미지_카드로_답한�
     assert "홍삼" in card["title"]
     assert card["description"].startswith("이 내용을 확인했어요")
     assert len(card["description"]) <= 230
-    assert [b["label"] for b in card["buttons"]] == ["왜 그런지 보기", "가족에게 보내기"]
+    assert [b["label"] for b in card["buttons"]] == ["왜 그런지 보기", "친구에게 보내기"]
 
 
 async def test_결과_카드에는_판정_이유를_넣지_않는다():
