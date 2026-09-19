@@ -132,16 +132,17 @@ def find_forbidden(text: str) -> list[str]:
     return [phrase for phrase in forbidden if phrase in remaining]
 
 
-def ack_response() -> dict:
+def ack_response(text: str | None = None) -> dict:
     """즉시 ack 응답.
 
     카카오 스킬 응답 제한은 5초인데 실제 파이프라인은 10~20초가 걸린다.
     template 없이 useCallback만 담아 돌려주고, 결과는 콜백으로 보낸다.
+    text는 기다리는 동안 보이는 말이다. [한번 해 보기]는 확인하는 예시 문장을 함께 보여 준다.
     """
-    return {"version": "2.0", "useCallback": True, "data": {"text": _ACK_TEXT}}
+    return {"version": "2.0", "useCallback": True, "data": {"text": _clip(text or _ACK_TEXT, _MAX_SIMPLE_TEXT)}}
 
 
-def render(result: CheckResult, *, image_base_url: str | None = None) -> dict:
+def render(result: CheckResult, *, image_base_url: str | None = None, intro: str | None = None) -> dict:
     """판정 결과를 카카오 응답으로 만든다.
 
     카카오 카드를 만드는 유일한 경로다. 면책 문구는 항상 붙는다.
@@ -154,13 +155,13 @@ def render(result: CheckResult, *, image_base_url: str | None = None) -> dict:
     # 일시적 실패는 '알 수 없어요'로 답하지 않는다. 다시 보내면 달라질 수 있는
     # 상태인데 판정이 끝난 것처럼 보여 주면 어르신이 다시 시도하지 않는다.
     if result.retryable_failure:
-        return _wrap([_simple_text(_RETRY_TEXT)])
+        return _wrap(_intro(intro) + [_simple_text(_RETRY_TEXT)])
 
     if result.notice:
-        return _wrap([_simple_text(_notice_text(result.notice))], quick_replies=_guide_quick_replies())
+        return _wrap(_intro(intro) + [_simple_text(_notice_text(result.notice))], quick_replies=_guide_quick_replies())
 
     if not _is_in_scope(result):
-        return _wrap([_simple_text(_OUT_OF_SCOPE_TEXT)], quick_replies=_guide_quick_replies())
+        return _wrap(_intro(intro) + [_simple_text(_OUT_OF_SCOPE_TEXT)], quick_replies=_guide_quick_replies())
 
     checked = _checked_claim_text(result)
     checked_title = _checked_title(result)
@@ -179,7 +180,7 @@ def render(result: CheckResult, *, image_base_url: str | None = None) -> dict:
                 "buttons": _buttons(),
             }
         }
-        return _wrap([card], quick_replies=_unknown_quick_replies(label))
+        return _wrap(_intro(intro) + [card], quick_replies=_unknown_quick_replies(label))
 
     card = {
         "textCard": {
@@ -189,7 +190,22 @@ def render(result: CheckResult, *, image_base_url: str | None = None) -> dict:
             "buttons": _buttons(),
         }
     }
-    return _wrap([card], quick_replies=_unknown_quick_replies(label))
+    return _wrap(_intro(intro) + [card], quick_replies=_unknown_quick_replies(label))
+
+
+def _intro(intro: str | None) -> list[dict]:
+    """결과 앞에 붙는 안내 말풍선. 판정 문구가 아니므로 금지 표현 검사만 받는다(_wrap에서)."""
+    return [_simple_text(intro)] if intro else []
+
+
+def try_intro() -> str:
+    """[한번 해 보기] 결과 위에 붙는 말. 어떤 문장을 확인했는지와 보내는 법을 알려 준다."""
+    return str(load_guide().get("체험_안내", "")).replace("{문장}", try_sentence())
+
+
+def try_wait_text() -> str:
+    """[한번 해 보기]를 처음 확인하는 동안 보이는 말."""
+    return str(load_guide().get("체험_기다림", "")).replace("{문장}", try_sentence())
 
 
 def render_reason(result: CheckResult, *, image_base_url: str | None = None) -> dict:
@@ -631,6 +647,8 @@ __all__ = [
     "render_caution",
     "guide_command",
     "try_sentence",
+    "try_intro",
+    "try_wait_text",
     "find_forbidden",
     "verdict_image_url",
     "IMAGE_FILES",

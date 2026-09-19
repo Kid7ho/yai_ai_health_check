@@ -37,7 +37,9 @@ from healthcheck.pipeline.step6_response import (
     render_reason,
     render_small_talk,
     render_welcome,
+    try_intro,
     try_sentence,
+    try_wait_text,
 )
 from healthcheck.pipeline.small_talk import classify_small_talk
 from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
@@ -173,9 +175,12 @@ async def skill(request: Request) -> dict:
         return render_guide()
     if command == "caution":
         return render_caution()
+    intro = wait_text = None
     if command == "try":
         # [한번 해 보기]는 예시 문장을 대신 확인한다. 한 번 확인한 뒤로는 캐시로 바로 답한다.
+        # 결과 위에 확인한 문장을 보여 줘서 어르신이 무엇을 보내면 되는지 배우게 한다.
         utterance = try_sentence()
+        intro, wait_text = try_intro(), try_wait_text()
 
     # "왜 그런지 보기" 버튼. 새 확인 요청이 아니라 직전 결과의 근거를 돌려준다.
     # 외부 호출 없이 바로 답하므로 5초 안에 끝난다.
@@ -213,7 +218,7 @@ async def skill(request: Request) -> dict:
                 )
             except Exception:
                 logger.exception("판정 기록 저장 실패(캐시 응답)")
-        return render(cached, image_base_url=services.image_base_url)
+        return render(cached, image_base_url=services.image_base_url, intro=intro)
 
     # 기본 경로: 콜백이 없으면 비동기 처리를 할 수 없다.
     # TODO(확인필요): 오픈빌더에서 콜백 사용 설정을 켜야 callbackUrl이 온다.
@@ -227,6 +232,7 @@ async def skill(request: Request) -> dict:
         share_input=share_input,
         callback_url=callback_url,
         user_key=user_key,
+        intro=intro,
     )
 
     try:
@@ -236,7 +242,7 @@ async def skill(request: Request) -> dict:
         return _simple(_BUSY_TEXT)
 
     logger.info("작업 접수 job=%s kind=%s", job.job_id, share_input.kind)
-    return ack_response()
+    return ack_response(wait_text)
 
 
 def _simple(text: str) -> dict:

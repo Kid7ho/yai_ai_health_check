@@ -89,7 +89,7 @@ class Worker:
 
         try:
             await self._callback.send(
-                job.callback_url, render(result, image_base_url=self._image_base_url)
+                job.callback_url, render(result, image_base_url=self._image_base_url, intro=job.intro)
             )
         except Exception:
             # 콜백은 1회만 쓸 수 있어서 여기서 재시도해도 성공하지 않는 경우가 많다.

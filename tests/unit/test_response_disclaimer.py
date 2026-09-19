@@ -83,10 +83,21 @@ def test_면책_문구는_마지막_말풍선의_끝에_붙는다():
 def test_면책_문구를_끄는_인자가_없다():
     """개발자가 빠뜨릴 수 있는 선택 항목으로 두지 않는다."""
     # 카드 머리 이미지 주소만 받는다. 면책 문구나 금지 표현 검사를 끄는 인자는 두지 않는다.
-    for fn in (render, render_reason):
+    # render의 intro는 결과 앞에 안내 말풍선을 하나 더 붙일 뿐이다([한번 해 보기]). 면책 문구는 그대로 붙는다.
+    expected = {render: ["result", "image_base_url", "intro"], render_reason: ["result", "image_base_url"]}
+    for fn, names in expected.items():
         params = inspect.signature(fn).parameters
-        assert list(params) == ["result", "image_base_url"], f"{fn.__name__}에 추가 인자가 생겼습니다."
-        assert params["image_base_url"].kind is inspect.Parameter.KEYWORD_ONLY
+        assert list(params) == names, f"{fn.__name__}에 추가 인자가 생겼습니다."
+        for name in names[1:]:
+            assert params[name].kind is inspect.Parameter.KEYWORD_ONLY
+
+
+@pytest.mark.parametrize("label", list(Label))
+def test_안내_말풍선을_붙여도_면책_문구는_마지막에_붙는다(label):
+    payload = render(result(label), intro="이렇게 보내 보세요")
+    outputs = payload["template"]["outputs"]
+    assert outputs[0]["simpleText"]["text"] == "이렇게 보내 보세요"
+    assert DISCLAIMER in texts_of(payload)[-1]
 
 
 def test_응답을_만드는_공개_함수를_늘리지_않는다():
@@ -113,6 +124,8 @@ def test_응답을_만드는_공개_함수를_늘리지_않는다():
         "render_caution",
         "guide_command",
         "try_sentence",
+        "try_intro",
+        "try_wait_text",
     }
 
 

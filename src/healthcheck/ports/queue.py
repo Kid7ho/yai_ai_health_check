@@ -28,6 +28,8 @@ class CheckJob:
     user_key: str | None = None
     # 작업을 받은 시각. 콜백 URL 유효 시간(5분)을 넘겼는지 판단한다.
     created_at: float = field(default_factory=time.monotonic)
+    # 결과 카드 위에 붙일 안내 말풍선. [한번 해 보기]가 어떤 문장을 확인했는지 보여 줄 때 쓴다.
+    intro: str | None = None
 
 
 class JobQueue(Protocol):
