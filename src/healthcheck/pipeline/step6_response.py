@@ -284,11 +284,11 @@ def render_guide() -> dict:
             "description": _clip(str(card.get("설명", "")), _MAX_DESCRIPTION),
         }
         if index == len(cards) - 1:
-            item["buttons"] = [_message_button(guide["버튼"]["체험"])]
+            item["buttons"] = [_try_button()]
         items.append(item)
     # TODO(확인필요): textCard 캐러셀이 휴대폰에서 넘겨 보기로 보이는지 실채널에서 확인한다.
     carousel = {"carousel": {"type": "textCard", "items": items}}
-    return _wrap_info([carousel], quick_replies=[_quick_reply(guide["버튼"]["체험"])])
+    return _wrap_info([carousel], quick_replies=[_try_quick_reply()])
 
 
 def render_caution() -> dict:
@@ -301,7 +301,7 @@ def render_caution() -> dict:
             "description": _clip(str(caution.get("설명", "")), _MAX_DESCRIPTION),
         }
     }
-    return _wrap_info([card], quick_replies=[_quick_reply(guide["버튼"]["사용법"]), _quick_reply(guide["버튼"]["체험"])])
+    return _wrap_info([card], quick_replies=[_quick_reply(guide["버튼"]["사용법"]), _try_quick_reply()])
 
 
 def render_welcome() -> dict:
@@ -309,7 +309,7 @@ def render_welcome() -> dict:
     guide = load_guide()
     return _wrap_info(
         [_simple_text(str(guide.get("처음_인사", "")))],
-        quick_replies=[_quick_reply(guide["버튼"]["사용법"]), _quick_reply(guide["버튼"]["체험"])],
+        quick_replies=[_quick_reply(guide["버튼"]["사용법"]), _try_quick_reply()],
     )
 
 
@@ -320,7 +320,7 @@ def render_small_talk(kind: str) -> dict:
         {"greeting": "인사", "thanks": "감사", "question": "질문", "off_topic": "무관"}[kind], ""))
     return _wrap_info(
         [_simple_text(text)],
-        quick_replies=[_quick_reply(guide["버튼"]["사용법"]), _quick_reply(guide["버튼"]["체험"])],
+        quick_replies=[_quick_reply(guide["버튼"]["사용법"]), _try_quick_reply()],
     )
 
 
@@ -338,7 +338,9 @@ def guide_command(utterance: str) -> str | None:
     if not key:
         return None
     guide = load_guide()
-    if key == _command_key(guide["버튼"]["체험"]):
+    # 체험 버튼은 "한번 해 보기" 한 줄이나, 그 아래 예시 문장까지 두 줄로 온다.
+    try_key = _command_key(guide["버튼"]["체험"])
+    if key == try_key or key == _command_key(try_message()):
         return "try"
     if key in {_command_key(w) for w in guide.get("사용법_말") or ()} | {_command_key(guide["버튼"]["사용법"])}:
         return "guide"
@@ -356,6 +358,25 @@ def try_sentence() -> str:
 
 def _command_key(text: str) -> str:
     return "".join(ch for ch in (text or "") if ch.isalnum())
+
+
+def try_message() -> str:
+    """[한번 해 보기] 버튼이 보내는 말. 어르신 말풍선에 버튼 이름 아래 예시 문장이 함께 보인다.
+
+    어르신이 무엇을 보내면 되는지 자기 말풍선으로 보고 배우게 한다. 서버는 첫 줄로 체험 버튼임을 알아본다.
+    """
+    guide = load_guide()
+    return f"{guide['버튼']['체험']}\n{try_sentence()}"
+
+
+def _try_quick_reply() -> dict:
+    guide = load_guide()
+    return {"label": _clip(guide["버튼"]["체험"], _MAX_BUTTON_LABEL), "action": "message", "messageText": try_message()}
+
+
+def _try_button() -> dict:
+    guide = load_guide()
+    return {"action": "message", "label": _clip(guide["버튼"]["체험"], _MAX_BUTTON_LABEL), "messageText": try_message()}
 
 
 def _quick_reply(label: str) -> dict:
@@ -647,6 +668,7 @@ __all__ = [
     "render_caution",
     "guide_command",
     "try_sentence",
+    "try_message",
     "try_intro",
     "try_wait_text",
     "find_forbidden",

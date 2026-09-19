@@ -38,7 +38,7 @@ def test_사용법을_물으면_넘겨_보는_카드_네_장으로_바로_답한
         "15초 뒤 답이 와요",
         "이건 못 봐요",
     ]
-    assert carousel["items"][-1]["buttons"][0]["messageText"] == "한번 해 보기"
+    assert carousel["items"][-1]["buttons"][0]["messageText"].startswith("한번 해 보기\n")
     assert sender.sent == []
 
 
@@ -178,3 +178,22 @@ def test_한번_해_보기_결과_위에_보낸_문장과_보내는_법을_붙�
     first = payload["template"]["outputs"][0]["simpleText"]["text"]
     assert first.startswith("이렇게 보내 보세요")
     assert "「홍삼이 면역력 증진에 도움을 줄 수 있다」" in first
+
+
+def test_한번_해_보기_버튼은_예시_문장까지_두_줄로_보낸다():
+    from healthcheck.pipeline.step6_response import render_welcome, try_message
+
+    assert try_message() == "한번 해 보기\n홍삼이 면역력 증진에 도움을 줄 수 있다"
+    replies = render_welcome()["template"]["quickReplies"]
+    assert replies[1]["label"] == "한번 해 보기"
+    assert replies[1]["messageText"] == try_message()
+    card_button = render_guide()["template"]["outputs"][0]["carousel"]["items"][-1]["buttons"][0]
+    assert card_button["messageText"] == try_message()
+
+
+@pytest.mark.parametrize(
+    "utterance",
+    ["한번 해 보기\n홍삼이 면역력 증진에 도움을 줄 수 있다", "한 번 해보기\n홍삼이 면역력 증진에 도움을 줄 수 있다", "한 번 해보기"],
+)
+def test_두_줄로_온_체험_버튼도_체험으로_본다(utterance):
+    assert guide_command(utterance) == "try"
