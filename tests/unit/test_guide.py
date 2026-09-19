@@ -33,8 +33,9 @@ def test_사용법을_물으면_넘겨_보는_카드_네_장으로_바로_답한
     carousel = payload["template"]["outputs"][0]["carousel"]
     assert carousel["type"] == "textCard"
     assert [item["title"] for item in carousel["items"]] == [
-        "이렇게 보내세요",
-        "공유가 안 되면",
+        "카톡으로 받았다면",
+        "유튜브에서 봤다면",
+        "여기에 붙여 넣고 보내기",
         "15초 뒤 답이 와요",
         "이건 못 봐요",
     ]
@@ -197,3 +198,24 @@ def test_한번_해_보기_버튼은_예시_문장까지_두_줄로_보낸다():
 )
 def test_두_줄로_온_체험_버튼도_체험으로_본다(utterance):
     assert guide_command(utterance) == "try"
+
+
+def test_공개_주소가_있으면_사용법을_사진_카드로_보낸다():
+    payload = render_guide("https://example.org")
+    carousel = payload["template"]["outputs"][0]["carousel"]
+    assert carousel["type"] == "basicCard"
+    for item in carousel["items"]:
+        assert item["thumbnail"]["imageUrl"].startswith("https://example.org/static/guide/v1/")
+        assert len(item["description"]) <= 230
+
+
+def test_사용법_사진은_정해진_파일만_내보낸다():
+    from healthcheck.pipeline.step6_response import GUIDE_IMAGE_VERSION, guide_image_names
+
+    app = create_app(orchestrator=build_fake_orchestrator(), callback_sender=RecordingCallbackSender())
+    with TestClient(app) as client:
+        for name in guide_image_names():
+            response = client.get(f"/static/guide/{GUIDE_IMAGE_VERSION}/{name}.png")
+            assert response.status_code == 200 and response.headers["content-type"] == "image/png"
+        assert client.get(f"/static/guide/{GUIDE_IMAGE_VERSION}/..%2Fdebug.png").status_code == 404
+        assert client.get("/static/guide/v0/1_forward.png").status_code == 404

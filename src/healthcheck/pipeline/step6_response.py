@@ -273,21 +273,41 @@ def load_guide(path: Path | str = GUIDE_PATH) -> dict:
     return yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
 
 
-def render_guide() -> dict:
-    """사용법 카드(넘겨 보는 카드 4장). 마지막 장에 [한번 해 보기] 버튼을 단다."""
+# 사용법 카드 사진. 사진을 바꾸면 버전을 올린다. 카카오가 같은 주소의 이미지를 오래 기억한다.
+GUIDE_IMAGE_VERSION = "v1"
+
+
+def guide_image_names() -> tuple[str, ...]:
+    """서버가 내보내도 되는 사용법 사진 이름. 경로 조작으로 다른 파일을 읽지 못하게 이 목록만 연다."""
+    return tuple(str(card["사진"]) for card in load_guide().get("사용법_카드") or () if card.get("사진"))
+
+
+def render_guide(image_base_url: str | None = None) -> dict:
+    """사용법 카드(넘겨 보는 카드). 마지막 장에 [한번 해 보기] 버튼을 단다.
+
+    공개 주소가 있으면 실제 휴대폰 화면 사진 카드(basicCard)로, 없으면 글자 카드(textCard)로 보낸다.
+    """
     guide = load_guide()
     cards = guide.get("사용법_카드") or []
+    with_images = bool(image_base_url) and all(card.get("사진") for card in cards)
+    limit = _MAX_BASIC_DESCRIPTION if with_images else _MAX_DESCRIPTION
     items = []
     for index, card in enumerate(cards):
         item = {
             "title": _clip(str(card.get("제목", "")), _MAX_TITLE),
-            "description": _clip(str(card.get("설명", "")), _MAX_DESCRIPTION),
+            "description": _clip(str(card.get("설명", "")), limit),
         }
+        if with_images:
+            item["thumbnail"] = {
+                "imageUrl": f"{image_base_url.rstrip('/')}/static/guide/{GUIDE_IMAGE_VERSION}/{card['사진']}.png",
+                "altText": str(card.get("제목", "")),
+                "fixedRatio": True,
+            }
         if index == len(cards) - 1:
             item["buttons"] = [_try_button()]
         items.append(item)
-    # TODO(확인필요): textCard 캐러셀이 휴대폰에서 넘겨 보기로 보이는지 실채널에서 확인한다.
-    carousel = {"carousel": {"type": "textCard", "items": items}}
+    # 2026-09-19 휴대폰에서 textCard 캐러셀 넘겨 보기를 확인했다.
+    carousel = {"carousel": {"type": "basicCard" if with_images else "textCard", "items": items}}
     return _wrap_info([carousel], quick_replies=[_try_quick_reply()])
 
 
@@ -662,6 +682,8 @@ __all__ = [
     "render",
     "render_reason",
     "render_guide",
+    "guide_image_names",
+    "GUIDE_IMAGE_VERSION",
     "render_welcome",
     "render_media_notice",
     "render_small_talk",

@@ -172,7 +172,7 @@ async def skill(request: Request) -> dict:
     if _dig(body, "intent", "name") == _WELCOME_INTENT or command == "welcome":
         return render_welcome()
     if command == "guide":
-        return render_guide()
+        return render_guide(services.image_base_url)
     if command == "caution":
         return render_caution()
     intro = wait_text = None

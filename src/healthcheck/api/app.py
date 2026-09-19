@@ -37,7 +37,13 @@ from healthcheck.api import debug, skill
 from healthcheck.api.auth import SkillAuth, warn_if_unprotected
 from healthcheck.config import Settings, load_settings, setup_logging
 from healthcheck.domain.labels import Label
-from healthcheck.pipeline.step6_response import IMAGE_FILES, IMAGE_VERSION, verdict_image_url
+from healthcheck.pipeline.step6_response import (
+    GUIDE_IMAGE_VERSION,
+    IMAGE_FILES,
+    IMAGE_VERSION,
+    guide_image_names,
+    verdict_image_url,
+)
 from healthcheck.api.worker import start_workers
 from healthcheck.pipeline.orchestrator import Orchestrator
 from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
@@ -46,6 +52,7 @@ from healthcheck.ports.repository import CheckRepository
 from healthcheck.storage.memory_repo import InMemoryCheckRepository
 
 VERDICT_IMAGE_DIR = Path(__file__).resolve().parent / "static" / "verdict"
+GUIDE_IMAGE_DIR = Path(__file__).resolve().parent / "static" / "guide"
 from healthcheck.storage.sqlite_repo import SqliteCheckRepository
 
 logger = logging.getLogger(__name__)
@@ -349,6 +356,17 @@ def create_app(
             media_type="image/png",
             headers={"Cache-Control": "public, max-age=604800"},
         )
+    # 사용법 카드 사진. 결과 카드 이미지와 같은 방식으로 정해진 파일만 연다.
+    @app.get("/static/guide/{version}/{name}.png", include_in_schema=False)
+    async def guide_image(version: str, name: str) -> FileResponse:
+        if version != GUIDE_IMAGE_VERSION or name not in guide_image_names():
+            raise HTTPException(status_code=404)
+        return FileResponse(
+            GUIDE_IMAGE_DIR / f"{name}.png",
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=604800"},
+        )
+
     warn_if_unprotected(auth, skill_path, settings.debug_ui)
 
     # 팀원 분류 시트. 토큰이 있을 때만 연다. 서비스 판정과 무관한 내부 도구다.
