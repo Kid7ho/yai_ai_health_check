@@ -128,7 +128,6 @@ def test_응답을_만드는_공개_함수를_늘리지_않는다():
         "try_sentence",
         "try_message",
         "try_intro",
-        "try_wait_text",
     }
 
 

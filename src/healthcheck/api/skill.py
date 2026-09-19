@@ -39,7 +39,6 @@ from healthcheck.pipeline.step6_response import (
     render_welcome,
     try_intro,
     try_sentence,
-    try_wait_text,
 )
 from healthcheck.pipeline.small_talk import classify_small_talk
 from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
@@ -175,12 +174,12 @@ async def skill(request: Request) -> dict:
         return render_guide(services.image_base_url)
     if command == "caution":
         return render_caution()
-    intro = wait_text = None
+    intro = None
     if command == "try":
         # [한번 해 보기]는 예시 문장을 대신 확인한다. 한 번 확인한 뒤로는 캐시로 바로 답한다.
         # 결과 위에 확인한 문장을 보여 줘서 어르신이 무엇을 보내면 되는지 배우게 한다.
         utterance = try_sentence()
-        intro, wait_text = try_intro(), try_wait_text()
+        intro = try_intro()
 
     # "왜 그런지 보기" 버튼. 새 확인 요청이 아니라 직전 결과의 근거를 돌려준다.
     # 외부 호출 없이 바로 답하므로 5초 안에 끝난다.
@@ -242,7 +241,7 @@ async def skill(request: Request) -> dict:
         return _simple(_BUSY_TEXT)
 
     logger.info("작업 접수 job=%s kind=%s", job.job_id, share_input.kind)
-    return ack_response(wait_text)
+    return ack_response()
 
 
 def _simple(text: str) -> dict:

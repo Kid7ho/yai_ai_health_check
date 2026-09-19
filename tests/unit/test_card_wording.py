@@ -142,8 +142,8 @@ def test_제목에서_같은_뜻의_표기까지_찾는다(title, effect, expect
 
 @pytest.mark.parametrize(
     ("source", "title"),
-    [("gemini", "영상 속 이 내용을 확인했어요"), ("title_only", "영상 속 이 내용을 확인했어요"),
-     ("article", "글 속 이 내용을 확인했어요"), (None, "이 내용을 확인했어요")],
+    [("gemini", "영상 속 이 문장을 확인했어요."), ("title_only", "영상 속 이 문장을 확인했어요."),
+     ("article", "글 속 이 문장을 확인했어요."), (None, "")],
 )
 def test_영상이나_글_전체가_아니라_그_안의_문장을_판정했다고_밝힌다(extractor, source, title):
     """실측: '무릎 관절 건강' 영상에서 칼슘·뼈 건강 문장을 판정해 믿을 만해요가 나갔다."""
@@ -159,6 +159,7 @@ def test_영상이나_글_전체가_아니라_그_안의_문장을_판정했다�
     card = render(result, image_base_url="https://example.com")["template"]["outputs"][0]["basicCard"]
     assert card["title"] == "칼슘이 뼈 건강에 도움이 됩니다"
     assert card["description"].startswith(title)
-    # 이미지 없는 카드는 제목이 라벨이라 설명 첫 줄에 같은 안내를 둔다.
+    # 이미지 없는 카드는 제목이 라벨이라 설명 첫 줄에 영상·글 속 문장이라는 안내를 둔다.
     text_card = render(result)["template"]["outputs"][0]["textCard"]
-    assert text_card["description"].startswith("확인한 내용" if source is None else title)
+    expected = {None: "확인한 내용", "article": "글 속 이 내용을 확인했어요"}.get(source, "영상 속 이 내용을 확인했어요")
+    assert text_card["description"].startswith(expected)

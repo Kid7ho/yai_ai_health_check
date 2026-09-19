@@ -132,14 +132,14 @@ def find_forbidden(text: str) -> list[str]:
     return [phrase for phrase in forbidden if phrase in remaining]
 
 
-def ack_response(text: str | None = None) -> dict:
+def ack_response() -> dict:
     """즉시 ack 응답.
 
     카카오 스킬 응답 제한은 5초인데 실제 파이프라인은 10~20초가 걸린다.
     template 없이 useCallback만 담아 돌려주고, 결과는 콜백으로 보낸다.
-    text는 기다리는 동안 보이는 말이다. [한번 해 보기]는 확인하는 예시 문장을 함께 보여 준다.
+    2026-09-19 휴대폰 확인: 기다리는 동안 보이는 말은 이 data.text가 아니라 오픈빌더의 대기 문구 설정이 보인다.
     """
-    return {"version": "2.0", "useCallback": True, "data": {"text": _clip(text or _ACK_TEXT, _MAX_SIMPLE_TEXT)}}
+    return {"version": "2.0", "useCallback": True, "data": {"text": _ACK_TEXT}}
 
 
 def render(result: CheckResult, *, image_base_url: str | None = None, intro: str | None = None) -> dict:
@@ -201,11 +201,6 @@ def _intro(intro: str | None) -> list[dict]:
 def try_intro() -> str:
     """[한번 해 보기] 결과 위에 붙는 말. 어떤 문장을 확인했는지와 보내는 법을 알려 준다."""
     return str(load_guide().get("체험_안내", "")).replace("{문장}", try_sentence())
-
-
-def try_wait_text() -> str:
-    """[한번 해 보기]를 처음 확인하는 동안 보이는 말."""
-    return str(load_guide().get("체험_기다림", "")).replace("{문장}", try_sentence())
 
 
 def render_reason(result: CheckResult, *, image_base_url: str | None = None) -> dict:
@@ -514,17 +509,31 @@ _NO_CLAIM_TEXT = "확인할 내용을 찾지 못했어요."
 
 
 def _describe(result: CheckResult) -> str:
-    """이미지 없는 카드 본문. '확인한 내용'만 담는다. 판정 이유는 근거 화면에 있다."""
+    """이미지 없는 카드 본문. 확인한 내용과 판정 이유 한 줄. 자세한 근거는 근거 화면에 있다."""
     checked = _checked_claim_text(result)
     if checked:
-        return f"{_checked_title(result)}\n{checked}"
+        reason = result.verdict.guidance.strip()
+        return "\n".join(part for part in (_checked_title(result), checked, reason) if part)
     return _NO_CLAIM_TEXT
 
 
 def _checked_caption(result: CheckResult) -> str:
-    """이미지 카드의 회색 설명. 제목 문장이 무엇인지 알려 준다."""
+    """이미지 카드의 회색 설명. 판정 이유 한 줄(규칙표 안내)을 바로 보여 준다.
+
+    이전에는 "이 내용을 확인했어요"만 적어 이유를 보려면 "왜 그런지 보기"를 눌러야 했다(2026-09-19 개선).
+    영상·글이면 판정한 것이 그 안의 한 문장이라는 점을 앞에 짧게 남긴다.
+    """
+    reason = result.verdict.guidance.strip()
     title = _checked_title(result)
-    return "이 내용을 확인했어요" if title == _CHECKED_TITLE else title
+    prefix = "" if title == _CHECKED_TITLE else _PART_NOTE.get(title, "")
+    return "\n".join(part for part in (prefix, reason) if part) or title
+
+
+# 영상·글 속 한 문장만 판정했다는 짧은 표시
+_PART_NOTE = {
+    "글 속 이 내용을 확인했어요": "글 속 이 문장을 확인했어요.",
+    "영상 속 이 내용을 확인했어요": "영상 속 이 문장을 확인했어요.",
+}
 
 
 def _checked_title(result: CheckResult) -> str:
@@ -692,7 +701,6 @@ __all__ = [
     "try_sentence",
     "try_message",
     "try_intro",
-    "try_wait_text",
     "find_forbidden",
     "verdict_image_url",
     "IMAGE_FILES",

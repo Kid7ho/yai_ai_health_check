@@ -40,19 +40,25 @@ async def test_이미지_주소가_있으면_라벨_이미지_카드로_답한�
     assert card["thumbnail"]["imageUrl"].startswith(f"{BASE}/static/verdict/{IMAGE_VERSION}/")
     # 판정 대상 문장이 진한 글씨(제목)로 나간다.
     assert "홍삼" in card["title"]
-    assert card["description"].startswith("이 내용을 확인했어요")
+    # 회색 설명에 판정 이유 한 줄(규칙표 안내)을 바로 보여 준다
+    assert card["description"].startswith(result.verdict.guidance)
     assert len(card["description"]) <= 230
     assert [b["label"] for b in card["buttons"]] == ["왜 그런지 보기", "친구에게 보내기"]
 
 
-async def test_결과_카드에는_판정_이유를_넣지_않는다():
+async def test_결과_카드에_판정_이유_한_줄을_바로_보여_준다():
+    """'왜 그런지 보기'를 누르지 않아도 이유를 알 수 있게 한다(2026-09-19). 검수용 근거 문장은 넣지 않는다."""
     result = await result_of()
     assert result.verdict.guidance
 
     for payload in (render(result), render(result, image_base_url=BASE)):
         card = payload["template"]["outputs"][0]
         body = card.get("basicCard", card.get("textCard"))["description"]
-        assert result.verdict.guidance not in body
+        assert result.verdict.guidance in body
+        assert "이 내용을 확인했어요" not in body
+        for reason in result.verdict.reasons:
+            if reason and reason != result.verdict.guidance:
+                assert reason not in body
 
 
 async def test_결과는_카드_하나로_보내고_면책_문구는_카드_안에_붙는다():

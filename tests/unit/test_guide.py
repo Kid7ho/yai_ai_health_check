@@ -166,12 +166,6 @@ def test_고정_메뉴_세_버튼이_보내는_말에_바로_답한다(label):
         assert len(output["textCard"]["description"]) <= 400
 
 
-def test_한번_해_보기는_기다리는_동안_확인하는_문장을_보여_준다():
-    payload, _ = post(kakao_request("한 번 해보기"))
-    assert payload["useCallback"] is True
-    assert "홍삼이 면역력 증진에 도움을 줄 수 있다" in payload["data"]["text"]
-
-
 def test_한번_해_보기_결과_위에_보낸_문장과_보내는_법을_붙인다():
     from healthcheck.pipeline.step6_response import try_intro
 
