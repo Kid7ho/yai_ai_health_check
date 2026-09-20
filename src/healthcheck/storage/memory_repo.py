@@ -23,7 +23,16 @@ class InMemoryCheckRepository:
         users: set[str] = set()
         versions: dict[str, int] = {}
 
+        by_kind: dict[str, int] = {}
+        daily: dict[str, int] = {}
+        ingredients: dict[str, int] = {}
+
         for record in self.records:
+            by_kind[record.input_kind] = by_kind.get(record.input_kind, 0) + 1
+            day = record.created_at.date().isoformat()
+            daily[day] = daily.get(day, 0) + 1
+            if record.ingredient:
+                ingredients[record.ingredient] = ingredients.get(record.ingredient, 0) + 1
             by_label[record.label.value] = by_label.get(record.label.value, 0) + 1
             versions[record.rules_version] = versions.get(record.rules_version, 0) + 1
             if record.label in (Label.WARNING, Label.CAUTION) and record.ingredient:
@@ -38,6 +47,9 @@ class InMemoryCheckRepository:
             cache_hits=sum(1 for record in self.records if record.from_cache),
             distinct_users=len(users),
             rules_versions=versions,
+            by_input_kind=by_kind,
+            daily=dict(sorted(daily.items())),
+            top_ingredients=sorted(ingredients.items(), key=lambda item: (-item[1], item[0]))[:10],
         )
 
     async def purge_expired(self, now: datetime | None = None) -> dict[str, int]:

@@ -154,6 +154,29 @@ class SqliteCheckRepository:
             users = cursor.execute(
                 "SELECT COUNT(DISTINCT user_key) FROM checks WHERE user_key IS NOT NULL"
             ).fetchone()[0]
+            by_kind = {
+                row[0]: row[1]
+                for row in cursor.execute(
+                    "SELECT input_kind, COUNT(*) FROM checks GROUP BY input_kind"
+                ).fetchall()
+            }
+            # 날짜별 건수. created_at은 ISO 문자열이라 앞 10자가 날짜다.
+            daily = {
+                row[0]: row[1]
+                for row in cursor.execute(
+                    "SELECT substr(created_at, 1, 10) AS day, COUNT(*) FROM checks GROUP BY day ORDER BY day"
+                ).fetchall()
+            }
+            top_ingredients = [
+                (row[0], row[1])
+                for row in cursor.execute(
+                    """
+                    SELECT ingredient, COUNT(*) AS n FROM checks
+                    WHERE ingredient IS NOT NULL
+                    GROUP BY ingredient ORDER BY n DESC, ingredient LIMIT 10
+                    """
+                ).fetchall()
+            ]
             versions = {
                 row[0]: row[1]
                 for row in cursor.execute(
@@ -171,6 +194,9 @@ class SqliteCheckRepository:
             cache_hits=cache_hits,
             distinct_users=users,
             rules_versions=versions,
+            by_input_kind=by_kind,
+            daily=daily,
+            top_ingredients=top_ingredients,
         )
 
     def _purge(self, now: datetime) -> dict[str, int]:

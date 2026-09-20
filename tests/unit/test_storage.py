@@ -218,3 +218,15 @@ def test_metrics에_개인정보가_없다():
 
     assert "user_key" not in str(body)
     assert "raw_text" not in str(body)
+
+
+async def test_성과_공유회용_집계를_함께_낸다(repository):
+    """입력 종류·날짜별 건수·많이 확인한 성분. 개인을 식별하는 값은 담지 않는다."""
+    await repository.save(await record_for("홍삼이 면역력 증진에 도움을 줄 수 있다", now=NOW))
+    await repository.save(await record_for("https://youtu.be/redginseng1", now=NOW))
+    await repository.save(await record_for("마늘이 혈압을 낮추는 데 좋다", now=NOW + timedelta(days=1)))
+
+    metrics = await repository.metrics()
+    assert metrics.by_input_kind == {"PLAIN_TEXT": 2, "YOUTUBE": 1}
+    assert metrics.daily == {"2026-09-12": 2, "2026-09-13": 1}
+    assert dict(metrics.top_ingredients)["홍삼"] >= 1

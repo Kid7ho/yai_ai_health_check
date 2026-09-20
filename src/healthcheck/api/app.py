@@ -403,6 +403,9 @@ def create_app(
             "캐시_적중": values.cache_hits,
             "참여자_수": values.distinct_users,
             "규칙표_버전별": values.rules_versions,
+            "입력_종류별": values.by_input_kind,
+            "날짜별": values.daily,
+            "많이_확인한_성분": values.top_ingredients,
         }
 
     @app.get("/health")

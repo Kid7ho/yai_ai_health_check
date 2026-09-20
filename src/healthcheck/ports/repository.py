@@ -77,6 +77,11 @@ class Metrics:
     cache_hits: int
     distinct_users: int
     rules_versions: dict[str, int] = field(default_factory=dict)
+    # 성과 공유회에서 쓸 집계. 개인을 식별하는 값은 담지 않는다.
+    # 입력 종류(YOUTUBE·OTHER_LINK·PLAIN_TEXT), 날짜별 건수, 많이 확인한 성분 순위
+    by_input_kind: dict[str, int] = field(default_factory=dict)
+    daily: dict[str, int] = field(default_factory=dict)
+    top_ingredients: list[tuple[str, int]] = field(default_factory=list)
 
 
 class CheckRepository(Protocol):
