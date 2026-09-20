@@ -86,6 +86,27 @@ def make(src: Path) -> None:
     # 4. 결과 카드
     fit(chat.crop((110, 340, 775, 1100))).save(OUT / "4_result.png", optimize=True)
 
+    # 0. 이런 걸 확인해요 (그림)
+    bg = (244, 243, 250)
+    img = Image.new("RGB", (SIZE, SIZE), bg)
+    draw = ImageDraw.Draw(img)
+    green = (31, 157, 85)
+    rows = [
+        (True, "홍삼이 면역력에", "좋대요", 170),
+        (True, "이 제품 먹고", "당뇨 나았대요", 370),
+        (False, "오늘 뭐 먹을까", "식단 소개", 590),
+    ]
+    for ok, line1, line2, y in rows:
+        color = green if ok else RED
+        if ok:
+            draw.ellipse((70, y - 36, 142, y + 36), outline=color, width=11)
+        else:
+            draw.line((78, y - 32, 136, y + 32), fill=color, width=13)
+            draw.line((136, y - 32, 78, y + 32), fill=color, width=13)
+        draw.text((180, y - 34), line1, font=font(52), fill=(23, 26, 36), anchor="lm")
+        draw.text((180, y + 30), line2, font=font(52), fill=(23, 26, 36), anchor="lm")
+    img.save(OUT / "0_what.png", optimize=True)
+
     # 5. 이건 못 봐요 (그림)
     bg = (244, 243, 250)
     img = Image.new("RGB", (SIZE, SIZE), bg)

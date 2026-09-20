@@ -33,6 +33,7 @@ def test_사용법을_물으면_넘겨_보는_카드_네_장으로_바로_답한
     carousel = payload["template"]["outputs"][0]["carousel"]
     assert carousel["type"] == "textCard"
     assert [item["title"] for item in carousel["items"]] == [
+        "이런 걸 확인해요",
         "카톡으로 받았다면",
         "유튜브에서 봤다면",
         "여기에 붙여 넣고 보내기",
@@ -199,7 +200,7 @@ def test_공개_주소가_있으면_사용법을_사진_카드로_보낸다():
     carousel = payload["template"]["outputs"][0]["carousel"]
     assert carousel["type"] == "basicCard"
     for item in carousel["items"]:
-        assert item["thumbnail"]["imageUrl"].startswith("https://example.org/static/guide/v2/")
+        assert item["thumbnail"]["imageUrl"].startswith("https://example.org/static/guide/v3/")
         assert len(item["description"]) <= 230
 
 
@@ -212,7 +213,7 @@ def test_사용법_사진은_정해진_파일만_내보낸다():
             response = client.get(f"/static/guide/{GUIDE_IMAGE_VERSION}/{name}.png")
             assert response.status_code == 200 and response.headers["content-type"] == "image/png"
         assert client.get(f"/static/guide/{GUIDE_IMAGE_VERSION}/..%2Fdebug.png").status_code == 404
-        assert client.get("/static/guide/v1/1_forward.png").status_code == 404
+        assert client.get("/static/guide/v2/1_forward.png").status_code == 404
 
 
 # ─────────────────────────────────────────────────────────────
