@@ -54,6 +54,7 @@ from healthcheck.storage.memory_repo import InMemoryCheckRepository
 VERDICT_IMAGE_DIR = Path(__file__).resolve().parent / "static" / "verdict"
 GUIDE_IMAGE_DIR = Path(__file__).resolve().parent / "static" / "guide"
 from healthcheck.storage.sqlite_repo import SqliteCheckRepository
+from healthcheck.storage.transcript_cache import CachingTranscriptExtractor, SqliteTranscriptCache
 
 logger = logging.getLogger(__name__)
 
@@ -197,6 +198,11 @@ def build_orchestrator(settings: Settings | None = None) -> Orchestrator:
         # 영상 제목으로 본문을 만든다. 안쪽에 두면 제목이 음성 인식을 가린다.
         transcript = TitledTranscriptExtractor(transcript, YouTubeTitleFetcher())
         logger.info("영상 제목: 자막 앞에 붙이고, 자막이 없으면 제목으로 판정")
+        # 가장 바깥. 같은 영상을 다시 읽지 않는다. 판정 캐시와 달리 재시작과 규칙표 버전 변경을 넘어 남는다.
+        transcript = CachingTranscriptExtractor(
+            transcript, SqliteTranscriptCache(settings.transcript_cache_path)
+        )
+        logger.info("영상 받아 적기 캐시: %s", settings.transcript_cache_path)
     else:
         transcript = FakeTranscriptExtractor()
 
@@ -308,6 +314,12 @@ def create_app(
                     purged = await repository.purge_expired()
                     if any(purged.values()):
                         logger.info("보존 기간 만료 정리: %s", purged)
+                    # 영상 받아 적기 캐시도 함께 정리한다. 지워진 영상의 글이 오래 남지 않게 한다.
+                    cache = getattr(orchestrator.transcript, "_cache", None)
+                    if cache is not None:
+                        removed = await cache.purge_expired()
+                        if removed:
+                            logger.info("영상 받아 적기 캐시 정리: %d건", removed)
                 except Exception:
                     logger.exception("보존 기간 정리 실패")
                 await asyncio.sleep(24 * 3600)
@@ -419,6 +431,7 @@ def create_app(
             "queued": queue.size,
             "transcript_blocked": blocked,
             "gemini": _gemini_usage(orchestrator.transcript),
+            "영상_캐시": _transcript_cache_usage(orchestrator.transcript),
             "mfds_snapshot": (
                 orchestrator.mfds.snapshot_info()
                 if hasattr(orchestrator.mfds, "snapshot_info")
@@ -427,6 +440,14 @@ def create_app(
         }
 
     return app
+
+
+def _transcript_cache_usage(transcript) -> dict[str, int] | None:
+    """영상 받아 적기 캐시 적중·누락. 캐시를 쓰지 않으면 None."""
+    cache = getattr(transcript, "_cache", None)
+    if cache is None:
+        return None
+    return {"적중": cache.hits, "누락": cache.misses}
 
 
 def _gemini_usage(extractor, depth: int = 0) -> dict | None:

@@ -111,6 +111,8 @@ class Settings:
     # 팀원 분류 시트. 토큰이 있을 때만 /labeling/{토큰}/ 주소로 연다. 누구나 쓰는 공개 화면이 되지 않게 한다.
     labeling_token: str | None = field(default=None, repr=False)
     labeling_db_path: Path = PROJECT_ROOT / "data" / "labeling.db"
+    # 영상 받아 적기 캐시. 같은 영상을 다시 읽지 않아 Gemini 무료 한도를 아낀다.
+    transcript_cache_path: Path = PROJECT_ROOT / "data" / "transcripts.db"
 
     # 저장소. 판정 기록과 목표 지표가 여기 쌓인다.
     database_path: str = "healthcheck.db"
@@ -224,6 +226,9 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         paper_stance_verify_effort=(os.environ.get("PAPER_STANCE_VERIFY_EFFORT") or "none").strip().lower(),
         labeling_token=_clean(os.environ.get("LABELING_TOKEN")),
         labeling_db_path=Path(os.environ.get("LABELING_DB_PATH") or PROJECT_ROOT / "data" / "labeling.db"),
+        transcript_cache_path=Path(
+            os.environ.get("TRANSCRIPT_CACHE_PATH") or PROJECT_ROOT / "data" / "transcripts.db"
+        ),
         mfds_snapshot_path=Path(
             os.environ.get("MFDS_SNAPSHOT_PATH") or PROJECT_ROOT / "data" / "mfds_i0040.json"
         ),

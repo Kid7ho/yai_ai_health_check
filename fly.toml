@@ -27,6 +27,8 @@ primary_region = "nrt"
   MFDS_SNAPSHOT_PATH = "/data/mfds_i0040.json"
   # 팀원 분류 결과. LABELING_TOKEN은 fly secrets에 둔다.
   LABELING_DB_PATH = "/data/labeling.db"
+  # 영상 받아 적기 캐시. 같은 영상을 다시 읽지 않아 Gemini 무료 한도를 아낀다.
+  TRANSCRIPT_CACHE_PATH = "/data/transcripts.db"
   # 결과 카드 이미지를 카카오가 내려받을 주소. 앱 이름을 바꾸면 함께 바꾼다.
   PUBLIC_BASE_URL = "https://yai-health-check.fly.dev"
 
