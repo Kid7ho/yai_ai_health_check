@@ -25,6 +25,8 @@ COPY rules/ ./rules/
 COPY src/ ./src/
 # 팀원 분류 시트. LABELING_TOKEN이 있을 때만 서버가 연다.
 COPY labeling/claim_labeling.html ./labeling/claim_labeling.html
+# 성과 요약 스크립트. 서버에서 판정 DB를 읽어 집계만 찍는다(fly ssh console -C).
+COPY scripts/report_metrics.py ./scripts/report_metrics.py
 
 ENV PYTHONPATH=/app/src \
     ADAPTER_MODE=fake
