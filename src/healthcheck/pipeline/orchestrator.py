@@ -25,7 +25,7 @@ from healthcheck.domain.types import (
 )
 from healthcheck.adapters.youtube.transcript import TranscriptFetchError
 from healthcheck.pipeline import step1_input
-from healthcheck.pipeline.step3_claims import ClaimExtractor
+from healthcheck.pipeline.step3_claims import ClaimExtractor, mentions_food_word
 from healthcheck.pipeline.step4_verify import verify
 from healthcheck.pipeline.step5_verdict import (
     RuleSet,
@@ -137,7 +137,10 @@ class Orchestrator:
             and not claims.disease_cure_expression
             and not claims.prohibited_ad_expression
         ):
-            return self._notice_result(share_input, "not_target")
+            # 음식 이야기는 분명한데 구체적인 효능 주장이 없는 글(식단 소개 영상 등)은 다르게 안내한다.
+            # "확인 대상이 아니에요"는 음식은 안 봐 준다는 뜻으로 읽힌다(2026-09-20 실측).
+            notice = "no_claim" if mentions_food_word(content.text) else "not_target"
+            return self._notice_result(share_input, notice)
 
         step = time.monotonic()
         if claim_checks:

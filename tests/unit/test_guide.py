@@ -213,3 +213,33 @@ def test_사용법_사진은_정해진_파일만_내보낸다():
             assert response.status_code == 200 and response.headers["content-type"] == "image/png"
         assert client.get(f"/static/guide/{GUIDE_IMAGE_VERSION}/..%2Fdebug.png").status_code == 404
         assert client.get("/static/guide/v1/1_forward.png").status_code == 404
+
+
+# ─────────────────────────────────────────────────────────────
+# 음식 이야기는 있는데 주장이 없는 글
+# ─────────────────────────────────────────────────────────────
+
+from healthcheck.pipeline.step3_claims import mentions_food_word  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("의사가 말하는 건강한 저녁식사 TOP 3 곤약볶음 계란찜과 나물 오트밀죽", True),
+        ("사과와 바나나를 자주 드세요", True),
+        ("오늘 주식 시장 소식입니다", False),
+        ("새 스마트폰 사용법 안내", False),
+    ],
+)
+def test_흔한_음식_이름을_알아본다(text, expected):
+    assert mentions_food_word(text) is expected
+
+
+def test_음식_이야기인데_주장이_없으면_다른_문구로_안내한다():
+    from healthcheck.domain.labels import Label as L
+    from healthcheck.pipeline.step6_response import render as render_result
+
+    payload = render_result(result(L.UNKNOWN, notice="no_claim"))
+    text = payload["template"]["outputs"][0]["simpleText"]["text"]
+    assert text.startswith("이 영상이나 글에는 확인할 만한 내용이 없었어요.")
+    assert quick_labels(payload) == ["사용법 보기"]

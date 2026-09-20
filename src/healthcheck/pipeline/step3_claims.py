@@ -76,6 +76,8 @@ class _Patterns:
     ingredient_lookup: dict[str, str]
     # 바로 앞에 한글이 붙으면 성분으로 보지 않는 표기. "줄여주고"의 "여주"
     strict_left_ingredients: frozenset[str] = frozenset()
+    # 흔한 음식 이름. 안내 문구를 고를 때만 쓰고 판정·검증에는 쓰지 않는다.
+    food_words: tuple[str, ...] = ()
 
 
 @lru_cache(maxsize=4)
@@ -162,7 +164,14 @@ def load_patterns(
         effect_targets=tuple(sorted(set(targets), key=len, reverse=True)),
         ingredient_lookup=lookup,
         strict_left_ingredients=strict_left,
+        food_words=tuple(raw.get("일반_음식_이름") or ()),
     )
+
+
+def mentions_food_word(text: str, patterns=None) -> bool:
+    """흔한 음식 이름이 글에 나오는가. 판정이 아니라 안내 문구를 고를 때만 쓴다."""
+    patterns = patterns or load_patterns()
+    return any(word in text for word in patterns.food_words)
 
 
 class RuleBasedClaimExtractor:
