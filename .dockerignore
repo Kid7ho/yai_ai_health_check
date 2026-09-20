@@ -14,5 +14,7 @@ __pycache__/
 .pytest_cache/
 tests/
 scripts/
+# 성과 요약 스크립트만 올린다. 서버에서 판정 DB를 읽어 집계를 찍는다.
+!scripts/report_metrics.py
 *.md
 .DS_Store
