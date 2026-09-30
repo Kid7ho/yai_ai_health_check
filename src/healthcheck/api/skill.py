@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
+import time
 import uuid
 from dataclasses import dataclass, field
 from typing import Any
@@ -28,6 +29,7 @@ from healthcheck.pipeline import step1_input
 from healthcheck.pipeline.orchestrator import Orchestrator
 from healthcheck.pipeline.step6_response import (
     _REASON_BUTTON,
+    _SHARE_BUTTON,
     ack_response,
     guide_command,
     render_caution,
@@ -35,6 +37,7 @@ from healthcheck.pipeline.step6_response import (
     render_guide,
     render_media_notice,
     render_reason,
+    render_share,
     render_small_talk,
     render_welcome,
     try_intro,
@@ -42,8 +45,10 @@ from healthcheck.pipeline.step6_response import (
 )
 from healthcheck.pipeline.small_talk import classify_small_talk
 from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
+from healthcheck.ports.events import EventLog
 from healthcheck.ports.queue import CheckJob, JobQueue
 from healthcheck.ports.repository import CheckRepository
+from healthcheck.storage.events import new_event, outcome_of
 from healthcheck.storage.record import build_record
 
 logger = logging.getLogger(__name__)
@@ -115,11 +120,24 @@ class SkillServices:
     small_talk_extractor: RuleBasedClaimExtractor = field(default_factory=RuleBasedClaimExtractor)
     # 결과 카드 머리 이미지의 공개 주소. 없으면 이미지 없는 카드로 답한다.
     image_base_url: str | None = None
+    # 응답 기록(교육 성과 KPI). 없으면 기록하지 않는다.
+    events: EventLog | None = None
+
+
+async def _log(services: SkillServices, kind: str, user_key: str | None, **fields) -> None:
+    """응답 한 줄을 기록한다. 기록 실패로 어르신에게 답을 못 보내는 일은 만들지 않는다."""
+    if services.events is None:
+        return
+    try:
+        await services.events.record(new_event(kind, user_key=user_key, **fields))
+    except Exception:
+        logger.exception("응답 기록 실패 kind=%s", kind)
 
 
 async def skill(request: Request) -> dict:
     """스킬 요청 하나를 받는다. 5초 안에 반드시 돌려준다."""
     services: SkillServices = request.app.state.services
+    started = time.monotonic()
 
     # 인증부터 확인한다. 토큰이 설정되어 있지 않으면 통과한다.
     services.auth.verify(request)
@@ -159,6 +177,7 @@ async def skill(request: Request) -> dict:
     # '알 수 없어요'를 돌려준다. 이미지 판독은 범위 밖이므로 조회 없이 안내한다.
     if _is_media_upload(body):
         logger.info("사진·파일 입력이라 확인하지 않는다")
+        await _log(services, "media", user_key, outcome="media")
         return render_media_notice()
 
     # 사용법·처음 인사. 외부 호출 없이 바로 답한다.
@@ -170,13 +189,20 @@ async def skill(request: Request) -> dict:
         logger.info("안내 응답 kind=%s", command)
     if _dig(body, "intent", "name") == _WELCOME_INTENT or command == "welcome":
         logger.info("안내 응답 kind=welcome intent=%s", _dig(body, "intent", "name"))
+        # 채널 진입으로 불린 인사는 어르신이 보낸 메시지가 아니다. KPI의 단계 수에서 뺀다.
+        await _log(services, "welcome", user_key, outcome="command" if command == "welcome" else "intent")
         return render_welcome()
     if command == "guide":
+        await _log(services, "guide", user_key)
         return render_guide(services.image_base_url)
     if command == "caution":
+        await _log(services, "caution", user_key)
         return render_caution()
     intro = None
+    via = None
     if command == "try":
+        await _log(services, "try", user_key)
+        via = "try"
         # [한번 해 보기]는 예시 문장을 대신 확인한다. 한 번 확인한 뒤로는 캐시로 바로 답한다.
         # 결과 위에 확인한 문장을 보여 줘서 어르신이 무엇을 보내면 되는지 배우게 한다.
         utterance = try_sentence()
@@ -186,21 +212,32 @@ async def skill(request: Request) -> dict:
     # 외부 호출 없이 바로 답하므로 5초 안에 끝난다.
     if utterance.strip() == _REASON_BUTTON:
         previous = services.last_results.get(user_key)
+        await _log(services, "reason", user_key, outcome=outcome_of(previous) if previous else "none")
         if previous is None:
             return _simple("먼저 확인하고 싶은 영상이나 글을 보내 주세요.")
         if previous.notice or previous.retryable_failure:
             return render(previous, image_base_url=services.image_base_url)
         return render_reason(previous, image_base_url=services.image_base_url)
 
+    # "친구에게 보내기" 버튼. 누른 수를 세고, 공유 버튼 달린 같은 카드를 다시 보낸다.
+    if utterance.strip() == _SHARE_BUTTON:
+        previous = services.last_results.get(user_key)
+        await _log(services, "share", user_key, outcome=outcome_of(previous) if previous else "none")
+        if previous is None:
+            return _simple("먼저 확인하고 싶은 영상이나 글을 보내 주세요.")
+        return render_share(previous, image_base_url=services.image_base_url)
+
     share_input = step1_input.classify(utterance)
 
     # 주소가 아닌 말. 인사·감사·질문·건강과 무관한 말은 확인 과정(약 15초)에 넣지 않고 바로 답한다.
     if share_input.kind == "PLAIN_TEXT":
         if not share_input.raw_text.strip():
+            await _log(services, "welcome", user_key, outcome="empty")
             return render_welcome()
         small_talk = classify_small_talk(share_input.raw_text, services.small_talk_extractor)
         if small_talk is not None:
             logger.info("바로 답하는 말 kind=%s", small_talk)
+            await _log(services, "small_talk", user_key, outcome=small_talk)
             return render_small_talk(small_talk)
 
     # 예외 경로: 캐시가 맞으면 외부 호출 없이 바로 답한다.
@@ -218,6 +255,10 @@ async def skill(request: Request) -> dict:
                 )
             except Exception:
                 logger.exception("판정 기록 저장 실패(캐시 응답)")
+        await _log(
+            services, "check", user_key, outcome=outcome_of(cached), share_input=share_input, via=via,
+            latency_ms=int((time.monotonic() - started) * 1000), delivered=True,
+        )
         return render(cached, image_base_url=services.image_base_url, intro=intro)
 
     # 기본 경로: 콜백이 없으면 비동기 처리를 할 수 없다.
@@ -225,6 +266,7 @@ async def skill(request: Request) -> dict:
     # 실제 채널 승인 후 이 분기가 실제로 발생하는지 확인해야 한다.
     if not callback_url:
         logger.warning("callbackUrl이 없어 비동기 처리를 못 한다")
+        await _log(services, "check", user_key, outcome="no_callback", share_input=share_input, via=via, delivered=False)
         return _simple(_NO_CALLBACK_TEXT)
 
     job = CheckJob(
@@ -233,12 +275,14 @@ async def skill(request: Request) -> dict:
         callback_url=callback_url,
         user_key=user_key,
         intro=intro,
+        via=via,
     )
 
     try:
         await services.queue.enqueue(job)
     except QueueFull:
         logger.warning("큐가 꽉 차서 요청을 받지 못했다")
+        await _log(services, "check", user_key, outcome="busy", share_input=share_input, via=via, delivered=True)
         return _simple(_BUSY_TEXT)
 
     logger.info("작업 접수 job=%s kind=%s", job.job_id, share_input.kind)

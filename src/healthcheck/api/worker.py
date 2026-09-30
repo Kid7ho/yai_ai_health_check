@@ -18,8 +18,10 @@ from healthcheck.domain.types import CheckResult, Verdict
 from healthcheck.pipeline.orchestrator import Orchestrator
 from healthcheck.pipeline.step6_response import render
 from healthcheck.ports.callback import CallbackSender
+from healthcheck.ports.events import EventLog
 from healthcheck.ports.queue import CheckJob, JobQueue
 from healthcheck.ports.repository import CheckRepository
+from healthcheck.storage.events import new_event, outcome_of
 from healthcheck.storage.record import build_record
 
 logger = logging.getLogger(__name__)
@@ -44,8 +46,10 @@ class Worker:
         repository: CheckRepository | None = None,
         last_results=None,
         image_base_url: str | None = None,
+        events: EventLog | None = None,
     ) -> None:
         self._image_base_url = image_base_url
+        self._events = events
         self._queue = queue
         self._orchestrator = orchestrator
         self._callback = callback_sender
@@ -85,8 +89,10 @@ class Worker:
             logger.warning(
                 "콜백 유효 시간이 지나 보내지 않는다 job=%s 경과=%.0f초", job.job_id, elapsed
             )
+            await self._log_event(job, result, delivered=False)
             return
 
+        delivered = True
         try:
             await self._callback.send(
                 job.callback_url, render(result, image_base_url=self._image_base_url, intro=job.intro)
@@ -95,6 +101,29 @@ class Worker:
             # 콜백은 1회만 쓸 수 있어서 여기서 재시도해도 성공하지 않는 경우가 많다.
             # 판정 자체는 캐시에 남았으므로 어르신이 다시 보내면 즉시 답할 수 있다.
             logger.exception("콜백 전송 실패: job=%s", job.job_id)
+            delivered = False
+        await self._log_event(job, result, delivered=delivered)
+
+    async def _log_event(self, job: CheckJob, result: CheckResult, *, delivered: bool) -> None:
+        """응답 기록. 요청을 받은 때부터 결과를 보낸 때까지 걸린 시간을 함께 남긴다."""
+        if self._events is None:
+            return
+        import time
+
+        try:
+            await self._events.record(
+                new_event(
+                    "check",
+                    user_key=job.user_key,
+                    outcome=outcome_of(result),
+                    share_input=job.share_input,
+                    via=job.via,
+                    latency_ms=int((time.monotonic() - job.created_at) * 1000),
+                    delivered=delivered,
+                )
+            )
+        except Exception:
+            logger.exception("응답 기록 실패: job=%s", job.job_id)
 
 
     async def _record(self, job: CheckJob, result: CheckResult) -> None:
@@ -131,6 +160,7 @@ async def start_workers(
     repository: CheckRepository | None = None,
     last_results=None,
     image_base_url: str | None = None,
+    events: EventLog | None = None,
 ) -> list[asyncio.Task]:
     """워커 여러 개를 띄운다.
 
@@ -138,6 +168,6 @@ async def start_workers(
     Liner 토큰 비용을 지원받는 구조이므로 기본값은 작게 둔다.
     """
     worker = Worker(
-        queue, orchestrator, callback_sender, repository, last_results, image_base_url
+        queue, orchestrator, callback_sender, repository, last_results, image_base_url, events
     )
     return [asyncio.create_task(worker.run_forever()) for _ in range(count)]

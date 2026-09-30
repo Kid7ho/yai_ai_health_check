@@ -6,15 +6,26 @@
     fly ssh console --app yai-health-check -C "python /app/scripts/report_metrics.py"
     python3 scripts/report_metrics.py --db data/healthcheck.db --days 30
 
+교육 회차별 KPI(응답 기록 events 표). 기간은 한국 시간이다.
+
+    fly ssh console --app yai-health-check -C "python /app/scripts/report_metrics.py --cohort 2026-10-05T09:00~2026-10-06T18:00"
+    fly ssh console --app yai-health-check -C "python /app/scripts/report_metrics.py --kpi"   # 전체 기간
+
 개인을 식별하는 값은 뽑지 않는다. 건수와 비율만 센다.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import sqlite3
+import sys
 from collections import Counter
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from pathlib import Path
+
+# 서버 이미지는 PYTHONPATH=/app/src다. 로컬에서 돌릴 때도 src를 찾게 한다.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 LABEL_KO = {
     "TRUSTWORTHY": "믿을 만해요",
@@ -41,7 +52,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="판정 기록 요약")
     parser.add_argument("--db", default="/data/healthcheck.db")
     parser.add_argument("--days", type=int, default=30, help="날짜별 표에 보여 줄 기간")
+    parser.add_argument("--kpi", action="store_true", help="응답 기록으로 KPI를 계산한다(전체 기간)")
+    parser.add_argument("--cohort", help="교육 시간. 예: 2026-10-05T09:00~2026-10-06T18:00 (한국 시간)")
     args = parser.parse_args()
+    if args.kpi or args.cohort:
+        return print_kpi(args.db, args.cohort)
 
     rows = sqlite3.connect(f"file:{args.db}?mode=ro", uri=True).execute(
         "SELECT substr(created_at, 1, 10), label, rule_id, input_kind, ingredient, from_cache, user_key FROM checks"
@@ -83,6 +98,30 @@ def main() -> int:
         count = counts.get(day, 0)
         if count or day >= days[0]:
             print(f"  {day} {bar(count, peak, 20)} {count:>4}건")
+    return 0
+
+
+def print_kpi(db: str, cohort_text: str | None) -> int:
+    from healthcheck.storage.events import read_events
+    from healthcheck.storage.kpi import compute, format_report, parse_cohort
+
+    connection = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+    try:
+        events = read_events(lambda: connection, lambda _connection: None)
+    except sqlite3.OperationalError:
+        print("응답 기록(events 표)이 아직 없습니다:", db)
+        return 0
+    # 응답 기록이 생기기 전부터 쓰던 사람(팀원 등)을 참여자에서 빼려고 판정 기록의 첫 사용 시각을 함께 본다.
+    prior: dict[str, datetime] = {}
+    for created_at, user_key, hashed in connection.execute(
+        "SELECT created_at, user_key, user_key_hashed FROM checks WHERE user_key IS NOT NULL"
+    ):
+        key = user_key if hashed else hashlib.sha256(user_key.encode("utf-8")).hexdigest()[:32]
+        moment = datetime.fromisoformat(created_at)
+        if key not in prior or moment < prior[key]:
+            prior[key] = moment
+    connection.close()
+    print(format_report(compute(events, cohort=parse_cohort(cohort_text), prior_first_seen=prior)))
     return 0
 
 

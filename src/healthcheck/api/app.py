@@ -54,6 +54,7 @@ from healthcheck.storage.memory_repo import InMemoryCheckRepository
 VERDICT_IMAGE_DIR = Path(__file__).resolve().parent / "static" / "verdict"
 GUIDE_IMAGE_DIR = Path(__file__).resolve().parent / "static" / "guide"
 from healthcheck.storage.sqlite_repo import SqliteCheckRepository
+from healthcheck.storage.events import InMemoryEventLog, SqliteEventLog
 from healthcheck.storage.transcript_cache import CachingTranscriptExtractor, SqliteTranscriptCache
 
 logger = logging.getLogger(__name__)
@@ -244,6 +245,15 @@ def build_repository(settings: Settings | None = None) -> CheckRepository:
     return SqliteCheckRepository(settings.database_path)
 
 
+def build_event_log(settings: Settings | None = None):
+    """응답 기록 저장소. 판정 DB와 같은 파일에 events 표를 둔다."""
+    settings = settings or load_settings()
+    if settings.database_path in ("", ":memory:"):
+        return InMemoryEventLog()
+    logger.info("응답 기록: SQLite %s (events)", settings.database_path)
+    return SqliteEventLog(settings.database_path)
+
+
 def build_callback_sender(settings: Settings | None = None) -> object:
     """실제 카카오 콜백 전송기를 쓸지 기록용 Fake를 쓸지 고른다."""
     settings = settings or load_settings()
@@ -259,6 +269,7 @@ def create_app(
     *,
     worker_count: int = 2,
     repository: CheckRepository | None = None,
+    events=None,
     auth: SkillAuth | None = None,
     skill_path: str | None = None,
     image_base_url: str | None = None,
@@ -280,6 +291,7 @@ def create_app(
     # 기본값을 메모리로 둔다. 테스트가 실수로 실제 DB 파일을 만들지 않게 한다.
     # 실제 서비스는 아래 app 조립에서 SQLite를 넘긴다.
     repository = repository or InMemoryCheckRepository()
+    events = events if events is not None else InMemoryEventLog()
     queue = InProcessJobQueue()
     last_results = skill.LastResults()
 
@@ -293,6 +305,7 @@ def create_app(
             repository=repository,
             last_results=last_results,
             image_base_url=image_base_url,
+            events=events,
         )
         logger.info("워커 %d개 기동. 규칙표 %s", worker_count, orchestrator.ruleset.version)
 
@@ -314,6 +327,9 @@ def create_app(
                     purged = await repository.purge_expired()
                     if any(purged.values()):
                         logger.info("보존 기간 만료 정리: %s", purged)
+                    removed_events = await events.purge_expired()
+                    if removed_events:
+                        logger.info("응답 기록 보존 기간 정리: %d건", removed_events)
                     # 영상 받아 적기 캐시도 함께 정리한다. 지워진 영상의 글이 오래 남지 않게 한다.
                     cache = getattr(orchestrator.transcript, "_cache", None)
                     if cache is not None:
@@ -339,7 +355,9 @@ def create_app(
         auth=auth,
         last_results=last_results,
         image_base_url=image_base_url,
+        events=events,
     )
+    app.state.events = events
     app.state.image_base_url = image_base_url
     app.state.callback_probe_enabled = settings.callback_probe_enabled
     if settings.callback_probe_enabled:
@@ -467,5 +485,6 @@ def _gemini_usage(extractor, depth: int = 0) -> dict | None:
 _settings = load_settings()
 app = create_app(
     repository=build_repository(_settings),
+    events=build_event_log(_settings),
     callback_sender=build_callback_sender(_settings),
 )

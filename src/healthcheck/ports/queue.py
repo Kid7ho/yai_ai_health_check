@@ -30,6 +30,8 @@ class CheckJob:
     created_at: float = field(default_factory=time.monotonic)
     # 결과 카드 위에 붙일 안내 말풍선. [한번 해 보기]가 어떤 문장을 확인했는지 보여 줄 때 쓴다.
     intro: str | None = None
+    # try면 [한번 해 보기]가 대신 보낸 예시 문장이다. 응답 기록에서 어르신이 직접 보낸 입력과 구분한다.
+    via: str | None = None
 
 
 class JobQueue(Protocol):
