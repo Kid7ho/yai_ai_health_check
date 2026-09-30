@@ -1,9 +1,12 @@
-"""팀원 분류 시트를 서버에서 연다.
+"""의료 자문 시트와 팀원 분류 시트를 서버에서 연다.
 
-판정표를 완성하려고 팀원 다섯 명이 같은 사례를 직접 분류한다. 시트는 labeling/claim_labeling.html
-하나이고, 분류 결과는 SQLite 파일 하나(볼륨)에 둔다. 서비스 판정과는 무관한 내부 도구다.
+/labeling/{토큰}/ 은 의료 자문 시트(labeling/advisory_sheet.html)다. 교수님이 사례 20건에서 서비스가
+뽑은 주장·식약처 정보·논문 분류·신호등이 적절한지 고른다(2026-10-01, 팀원 분류 대신 자문을 받기로 함).
+/labeling/{토큰}/team/ 은 이전 팀원 분류 시트(labeling/claim_labeling.html)다. 이미 저장한 분류를 볼 수 있게 남긴다.
+두 시트는 같은 저장소를 쓰고 키의 번호로 나뉜다(팀원 m1~m5, 자문위원 a1~a3).
+결과는 SQLite 파일 하나(볼륨)에 둔다. 서비스 판정과는 무관한 내부 도구다.
 
-주소는 /labeling/{토큰}/ 이다. LABELING_TOKEN이 없으면 라우터를 붙이지 않는다.
+LABELING_TOKEN이 없으면 라우터를 붙이지 않는다.
 로그인 기능을 따로 만들지 않고 스킬 경로처럼 추측할 수 없는 주소로 막는다.
 토큰 비교는 hmac.compare_digest로 한다.
 """
@@ -24,10 +27,11 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from healthcheck.config import PROJECT_ROOT
 
+ADVISORY_PATH = PROJECT_ROOT / "labeling" / "advisory_sheet.html"
 SHEET_PATH = PROJECT_ROOT / "labeling" / "claim_labeling.html"
-SLOTS = frozenset({"m1", "m2", "m3", "m4", "m5"})
-# 사례 ID와 팀원 번호로 만든 키. 예: lab-001__m1, link-03__m5
-_LABEL_KEY = re.compile(r"^[a-z]+-\d{2,4}__m[1-5]$")
+SLOTS = frozenset({"m1", "m2", "m3", "m4", "m5", "a1", "a2", "a3"})
+# 사례 ID와 번호로 만든 키. 예: lab-001__m1(팀원), link-03__a1(자문위원)
+_LABEL_KEY = re.compile(r"^[a-z]+-\d{2,4}__(m[1-5]|a[1-3])$")
 MAX_BODY_BYTES = 64 * 1024
 
 
@@ -70,7 +74,12 @@ class LabelingStore:
             )
 
 
-def build_router(token: str, store: LabelingStore, sheet_path: Path = SHEET_PATH) -> APIRouter:
+def build_router(
+    token: str,
+    store: LabelingStore,
+    sheet_path: Path = SHEET_PATH,
+    advisory_path: Path = ADVISORY_PATH,
+) -> APIRouter:
     router = APIRouter(include_in_schema=False)
 
     def check(given: str) -> None:
@@ -89,17 +98,11 @@ def build_router(token: str, store: LabelingStore, sheet_path: Path = SHEET_PATH
             raise HTTPException(status_code=400, detail="객체여야 합니다")
         return body
 
-    @router.get("/labeling/{given}")
-    async def redirect_slash(given: str) -> RedirectResponse:
+    def serve(given: str, path: Path) -> HTMLResponse:
         check(given)
-        return RedirectResponse(f"/labeling/{given}/", status_code=307)
-
-    @router.get("/labeling/{given}/")
-    async def sheet(given: str) -> HTMLResponse:
-        check(given)
-        if not sheet_path.is_file():
+        if not path.is_file():
             raise HTTPException(status_code=503, detail="시트 파일이 없습니다")
-        html = sheet_path.read_text(encoding="utf-8")
+        html = path.read_text(encoding="utf-8")
         # 시트가 서버 저장소를 쓰도록 주소를 알려 준다. 토큰은 이미 주소에 있으므로 새로 드러나는 값은 없다.
         inject = (
             '<!doctype html><meta charset="utf-8">'
@@ -110,6 +113,24 @@ def build_router(token: str, store: LabelingStore, sheet_path: Path = SHEET_PATH
             inject + html,
             headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex", "Referrer-Policy": "no-referrer"},
         )
+
+    @router.get("/labeling/{given}")
+    async def redirect_slash(given: str) -> RedirectResponse:
+        check(given)
+        return RedirectResponse(f"/labeling/{given}/", status_code=307)
+
+    @router.get("/labeling/{given}/")
+    async def advisory(given: str) -> HTMLResponse:
+        return serve(given, advisory_path)
+
+    @router.get("/labeling/{given}/team")
+    async def redirect_team_slash(given: str) -> RedirectResponse:
+        check(given)
+        return RedirectResponse(f"/labeling/{given}/team/", status_code=307)
+
+    @router.get("/labeling/{given}/team/")
+    async def team_sheet(given: str) -> HTMLResponse:
+        return serve(given, sheet_path)
 
     @router.get("/labeling/{given}/api/state")
     async def state(given: str) -> JSONResponse:
@@ -123,7 +144,7 @@ def build_router(token: str, store: LabelingStore, sheet_path: Path = SHEET_PATH
             raise HTTPException(status_code=400, detail="분류 키 형식이 아닙니다")
         body = await json_body(request)
         if body.get("slot") != key.rsplit("__", 1)[1]:
-            raise HTTPException(status_code=400, detail="팀원 번호가 키와 다릅니다")
+            raise HTTPException(status_code=400, detail="번호가 키와 다릅니다")
         await store.put_label(key, body)
         return {"ok": True}
 
@@ -131,7 +152,7 @@ def build_router(token: str, store: LabelingStore, sheet_path: Path = SHEET_PATH
     async def put_member(given: str, slot: str, request: Request) -> dict:
         check(given)
         if slot not in SLOTS:
-            raise HTTPException(status_code=400, detail="팀원 번호가 아닙니다")
+            raise HTTPException(status_code=400, detail="번호가 아닙니다")
         name = str((await json_body(request)).get("name") or "").strip()[:40]
         if not name:
             raise HTTPException(status_code=400, detail="이름이 비어 있습니다")

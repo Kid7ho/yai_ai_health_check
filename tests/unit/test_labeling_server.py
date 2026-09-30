@@ -13,20 +13,32 @@ TOKEN = "t0ken-for-test"
 def client_for(tmp_path) -> TestClient:
     sheet = tmp_path / "sheet.html"
     sheet.write_text("<title>시트</title><p>본문</p>", encoding="utf-8")
+    advisory = tmp_path / "advisory.html"
+    advisory.write_text("<title>자문</title><p>자문 본문</p>", encoding="utf-8")
     app = FastAPI()
-    app.include_router(build_router(TOKEN, LabelingStore(tmp_path / "labeling.db"), sheet_path=sheet))
+    app.include_router(
+        build_router(TOKEN, LabelingStore(tmp_path / "labeling.db"), sheet_path=sheet, advisory_path=advisory)
+    )
     return TestClient(app)
 
 
 def test_토큰이_틀리면_시트도_API도_없는_주소다(tmp_path):
     client = client_for(tmp_path)
     assert client.get("/labeling/wrong/").status_code == 404
+    assert client.get("/labeling/wrong/team/").status_code == 404
     assert client.get("/labeling/wrong/api/state").status_code == 404
     assert client.put("/labeling/wrong/api/members/m1", json={"name": "a"}).status_code == 404
 
 
+def test_기본_주소는_자문_시트_팀_주소는_팀원_시트다(tmp_path):
+    client = client_for(tmp_path)
+    assert "자문 본문" in client.get(f"/labeling/{TOKEN}/").text
+    assert "<p>본문</p>" in client.get(f"/labeling/{TOKEN}/team/").text
+    assert client.get(f"/labeling/{TOKEN}/team", follow_redirects=False).headers["location"] == f"/labeling/{TOKEN}/team/"
+
+
 def test_시트에_서버_저장소_주소를_넣어_돌려준다(tmp_path):
-    response = client_for(tmp_path).get(f"/labeling/{TOKEN}/")
+    response = client_for(tmp_path).get(f"/labeling/{TOKEN}/team/")
     assert response.status_code == 200
     assert f'window.LABELING_API = "/labeling/{TOKEN}/api"' in response.text
     assert response.text.startswith("<!doctype html>")
@@ -53,3 +65,14 @@ def test_키_형식과_팀원_번호를_확인한다(tmp_path):
     assert client.put(f"/labeling/{TOKEN}/api/labels/lab-001__m1", json={"slot": "m3"}).status_code == 400
     assert client.put(f"/labeling/{TOKEN}/api/members/m9", json={"name": "a"}).status_code == 400
     assert client.put(f"/labeling/{TOKEN}/api/labels/lab-001__m1", content=b"[1]").status_code == 400
+
+
+def test_자문위원_번호로_저장한다(tmp_path):
+    client = client_for(tmp_path)
+    body = {"caseId": "link-17", "slot": "a1", "final": "BAD", "finalFix": "TRUSTWORTHY"}
+    assert client.put(f"/labeling/{TOKEN}/api/labels/link-17__a1", json=body).status_code == 200
+    assert client.put(f"/labeling/{TOKEN}/api/members/a1", json={"name": "교수님"}).status_code == 200
+    assert client.put(f"/labeling/{TOKEN}/api/labels/link-17__a4", json={"slot": "a4"}).status_code == 400
+    state = client.get(f"/labeling/{TOKEN}/api/state").json()
+    assert state["labels"]["link-17__a1"]["finalFix"] == "TRUSTWORTHY"
+    assert state["members"]["a1"] == {"name": "교수님"}

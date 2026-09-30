@@ -23,8 +23,8 @@ RUN uv pip install --system --no-cache -r pyproject.toml
 # 이미지를 다시 굽지 않도록 볼륨으로 덮어쓸 수 있게 따로 복사한다.
 COPY rules/ ./rules/
 COPY src/ ./src/
-# 팀원 분류 시트. LABELING_TOKEN이 있을 때만 서버가 연다.
-COPY labeling/claim_labeling.html ./labeling/claim_labeling.html
+# 팀원 분류 시트와 의료 자문 시트. LABELING_TOKEN이 있을 때만 서버가 연다.
+COPY labeling/claim_labeling.html labeling/advisory_sheet.html ./labeling/
 # 성과 요약 스크립트. 서버에서 판정 DB를 읽어 집계만 찍는다(fly ssh console -C).
 COPY scripts/report_metrics.py ./scripts/report_metrics.py
 
