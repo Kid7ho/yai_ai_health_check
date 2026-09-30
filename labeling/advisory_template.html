@@ -1,0 +1,818 @@
+<title>건강지킴이 의료 자문</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f6f5fa; --surface:#ffffff; --surface-2:#efedf6; --ink:#1c1a28; --ink-2:#5d596f; --ink-3:#8b879c;
+  --line:#dfdcea; --accent:#5b3cc4; --accent-ink:#ffffff; --accent-soft:#ebe6fb;
+  --trust:#18864a; --trust-soft:#e2f4ea; --caution:#b98100; --caution-soft:#fbf1d6;
+  --warning:#cf3b33; --warning-soft:#fbe4e2; --unknown:#77738a; --unknown-soft:#ebeaf0;
+  --focus:#5b3cc4;
+  --sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14121b; --surface:#1c1a26; --surface-2:#252232; --ink:#ecebf4; --ink-2:#a9a5ba; --ink-3:#7d7990;
+    --line:#332f45; --accent:#a08bff; --accent-ink:#14121b; --accent-soft:#2a2542;
+    --trust:#46c983; --trust-soft:#18301f; --caution:#ecbd3a; --caution-soft:#33290f;
+    --warning:#ff7066; --warning-soft:#3a1c1a; --unknown:#aaa6b8; --unknown-soft:#2a2833; --focus:#a08bff;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14121b; --surface:#1c1a26; --surface-2:#252232; --ink:#ecebf4; --ink-2:#a9a5ba; --ink-3:#7d7990;
+  --line:#332f45; --accent:#a08bff; --accent-ink:#14121b; --accent-soft:#2a2542;
+  --trust:#46c983; --trust-soft:#18301f; --caution:#ecbd3a; --caution-soft:#33290f;
+  --warning:#ff7066; --warning-soft:#3a1c1a; --unknown:#aaa6b8; --unknown-soft:#2a2833; --focus:#a08bff;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;margin:0}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+a{color:var(--accent)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1180px;margin:0 auto;padding-block:10px;padding-inline:16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.brand{display:flex;flex-direction:column;line-height:1.25;margin-right:auto}
+@media (max-width:640px){.topbar{position:static}.rail{top:0}}
+.brand b{font-size:16px}
+.brand span{font-size:12px;color:var(--ink-3)}
+.tabs{display:flex;gap:4px;background:var(--surface-2);border-radius:10px;padding:3px}
+.tabs button{border:0;background:transparent;padding:6px 14px;border-radius:8px;font-weight:600;color:var(--ink-2)}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .08)}
+.me{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px 4px 4px;font-weight:600}
+.me .avatar{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:12px}
+.me .me-prog{font-size:12px;color:var(--ink-2);background:var(--surface-2);border-radius:999px;padding:1px 8px}
+.mode{font-size:12px;color:var(--ink-3)}
+.mode.shared::before,.mode.local::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.mode.shared::before{background:var(--trust)}
+.mode.local::before{background:var(--caution)}
+
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-inline:16px}
+.layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.layout{grid-template-columns:minmax(0,1fr)}}
+
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);display:flex;flex-direction:column;gap:10px}
+.progress{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.progress .row{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-2)}
+.bar{height:6px;background:var(--surface-2);border-radius:99px;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.case-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 230px);overflow:auto}
+.case-list .grp{font-size:11px;font-weight:700;color:var(--ink-3);padding:10px 10px 2px;letter-spacing:.02em}
+.case-list button{width:100%;text-align:left;border:0;background:transparent;border-radius:8px;padding:7px 10px;display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:2px 10px;align-items:center}
+.case-list button:hover{background:var(--surface-2)}
+.case-list button[aria-current="true"]{background:var(--accent-soft)}
+.dot{width:9px;height:9px;border-radius:50%;border:2px solid var(--ink-3)}
+.dot.part{border-color:var(--caution);background:linear-gradient(90deg,var(--caution) 50%,transparent 50%)}
+.dot.done{border-color:var(--trust);background:var(--trust)}
+.case-list .cid{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.case-list .ctext{grid-column:2 / 4;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.case-select{display:none}
+@media (max-width:860px){
+  .rail{position:static}
+  .case-list{display:none}
+  .case-select{display:block;width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+}
+
+/* 신호등 */
+.sig{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.sig i{width:9px;height:9px;border-radius:50%;display:block;background:currentColor}
+.sig.trust{background:var(--trust-soft);color:var(--trust)}
+.sig.caution{background:var(--caution-soft);color:var(--caution)}
+.sig.warning{background:var(--warning-soft);color:var(--warning)}
+.sig.unknown{background:var(--unknown-soft);color:var(--unknown)}
+.sig.none{background:var(--surface-2);color:var(--ink-3)}
+
+.case{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.case-head{padding:20px 22px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:14px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--ink-3)}
+.question{border-radius:12px;background:var(--accent-soft);padding:12px 16px;font-size:15px}
+.question b{display:block;font-size:12px;color:var(--accent);margin-bottom:2px}
+.source{margin:0;font-size:17px;line-height:1.55;font-weight:500;text-wrap:pretty;border-left:3px solid var(--line);padding-left:14px}
+.source a{word-break:break-all}
+.verdict{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 16px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.verdict .light{grid-row:span 2;width:44px;height:44px;border-radius:50%}
+.verdict .light.trust{background:var(--trust)}.verdict .light.caution{background:var(--caution)}
+.verdict .light.warning{background:var(--warning)}.verdict .light.unknown{background:var(--unknown)}
+.verdict .vt{font-size:18px;font-weight:700}
+.verdict .vt small{font-size:12px;font-weight:600;color:var(--ink-3);margin-left:8px;font-family:var(--mono)}
+.verdict .vg{font-size:14px;color:var(--ink-2)}
+.verdict details{grid-column:1 / -1;margin-top:6px}
+details summary{font-size:13px;color:var(--ink-2);cursor:pointer}
+.rulebox{font-size:13.5px;color:var(--ink-2);margin:6px 0 0;display:flex;flex-direction:column;gap:6px}
+.rulebox p{margin:0}
+.triggers{margin:0;padding-left:18px;font-size:13.5px}
+
+.claim-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:12px 22px 0}
+.claim-tabs button{border:1px solid var(--line);background:var(--surface-2);border-radius:8px 8px 0 0;border-bottom:0;padding:8px 12px;font-size:14px;color:var(--ink-2);display:flex;gap:8px;align-items:center}
+.claim-tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:inset 0 2px 0 var(--accent)}
+.claim-tabs .final{margin-left:auto}
+.check{font-size:12px;color:var(--trust);font-weight:700}
+
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--surface-2)}
+.steps button{border:0;background:transparent;padding:11px 6px;display:flex;flex-direction:column;align-items:center;gap:1px;border-right:1px solid var(--line);color:var(--ink-2)}
+.steps button:last-child{border-right:0}
+.steps button b{font-size:14px}
+.steps button small{font-size:11px;color:var(--ink-3)}
+.steps button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:inset 0 -3px 0 var(--accent)}
+.steps button.done small{color:var(--trust);font-weight:600}
+@media (max-width:520px){.steps button b{font-size:12.5px}}
+
+.panel{padding:22px;display:flex;flex-direction:column;gap:16px;min-height:300px}
+.panel h3{margin:0;font-size:13px;color:var(--ink-3);font-weight:600;letter-spacing:.02em}
+.svc{border:1px dashed var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.svc > small{font-size:12px;font-weight:700;color:var(--ink-3)}
+.ask{background:var(--surface-2);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.ask > p{margin:0;font-weight:600}
+.hint{margin:0;font-size:13px;color:var(--ink-2)}
+.quote{font-size:17px;font-weight:600;margin:0;line-height:1.5}
+.kv{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 16px;margin:0;font-size:14px}
+.kv dt{color:var(--ink-3)}
+.kv dd{margin:0}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px;font-size:13px;font-weight:600;background:var(--surface-2);color:var(--ink-2)}
+.badge.ok{background:var(--trust-soft);color:var(--trust)}
+.badge.no{background:var(--unknown-soft);color:var(--unknown)}
+.badge.fail{background:var(--warning-soft);color:var(--warning)}
+.official{border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:14.5px;background:var(--surface)}
+.official small{display:block;color:var(--ink-3);font-size:12px;margin-bottom:2px}
+
+.seg{display:inline-flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 14px;font-weight:600;font-size:14px}
+.seg button:hover{border-color:var(--ink-3)}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button.good[aria-pressed="true"]{background:var(--trust);border-color:var(--trust);color:var(--surface)}
+.seg button.bad[aria-pressed="true"]{background:var(--warning);border-color:var(--warning);color:var(--surface)}
+.note{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:8px 10px;font-size:14px;resize:vertical}
+.field{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600}
+.field input{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface);font-weight:400}
+
+.papers{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.paper{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.paper.agree{border-color:color-mix(in srgb,var(--trust) 55%,var(--line))}
+.paper.differ{border-color:color-mix(in srgb,var(--warning) 60%,var(--line))}
+.paper .top{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.paper .title{font-weight:600;line-height:1.45;text-wrap:pretty}
+.paper .meta{font-size:12px;color:var(--ink-3)}
+.st{font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px;white-space:nowrap}
+.st.SUPPORT{background:var(--trust-soft);color:var(--trust)}
+.st.REFUTE{background:var(--warning-soft);color:var(--warning)}
+.st.NEUTRAL{background:var(--unknown-soft);color:var(--unknown)}
+.excerpt{background:var(--surface-2);border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.65}
+.excerpt small{display:block;font-size:12px;color:var(--ink-3);margin-bottom:4px}
+.excerpt p{margin:0}
+.excerpt p + p{margin-top:8px}
+.excerpt p.en{margin-top:2px;font-size:12.5px;color:var(--ink-3)}
+mark{background:var(--caution-soft);color:inherit;border-radius:3px;padding:0 2px;font-weight:600}
+.paper details p{margin:6px 0 0;font-size:13px;color:var(--ink-2);line-height:1.6}
+.stance{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.stance > span{font-size:13px;color:var(--ink-2);margin-right:2px}
+.stance button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600}
+.stance button[data-val="SUPPORT"][aria-pressed="true"]{background:var(--trust);border-color:var(--trust);color:var(--surface)}
+.stance button[data-val="REFUTE"][aria-pressed="true"]{background:var(--warning);border-color:var(--warning);color:var(--surface)}
+.stance button[data-val="NEUTRAL"][aria-pressed="true"]{background:var(--unknown);border-color:var(--unknown);color:var(--surface)}
+.tally{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:13px}
+
+.labels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:640px){.labels{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.label-btn{border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:700;font-size:14px}
+.label-btn i{width:18px;height:18px;border-radius:50%;display:block}
+.label-btn[data-c="trust"] i{background:var(--trust)}
+.label-btn[data-c="caution"] i{background:var(--caution)}
+.label-btn[data-c="warning"] i{background:var(--warning)}
+.label-btn[data-c="unknown"] i{background:var(--unknown)}
+.label-btn[data-c="trust"][aria-pressed="true"]{border-color:var(--trust);background:var(--trust-soft)}
+.label-btn[data-c="caution"][aria-pressed="true"]{border-color:var(--caution);background:var(--caution-soft)}
+.label-btn[data-c="warning"][aria-pressed="true"]{border-color:var(--warning);background:var(--warning-soft)}
+.label-btn[data-c="unknown"][aria-pressed="true"]{border-color:var(--unknown);background:var(--unknown-soft)}
+.callout{border-radius:10px;padding:10px 14px;font-size:14px;background:var(--caution-soft);color:var(--ink)}
+
+.pager{display:flex;justify-content:space-between;gap:10px;padding:14px 22px;border-top:1px solid var(--line)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 16px;font-weight:600}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.small{padding:5px 12px;font-size:13px}
+.btn:disabled{opacity:.4;cursor:default}
+
+/* 요약 */
+.agg-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 16px;display:flex;flex-direction:column}
+.stat b{font-size:22px;font-family:var(--mono)}
+.stat span{font-size:12px;color:var(--ink-3)}
+.agg-actions{margin-left:auto;display:flex;flex-wrap:wrap;gap:8px}
+.table-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;min-width:820px;font-size:14px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--ink-3);font-weight:600;background:var(--surface-2);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td ul{margin:4px 0 0;padding-left:18px;font-size:13px}
+.ok-t{color:var(--trust);font-weight:700}.bad-t{color:var(--warning);font-weight:700}.wait-t{color:var(--ink-3)}
+
+/* 안내 */
+.overlay{position:fixed;inset:0;background:rgb(10 8 20 / .5);display:grid;place-items:center;padding:16px;z-index:20}
+.dialog{background:var(--surface);border-radius:16px;max-width:560px;width:100%;padding:22px;display:flex;flex-direction:column;gap:14px;max-height:92vh;overflow:auto}
+.dialog h2{margin:0;font-size:20px}
+.legend4{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 12px;font-size:13.5px;margin:0}
+.legend4 dd{margin:0;color:var(--ink-2)}
+.guide{margin:0;padding-left:18px;font-size:13.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:4px}
+.slots{display:flex;gap:6px;margin-top:8px}
+.slots button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 4px;font-size:13px;color:var(--ink-2)}
+.slots button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink);font-weight:600}
+
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:30;max-width:calc(100% - 32px)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand"><b>건강지킴이 의료 자문</b><span id="mode" class="mode">불러오는 중</span></div>
+    <div class="tabs" role="tablist">
+      <button id="tab-review" role="tab" aria-selected="true" data-act="view" data-val="review">자문하기</button>
+      <button id="tab-sum" role="tab" aria-selected="false" data-act="view" data-val="sum">결과 요약</button>
+    </div>
+    <button id="me" class="me" data-act="open-intro"><span class="avatar">?</span><span>안내</span></button>
+  </div>
+</header>
+<main class="wrap" id="app"></main>
+<div id="dialog-root"></div>
+<div id="toast" class="toast" hidden role="status"></div>
+
+<script id="advisory-data" type="application/json">/*DATA*/</script>
+<script>
+(() => {
+"use strict";
+const DATA = JSON.parse(document.getElementById("advisory-data").textContent);
+const CASES = DATA.cases;
+const TOPICS = DATA.topics;
+const SLOTS = ["a1", "a2", "a3"];
+const LABELS = [
+  { v: "TRUSTWORTHY", t: "믿을 만해요", c: "trust", d: "나라가 인정한 기능성과 같고, 뒷받침 연구가 우세할 때만 줍니다. 가장 좁은 조건입니다." },
+  { v: "CAUTION", t: "조심하세요", c: "caution", d: "인정 범위를 넘겨 말하거나(부풀림·인정 밖 효능), 연구가 엇갈리거나 부족할 때입니다." },
+  { v: "WARNING", t: "주의하세요", c: "warning", d: "병이 낫는다는 표현, 법이 금지한 광고 표현, 효과가 없다는 연구가 우세할 때입니다." },
+  { v: "UNKNOWN", t: "알 수 없어요", c: "unknown", d: "근거가 부족해 판단을 보류합니다. 서비스 범위 밖(의약품·시술·진단) 내용도 여기로 답합니다." },
+];
+const LABEL_OF = Object.fromEntries(LABELS.map(l => [l.v, l]));
+const STANCE_KO = { SUPPORT: "뒷받침", REFUTE: "반박", NEUTRAL: "무관·판단 불가" };
+const MATCH_OPTS = [["EXACT", "일치"], ["PARTIAL", "일부만 일치"], ["MISMATCH", "다름"], ["NONE", "비교 대상 없음"]];
+const STEPS = [
+  { k: "claim", t: "① 주장" },
+  { k: "mfds", t: "② 식약처" },
+  { k: "papers", t: "③ 논문" },
+  { k: "label", t: "④ 신호등" },
+];
+const LS_KEY = "hc-advisory-v1";
+
+const state = {
+  mode: "loading", me: null, members: {}, labels: {},
+  view: "review", caseIdx: 0, claimIdx: 0, step: "claim", final: false,
+  intro: false, pickSlot: null,
+};
+let remote = null, readOnly = false;
+
+// ── 로컬 저장(백업) ──
+function loadLocal() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_KEY) || "null");
+    if (!s) return;
+    if (SLOTS.includes(s.me)) state.me = s.me;
+    if (s.members) state.members = s.members;
+    if (s.labels) state.labels = s.labels;
+    if (Number.isInteger(s.caseIdx) && s.caseIdx < CASES.length) state.caseIdx = s.caseIdx;
+  } catch (e) { /* 저장소를 쓸 수 없는 환경 */ }
+}
+function saveLocal() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ me: state.me, members: state.members, labels: state.labels, caseIdx: state.caseIdx })); }
+  catch (e) { /* 무시 */ }
+}
+
+// ── 문서 ──
+const keyOf = (caseId, slot) => `${caseId}__${slot}`;
+const emptyClaim = () => ({ extraction: null, extractionNote: "", mfds: null, mfdsFix: null, mfdsNote: "", papersFit: null, papersNote: "", stances: {}, paperNotes: {}, label: null, labelFix: null, labelNote: "" });
+function emptyDoc(cs, slot) {
+  return {
+    caseId: cs.id, slot, name: state.members[slot]?.name || "", kind: "advisory",
+    serviceLabel: cs.verdict.label, serviceRule: cs.verdict.rule,
+    claims: cs.claims.map(emptyClaim),
+    final: null, finalFix: null, missingClaim: null, missingNote: "", questionNote: "", otherNote: "",
+    updatedAt: null,
+  };
+}
+function myDoc(cs, create) {
+  if (!state.me) return null;
+  const k = keyOf(cs.id, state.me);
+  if (!state.labels[k] && create) state.labels[k] = emptyDoc(cs, state.me);
+  const d = state.labels[k];
+  if (d) while (d.claims.length < cs.claims.length) d.claims.push(emptyClaim());
+  return d || null;
+}
+const noClaim = c => !!c.noClaim;
+function stepDone(c, d, step) {
+  if (!d) return false;
+  if (step === "claim") return !!d.extraction;
+  if (d.extraction === "WRONG") return true;
+  if (step === "mfds") return !c.mfds || d.mfds === "OK" || (d.mfds === "BAD" && !!d.mfdsFix);
+  if (step === "papers") return !c.papers.length || (!!d.papersFit && c.papers.every((_, i) => d.stances[i]));
+  if (step === "label") return d.label === "OK" || (d.label === "BAD" && !!d.labelFix);
+  return false;
+}
+function claimDone(c, d) { return noClaim(c) || STEPS.every(s => stepDone(c, d, s.k)); }
+function finalDone(doc) { return !!doc && (doc.final === "OK" || (doc.final === "BAD" && !!doc.finalFix)); }
+function caseDone(cs, doc) { return !!doc && finalDone(doc) && cs.claims.every((c, i) => claimDone(c, doc.claims[i])); }
+function caseStarted(doc) { return !!doc && (!!doc.final || doc.claims.some(x => x.extraction || x.label || x.mfds)); }
+function progressOf(slot) { return CASES.filter(cs => caseDone(cs, state.labels[keyOf(cs.id, slot)])).length; }
+
+// ── 서버 저장 ──
+// 문서마다 입력이 멈추면 한 번만 쓰고, 쓰기는 한 번에 하나씩 이어 붙인다.
+const timers = {}, chains = {}, inflight = {}, dirty = new Set();
+function writeShared(k) {
+  if (state.mode !== "shared" || readOnly || !remote || !state.labels[k]) return;
+  dirty.add(k);
+  clearTimeout(timers[k]);
+  timers[k] = setTimeout(() => {
+    timers[k] = null;
+    const body = JSON.parse(JSON.stringify(state.labels[k]));
+    inflight[k] = (inflight[k] || 0) + 1;
+    chains[k] = (chains[k] || Promise.resolve())
+      .then(() => remote.setLabel(k, body))
+      .catch(err => {
+        if (err && [401, 403, 404].includes(err.status)) { readOnly = true; toast("저장 권한이 없어요. 이 브라우저에만 남깁니다."); }
+        else toast("저장하지 못했어요. 잠시 뒤 다시 선택해 주세요.");
+      })
+      .finally(() => { inflight[k]--; if (!timers[k] && !inflight[k]) dirty.delete(k); });
+  }, 600);
+}
+function persist(cs) {
+  const doc = myDoc(cs, true);
+  doc.name = state.members[state.me]?.name || doc.name;
+  doc.updatedAt = new Date().toISOString();
+  saveLocal();
+  writeShared(keyOf(cs.id, state.me));
+}
+async function saveMember(slot, name) {
+  state.members[slot] = { name };
+  saveLocal();
+  if (state.mode === "shared" && !readOnly && remote) {
+    try { await remote.setMember(slot, name); } catch (e) { toast("성함을 저장하지 못했어요."); }
+  }
+}
+
+let firstSync = true;
+function applyState(data) {
+  Object.entries(data.members || {}).forEach(([slot, m]) => { if (SLOTS.includes(slot) && m?.name) state.members[slot] = { name: m.name }; });
+  const seen = new Set();
+  Object.entries(data.labels || {}).forEach(([k, doc]) => {
+    // 같은 저장소에 팀원 분류(m1~m5)도 있다. 이 시트는 자문(a1~a3)만 다룬다.
+    if (!SLOTS.includes(k.split("__")[1])) return;
+    seen.add(k);
+    if (!dirty.has(k)) state.labels[k] = doc;
+  });
+  if (firstSync) {
+    firstSync = false;
+    // 서버 연결 전에 이 브라우저에 적어 둔 내 자문은 올린다.
+    Object.keys(state.labels).forEach(k => { if (state.me && k.endsWith("__" + state.me) && !seen.has(k)) writeShared(k); });
+  }
+  saveLocal();
+  renderTop(); renderRail();
+  if (state.view === "sum") renderMain();
+}
+async function connect() {
+  if (!window.LABELING_API) { state.mode = "local"; renderTop(); return; }
+  const base = window.LABELING_API;
+  const call = async (method, path, body) => {
+    const res = await fetch(base + path, { method, headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+    if (!res.ok) { const e = new Error("HTTP " + res.status); e.status = res.status; throw e; }
+    return res.json();
+  };
+  remote = {
+    setLabel: (k, body) => call("PUT", "/labels/" + encodeURIComponent(k), body),
+    setMember: (slot, name) => call("PUT", "/members/" + slot, { name }),
+  };
+  state.mode = "shared";
+  renderTop();
+  const pull = async () => {
+    try { applyState(await call("GET", "/state")); }
+    catch (e) { toast("저장된 자문을 불러오지 못했어요. 잠시 뒤 다시 시도합니다."); }
+  };
+  await pull();
+  setInterval(() => { if (!document.hidden) pull(); }, 30000);
+}
+
+// ── 렌더 ──
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+// 초록 문장에서 주장의 성분·효능 단어(앞부분)를 강조한다. 원문은 조각마다 이스케이프한다.
+function hl(text, terms) {
+  const list = (terms || []).filter(Boolean).map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  if (!list.length) return esc(text);
+  const re = new RegExp("\\b(" + list.join("|") + ")[\\w-]*", "gi");
+  let out = "", last = 0;
+  String(text).replace(re, (m, _g, offset) => { out += esc(text.slice(last, offset)) + "<mark>" + esc(m) + "</mark>"; last = offset + m.length; return m; });
+  return out + esc(text.slice(last));
+}
+const pressed = b => `aria-pressed="${b ? "true" : "false"}"`;
+const sig = v => { const l = LABEL_OF[v]; return l ? `<span class="sig ${l.c}"><i></i>${l.t}</span>` : `<span class="sig none">판정 없음</span>`; };
+const slotTitle = s => "자문위원 " + s.slice(1);
+
+function renderAll() { renderTop(); renderMain(); renderDialog(); }
+
+function renderTop() {
+  const m = $("mode");
+  m.className = "mode " + state.mode;
+  m.textContent = state.mode === "shared" ? "입력하시는 대로 자동 저장됩니다" : state.mode === "local" ? "이 브라우저에만 저장 · 결과 요약에서 파일로 받기" : "불러오는 중";
+  $("tab-review").setAttribute("aria-selected", String(state.view === "review"));
+  $("tab-sum").setAttribute("aria-selected", String(state.view === "sum"));
+  const name = state.me ? (state.members[state.me]?.name || slotTitle(state.me)) : "안내";
+  $("me").innerHTML = `<span class="avatar">${esc(state.me ? name.slice(0, 1) : "?")}</span><span>${esc(name)}</span>`
+    + (state.me ? `<span class="me-prog mono">${progressOf(state.me)} / ${CASES.length}</span>` : "");
+}
+
+function renderMain() {
+  const app = $("app");
+  if (state.view === "sum") { app.innerHTML = sumView(); return; }
+  app.innerHTML = `<div class="layout"><aside class="rail" id="rail"></aside><div id="case"></div></div>`;
+  renderRail(); renderCase();
+}
+
+function renderRail() {
+  const rail = $("rail");
+  if (!rail) return;
+  let done = 0, lastTopic = null, items = "";
+  CASES.forEach((cs, i) => {
+    const d = state.me ? state.labels[keyOf(cs.id, state.me)] : null;
+    const st = caseDone(cs, d) ? "done" : caseStarted(d) ? "part" : "";
+    if (st === "done") done++;
+    if (cs.topic !== lastTopic) { lastTopic = cs.topic; items += `<li class="grp">${esc(cs.topic)}. ${esc(TOPICS[cs.topic] || "")}</li>`; }
+    const names = cs.claims.map(c => c.ingredient).filter((v, j, a) => v && a.indexOf(v) === j).join("·");
+    const text = names ? `${names} — ${cs.input}` : cs.input;
+    items += `<li><button data-act="goto-case" data-val="${i}" aria-current="${i === state.caseIdx}">
+      <span class="dot ${st}" aria-hidden="true"></span><span class="cid">${i + 1}. ${esc(cs.id)}</span>${sig(cs.verdict.label)}
+      <span class="ctext">${esc(text)}</span></button></li>`;
+  });
+  const opts = CASES.map((cs, i) => `<option value="${i}" ${i === state.caseIdx ? "selected" : ""}>${i + 1}. ${esc(cs.topic)} · ${esc(cs.input.slice(0, 32))}</option>`).join("");
+  rail.innerHTML = `
+    <div class="progress"><div class="row"><span>마친 사례</span><span class="mono">${done} / ${CASES.length}</span></div>
+      <div class="bar"><i style="width:${(done / CASES.length) * 100}%"></i></div></div>
+    <label class="sr" for="case-select">사례 선택</label>
+    <select id="case-select" class="case-select">${opts}</select>
+    <ul class="case-list">${items}</ul>`;
+}
+
+function verdictCard(v, title) {
+  const l = LABEL_OF[v.label] || LABELS[3];
+  return `<div class="verdict">
+    <span class="light ${l.c}" aria-hidden="true"></span>
+    <div class="vt">${esc(title)}: ${l.t}<small>${esc(v.rule)}</small></div>
+    <div class="vg">어르신께 보이는 안내 · “${esc(v.guidance)}”</div>
+    <details><summary>이 판정을 낸 규칙 보기</summary><div class="rulebox">
+      <p><b>${esc(v.rule)}</b> ${esc(v.desc)}</p>${v.basis ? `<p>규칙의 근거: ${esc(v.basis)}</p>` : ""}</div></details>
+  </div>`;
+}
+
+function renderCase() {
+  const host = $("case");
+  if (!host) return;
+  const cs = CASES[state.caseIdx];
+  const doc = myDoc(cs, false);
+  const onlyFinal = noClaim(cs.claims[0]);
+  if (onlyFinal) state.final = true;
+  const isUrl = /^https?:\/\//i.test(cs.input.trim());
+  const source = isUrl ? `<a href="${esc(cs.input.trim())}" target="_blank" rel="noopener">${esc(cs.input)}</a>` : esc(cs.input);
+  const v = cs.verdict;
+  const multi = cs.claims.length > 1;
+
+  const tabs = (onlyFinal ? "" : cs.claims.map((x, i) => `<button role="tab" aria-selected="${!state.final && i === state.claimIdx}" data-act="goto-claim" data-val="${i}">
+      주장 ${i + 1} · ${esc(x.ingredient)} ${sig(x.verdict?.label)}${doc && claimDone(x, doc.claims[i]) ? ' <span class="check">✓</span>' : ""}</button>`).join(""))
+    + `<button role="tab" class="final" aria-selected="${state.final}" data-act="goto-final">종합 의견${finalDone(doc) ? ' <span class="check">✓</span>' : ""}</button>`;
+
+  let body;
+  if (state.final) body = `<section class="panel">${finalPanel(cs, doc)}</section>`;
+  else {
+    const c = cs.claims[state.claimIdx];
+    const d = doc ? doc.claims[state.claimIdx] : null;
+    const steps = STEPS.map(s => {
+      const ok = stepDone(c, d, s.k);
+      return `<button role="tab" class="${ok ? "done" : ""}" aria-selected="${state.step === s.k}" data-act="goto-step" data-val="${s.k}"><b>${s.t}</b><small>${ok ? "완료" : "필요"}</small></button>`;
+    }).join("");
+    body = `<nav class="steps" role="tablist" aria-label="단계">${steps}</nav><section class="panel">${panel(cs, c, d)}</section>`;
+  }
+  const atStart = state.caseIdx === 0 && (onlyFinal || (!state.final && state.claimIdx === 0 && state.step === "claim"));
+  const atEnd = state.caseIdx === CASES.length - 1 && state.final;
+  const nextLabel = state.final ? "다음 사례" : (state.step === "label" ? (state.claimIdx < cs.claims.length - 1 ? "다음 주장" : "종합 의견") : "다음 단계");
+
+  host.innerHTML = `<article class="case">
+    <header class="case-head">
+      <div class="eyebrow">사례 ${state.caseIdx + 1} / ${CASES.length} · ${esc(cs.id)} · ${esc(cs.topic)}. ${esc(TOPICS[cs.topic] || "")}</div>
+      <div class="question"><b>이 사례에서 특히 여쭙는 점</b>${esc(cs.question)}</div>
+      ${isUrl ? `<p class="hint">실제로 공유되는 글·영상입니다. 링크를 열어 전체를 볼 수 있고, 주장마다 원문 앞뒤 문맥을 함께 보여 드립니다.</p>` : `<p class="hint">이 문장을 서비스에 그대로 보냈을 때의 결과입니다.</p>`}
+      <p class="source">${source}</p>
+      ${verdictCard(v, "서비스의 최종 판정")}
+      ${v.triggers && v.triggers.length ? `<div class="official"><small>이 판정을 부른 원문 문장</small><ul class="triggers">${v.triggers.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}
+      ${multi ? `<p class="hint">서비스는 글에서 주장을 최대 3개 뽑아 주장마다 판정하고, 그중 가장 엄한 결과(주의하세요 > 조심하세요 > 알 수 없어요 > 믿을 만해요)를 최종 판정으로 씁니다. 병이 낫는다는 표현이나 금지 광고 표현이 글에 있으면 주장별 판정과 무관하게 주의하세요입니다.</p>` : ""}
+    </header>
+    <nav class="claim-tabs" role="tablist" aria-label="주장">${tabs}</nav>
+    ${body}
+    <footer class="pager">
+      <button class="btn" data-act="prev" ${atStart ? "disabled" : ""}>이전</button>
+      <button class="btn primary" data-act="next" ${atEnd ? "disabled" : ""}>${nextLabel}</button>
+    </footer>
+  </article>`;
+}
+
+function okBad(act, cur, okText, badText) {
+  return `<div class="seg"><button class="good" data-act="${act}" data-val="OK" ${pressed(cur === "OK")}>${okText}</button>
+    <button class="bad" data-act="${act}" data-val="BAD" ${pressed(cur === "BAD")}>${badText}</button></div>`;
+}
+function noteField(field, value, placeholder, rows = 2) {
+  return `<textarea class="note" rows="${rows}" data-field="${field}" placeholder="${esc(placeholder)}" aria-label="${esc(placeholder)}">${esc(value || "")}</textarea>`;
+}
+function labelPicker(act, cur) {
+  return `<div class="labels" role="group">${LABELS.map(l => `<button class="label-btn" data-c="${l.c}" data-act="${act}" data-val="${l.v}" ${pressed(cur === l.v)}><i aria-hidden="true"></i>${l.t}</button>`).join("")}</div>`;
+}
+
+function panel(cs, c, d) {
+  const wrong = d?.extraction === "WRONG";
+  const skipNote = wrong && state.step !== "claim" ? `<div class="callout">① 주장에서 '잘못 뽑음'을 고르셨어요. 이 주장의 나머지 단계는 건너뛰셔도 됩니다.</div>` : "";
+  if (state.step === "claim") {
+    return `<div class="svc"><small>서비스가 원문에서 뽑은 주장</small>
+        <p class="quote">“${esc(c.statement || `${c.ingredient} ${c.effect}`)}”</p>
+        ${c.context ? `<div class="official"><small>원문에서 이 주장의 앞뒤</small>${esc(c.context)}</div>` : ""}
+        <dl class="kv"><dt>성분</dt><dd>${esc(c.ingredient)}</dd><dt>효능</dt><dd>${esc(c.effect)}</dd>
+          <dt>표현 강도</dt><dd>${esc({ SUGGESTIVE: "완화 (도움이 된다, 좋다 등)", ASSERTIVE: "단정 (반드시, 무조건, 낫는다 등)", UNCERTAIN: "추측 (~한다고 한다 등)" }[c.intensity] || c.intensity)}</dd></dl></div>
+      <div class="ask"><p>서비스가 원문의 핵심 주장을 제대로 뽑았나요?</p>
+        <p class="hint">성분·효능·표현 강도가 원문이 말하는 내용과 같은지 봐 주세요. 사실인지는 다음 단계에서 봅니다.</p>
+        <div class="seg"><button class="good" data-act="set-extraction" data-val="OK" ${pressed(d?.extraction === "OK")}>제대로 뽑음</button>
+          <button class="bad" data-act="set-extraction" data-val="WRONG" ${pressed(wrong)}>잘못 뽑음</button></div>
+        ${noteField("extractionNote", d?.extractionNote, wrong ? "무엇이 틀렸나요? (예: 효능은 '혈압'이 아니라 '혈관 건강')" : "의견이 있으면 적어 주세요 (선택)")}
+      </div>`;
+  }
+  if (state.step === "mfds") {
+    const m = c.mfds;
+    if (!m) return skipNote + `<p class="hint">이 주장은 식약처 조회를 하지 않았어요. 다음 단계로 넘어가세요.</p>`;
+    const recognized = m.recognition === "개별인정" || m.recognition === "고시형";
+    const cls = m.failed ? "fail" : recognized ? "ok" : "no";
+    return skipNote + `<div class="svc"><small>서비스가 쓴 식약처 정보와 판단</small>
+        <div><span class="badge ${cls}">${esc(m.recognition)}</span> ${recognized ? `<span class="badge">주장 효능과 인정 문구: ${esc(m.matchKo || "")}</span>` : ""}</div>
+        <dl class="kv"><dt>조회한 성분</dt><dd>${esc(c.ingredient)}</dd><dt>주장 효능</dt><dd>${esc(c.effect)}</dd>${m.no ? `<dt>인정번호</dt><dd class="mono">${esc(m.no)}</dd>` : ""}</dl>
+        ${m.text ? `<div class="official"><small>식약처가 인정한 기능성 문구 (${m.recognition === "고시형" ? "건강기능식품 공전 고시형 원료" : "개별인정형 원료"})</small>${esc(m.text)}</div>` : ""}
+        ${m.others && m.others.length ? `<div class="official"><small>이 성분이 다른 효능으로 인정받은 내용 (서비스는 주장 효능과 다르다고 판단)</small>${m.others.map(o => `<div>${esc(o)}</div>`).join("")}</div>` : ""}
+        ${!recognized && !(m.others && m.others.length) ? `<p class="hint">서비스는 이 성분·효능 짝으로 인정받은 기록을 찾지 못했습니다.</p>` : ""}
+        <p class="hint">'일치'는 인정 문구와 같은 뜻, '일부만 일치'는 인정 범위보다 넓거나 세게 말한 것(예: 무조건, 반드시), '미인정'은 이 효능으로 인정받은 기록이 없다는 뜻입니다.</p></div>
+      <div class="ask"><p>서비스가 쓴 식약처 정보와 판단이 적절한가요?</p>
+        <p class="hint">인정 여부와, 인정 문구와 주장 효능의 일치 판단이 맞는지 봐 주세요.</p>
+        ${okBad("set-mfds", d?.mfds, "적절함", "적절하지 않음")}
+        ${d?.mfds === "BAD" ? `<p class="hint">주장 효능과 국가 인정 문구의 관계는 무엇이 맞나요?</p>
+          <div class="seg">${MATCH_OPTS.map(([k, t]) => `<button data-act="set-mfdsfix" data-val="${k}" ${pressed(d.mfdsFix === k)}>${t}</button>`).join("")}</div>` : ""}
+        ${noteField("mfdsNote", d?.mfdsNote, d?.mfds === "BAD" ? "무엇이 적절하지 않은가요? (예: '낮춘다'는 '조절'과 같은 뜻으로 봐도 된다)" : "의견이 있으면 적어 주세요 (선택)")}
+      </div>`;
+  }
+  if (state.step === "papers") {
+    if (!c.papers.length) return skipNote + `<p class="hint">서비스가 관련 논문을 찾지 못했어요. 다음 단계로 넘어가세요.</p>`;
+    let agree = 0, judged = 0;
+    const list = c.papers.map((p, i) => {
+      const mine = d?.stances?.[i] || "";
+      if (mine) { judged++; if (mine === p.svc) agree++; }
+      const year = (p.date || "").slice(0, 4);
+      const cls = !mine ? "" : mine === p.svc ? "agree" : "differ";
+      return `<li class="paper ${cls}">
+        <div class="top"><a class="title" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a><span class="st ${esc(p.svc)}">서비스: ${esc(STANCE_KO[p.svc] || p.svc)}</span></div>
+        <div class="meta">${[p.journal, year, p.citations != null ? `인용 ${p.citations}회` : ""].filter(Boolean).map(esc).join(" · ")}</div>
+        ${p.excerpt && p.excerpt.sentences.length ? `<div class="excerpt"><small>초록에서 주장이 나오는 부분 · ${esc(p.excerpt.basis)}</small>${p.excerpt.sentences.map((t, j) => (p.excerpt.ko && p.excerpt.ko[j]) ? `<p>${esc(p.excerpt.ko[j])}</p><p class="en">${hl(t, p.excerpt.terms)}</p>` : `<p>${hl(t, p.excerpt.terms)}</p>`).join("")}</div>` : ""}
+        ${p.abstract ? `<details><summary>초록 전체 보기</summary><p>${hl(p.abstract, p.excerpt ? p.excerpt.terms : [])}</p></details>` : ""}
+        <div class="stance" role="group" aria-label="논문 ${i + 1} 판단"><span>교수님 판단</span>
+          ${["SUPPORT", "REFUTE", "NEUTRAL"].map(val => `<button data-act="set-stance" data-idx="${i}" data-val="${val}" ${pressed(mine === val)}>${STANCE_KO[val]}</button>`).join("")}
+        </div>
+        ${mine && mine !== p.svc ? noteField("paperNote:" + i, d?.paperNotes?.[i], "왜 다르게 보셨나요? (예: 동물 실험, 주사 제형, 다른 효능) — 선택", 1) : ""}
+      </li>`;
+    }).join("");
+    const counts = { SUPPORT: 0, REFUTE: 0, NEUTRAL: 0 };
+    c.papers.forEach(p => { if (counts[p.svc] !== undefined) counts[p.svc]++; });
+    return skipNote + `<div class="svc"><small>서비스가 찾은 논문과 분류</small>
+        <p class="hint">학술 검색(Liner)으로 찾은 논문 중 성분과 효능이 제목·초록에 나오는 ${c.papers.length}편입니다. 서비스는 논문마다 이 주장을 뒷받침하는지, 반박하는지, 무관한지를 언어 모델로 분류해 편수를 셉니다.</p>
+        <div class="tally mono"><span>서비스 분류: 뒷받침 ${counts.SUPPORT}</span><span>반박 ${counts.REFUTE}</span><span>무관 ${counts.NEUTRAL}</span></div></div>
+      <div class="ask"><p>논문마다 이 주장을 뒷받침하는지, 반박하는지 골라 주세요.</p>
+        <p class="hint">서비스 분류와 같으면 테두리가 초록색, 다르면 빨간색이 됩니다. 한국어는 기계 번역이고 작은 글씨가 원문입니다. 노란 표시는 주장의 성분·효능 단어입니다. 서비스 분류가 대부분 맞다고 보시면 아래 버튼으로 채운 뒤 다른 것만 고치셔도 됩니다.</p>
+        <div class="seg"><button class="btn small" data-act="accept-stances">서비스 분류대로 모두 채우기</button></div>
+        <div class="tally mono"><span>판단 ${judged} / ${c.papers.length}</span><span>서비스와 같음 ${agree}</span><span>다름 ${judged - agree}</span></div>
+      </div>
+      <ul class="papers">${list}</ul>
+      <div class="ask"><p>이 논문들이 주장을 판단하기에 적절한 근거인가요?</p>
+        <p class="hint">논문의 종류(사람 대상·동물·세포), 제형(섭취·주사), 편수가 이 주장을 판단하기에 충분한지 봐 주세요.</p>
+        ${okBad("set-papersfit", d?.papersFit, "적절함", "부족하거나 부적절함")}
+        ${noteField("papersNote", d?.papersNote, d?.papersFit === "BAD" ? "무엇이 부족한가요? (예: 사람 대상 연구가 없음)" : "의견이 있으면 적어 주세요 (선택)")}
+      </div>`;
+  }
+  // 신호등
+  const cv = c.verdict;
+  return skipNote + (cv ? verdictCard(cv, "이 주장의 판정") : "") + `
+    <div class="ask"><p>위 정보를 모두 보았을 때, 이 주장의 신호등이 적절한가요?</p>
+      ${okBad("set-label", d?.label, "적절함", "적절하지 않음")}
+      ${d?.label === "BAD" ? `<p class="hint">어떤 신호등이 맞나요?</p>${labelPicker("set-labelfix", d.labelFix)}` : ""}
+      ${noteField("labelNote", d?.labelNote, d?.label === "BAD" ? "이유를 적어 주세요. 규칙을 고칠 때 씁니다." : "의견이 있으면 적어 주세요 (선택)")}
+    </div>`;
+}
+
+function finalPanel(cs, doc) {
+  const c0 = cs.claims[0];
+  const ctx = noClaim(c0) ? `<div class="official"><small>서비스가 가져온 본문 앞부분</small>${esc(c0.context || "")}</div>
+      <p class="hint">서비스가 검증할 주장을 뽑기 전에 멈춘 사례입니다. 원문을 보고 판단해 주세요.</p>` : "";
+  return `${ctx}
+    <div class="ask"><p>서비스의 최종 판정(${esc(LABEL_OF[cs.verdict.label]?.t || "")})이 적절한가요?</p>
+      <p class="hint">어르신께는 이 최종 판정 하나가 신호등으로 보입니다.</p>
+      ${okBad("set-final", doc?.final, "적절함", "적절하지 않음")}
+      ${doc?.final === "BAD" ? `<p class="hint">어떤 신호등이 맞나요?</p>${labelPicker("set-finalfix", doc.finalFix)}` : ""}
+    </div>
+    <div class="ask"><p>이 사례에서 특히 여쭙는 점</p>
+      <p class="hint">${esc(cs.question)}</p>
+      ${noteField("questionNote", doc?.questionNote, "의견을 적어 주세요", 3)}
+    </div>
+    <div class="ask"><p>서비스가 놓친 중요한 주장이 있나요?</p>
+      <div class="seg"><button data-act="set-missing" data-val="NO" ${pressed(doc?.missingClaim === "NO")}>없음</button>
+        <button data-act="set-missing" data-val="YES" ${pressed(doc?.missingClaim === "YES")}>있음</button></div>
+      ${doc?.missingClaim === "YES" ? noteField("missingNote", doc.missingNote, "놓친 주장을 적어 주세요 (예: 마늘 — 암 예방)", 2) : ""}
+    </div>
+    <label class="field">그 밖의 의견 (선택)${noteField("otherNote", doc?.otherNote, "서비스 전반이나 이 사례에 대해 하실 말씀", 2)}</label>`;
+}
+
+// ── 결과 요약 ──
+function sumView() {
+  const slot = state.me;
+  let done = 0, finalOk = 0, finalN = 0, claimOk = 0, claimN = 0, pAgree = 0, pN = 0;
+  const rows = CASES.map((cs, i) => {
+    const doc = slot ? state.labels[keyOf(cs.id, slot)] : null;
+    if (caseDone(cs, doc)) done++;
+    if (doc?.final) { finalN++; if (doc.final === "OK") finalOk++; }
+    const notes = [];
+    cs.claims.forEach((c, j) => {
+      const d = doc?.claims?.[j];
+      if (!d || noClaim(c)) return;
+      if (d.label) { claimN++; if (d.label === "OK") claimOk++; }
+      c.papers.forEach((p, k) => { const s = d.stances?.[k]; if (s) { pN++; if (s === p.svc) pAgree++; } });
+      const diffs = c.papers.filter((p, k) => d.stances?.[k] && d.stances[k] !== p.svc).length;
+      const bits = [];
+      if (d.extraction === "WRONG") bits.push(`주장 잘못 뽑음${d.extractionNote ? ": " + esc(d.extractionNote) : ""}`);
+      if (d.mfds === "BAD") bits.push(`식약처 판단 부적절(→ ${esc((MATCH_OPTS.find(x => x[0] === d.mfdsFix) || [])[1] || "")})${d.mfdsNote ? ": " + esc(d.mfdsNote) : ""}`);
+      if (diffs) bits.push(`논문 분류 ${diffs}편 다름`);
+      if (d.papersFit === "BAD") bits.push(`논문 근거 부족${d.papersNote ? ": " + esc(d.papersNote) : ""}`);
+      if (d.label === "BAD") bits.push(`신호등 → ${esc(LABEL_OF[d.labelFix]?.t || "")}${d.labelNote ? ": " + esc(d.labelNote) : ""}`);
+      if (bits.length) notes.push(`<li>주장 ${j + 1} (${esc(c.ingredient)}) — ${bits.join(" · ")}</li>`);
+    });
+    const fin = !doc?.final ? `<span class="wait-t">아직</span>` : doc.final === "OK" ? `<span class="ok-t">적절</span>` : `<span class="bad-t">부적절</span> → ${sig(doc.finalFix)}`;
+    return `<tr>
+      <td><div class="mono" style="font-size:12px;color:var(--ink-3)">${i + 1}. ${esc(cs.id)} · ${esc(cs.topic)}</div><div>${esc(cs.input.length > 60 ? cs.input.slice(0, 60) + "…" : cs.input)}</div></td>
+      <td>${sig(cs.verdict.label)}<div class="mono" style="font-size:12px;color:var(--ink-3)">${esc(cs.verdict.rule)}</div></td>
+      <td>${fin}</td>
+      <td>${doc?.questionNote ? esc(doc.questionNote) : ""}${notes.length ? `<ul>${notes.join("")}</ul>` : ""}</td>
+    </tr>`;
+  }).join("");
+  const pct = (a, b) => b ? Math.round(a / b * 100) + "%" : "–";
+  return `<div class="agg-head">
+      <div class="stat"><b>${done}/${CASES.length}</b><span>마친 사례</span></div>
+      <div class="stat"><b>${pct(finalOk, finalN)}</b><span>최종 판정 적절 (${finalOk}/${finalN})</span></div>
+      <div class="stat"><b>${pct(claimOk, claimN)}</b><span>주장별 신호등 적절 (${claimOk}/${claimN})</span></div>
+      <div class="stat"><b>${pct(pAgree, pN)}</b><span>논문 분류 일치 (${pAgree}/${pN})</span></div>
+      <div class="agg-actions"><button class="btn" data-act="export">자문 결과 파일로 받기</button></div>
+    </div>
+    ${slot ? "" : `<p class="hint">성함을 입력하시면 자문 결과가 여기에 모입니다.</p>`}
+    <div class="table-wrap"><table>
+      <thead><tr><th style="width:30%">사례</th><th>서비스 판정</th><th>교수님 판단</th><th>의견과 고칠 점</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+}
+
+// ── 안내 ──
+function renderDialog() {
+  const root = $("dialog-root");
+  if (!state.intro) { root.innerHTML = ""; return; }
+  const pick = state.pickSlot || state.me || "a1";
+  const keepName = $("member-name")?.value;
+  const cur = state.members[pick]?.name || "";
+  root.innerHTML = `<div class="overlay"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
+    <h2 id="dlg-title">건강지킴이 의료 자문을 부탁드립니다</h2>
+    <p class="hint">건강지킴이는 어르신이 카카오톡으로 받은 음식·건강기능식품 정보를 채널에 보내면, 식약처 인정 기록과 학술 논문을 근거로 네 가지 신호등 중 하나로 알려 드리는 서비스입니다. 진단하지 않고 근거를 제시하며, 결과마다 "참고용이며 진단이 아닙니다"를 붙입니다.</p>
+    <dl class="legend4">${LABELS.map(l => `<dt>${sig(l.v)}</dt><dd>${esc(l.d)}</dd>`).join("")}</dl>
+    <ul class="guide">
+      <li>사례 ${CASES.length}건에 대해 서비스가 실제로 낸 결과를 그대로 보여 드립니다.</li>
+      <li>주장마다 ① 뽑은 주장 → ② 식약처 정보 → ③ 논문과 분류 → ④ 신호등이 적절한지 골라 주시고, 마지막에 종합 의견을 남겨 주세요.</li>
+      <li>사례마다 특히 여쭙는 점을 위에 적어 두었습니다. 주어진 근거만으로 판단해 주시면 됩니다.</li>
+      <li>입력하시는 대로 자동 저장되며, 이 주소로 다시 오시면 이어서 하실 수 있습니다.</li>
+      <li>주신 자문은 판정 규칙표를 고치는 데 씁니다.</li>
+    </ul>
+    <label class="field" for="member-name">성함<input id="member-name" autocomplete="off" placeholder="예: 홍길동" value="${esc(keepName ?? cur)}"></label>
+    <details><summary>여러 분이 함께 자문하시는 경우</summary>
+      <p class="hint">한 분마다 번호 하나를 씁니다. 다른 분의 번호를 고르면 그분의 자문을 덮어씁니다.</p>
+      <div class="slots">${SLOTS.map(s => `<button data-act="pick-slot" data-val="${s}" ${pressed(pick === s)}>${slotTitle(s)}<br><small>${esc(state.members[s]?.name || "비어 있음")}</small></button>`).join("")}</div>
+    </details>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      ${state.me ? `<button class="btn" data-act="close-intro">닫기</button>` : ""}
+      <button class="btn primary" data-act="confirm-me">${state.me ? "확인" : "시작하기"}</button>
+    </div></div></div>`;
+}
+
+// ── 이동 ──
+function toast(msg) {
+  const t = $("toast"); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, 3200);
+}
+function openCase(i) { state.caseIdx = i; state.claimIdx = 0; state.step = "claim"; state.final = noClaim(CASES[i].claims[0]); saveLocal(); }
+function move(delta) {
+  const cs = CASES[state.caseIdx];
+  if (delta > 0) {
+    if (state.final) { if (state.caseIdx < CASES.length - 1) openCase(state.caseIdx + 1); }
+    else {
+      const idx = STEPS.findIndex(s => s.k === state.step);
+      if (idx < STEPS.length - 1) state.step = STEPS[idx + 1].k;
+      else if (state.claimIdx < cs.claims.length - 1) { state.claimIdx++; state.step = "claim"; }
+      else state.final = true;
+    }
+  } else if (state.final && !noClaim(cs.claims[0])) { state.final = false; state.claimIdx = cs.claims.length - 1; state.step = "label"; }
+  else if (!state.final && state.step !== "claim") state.step = STEPS[STEPS.findIndex(s => s.k === state.step) - 1].k;
+  else if (!state.final && state.claimIdx > 0) { state.claimIdx--; state.step = "label"; }
+  else if (state.caseIdx > 0) { openCase(state.caseIdx - 1); state.final = true; }
+  renderRail(); renderCase();
+  $("case")?.scrollIntoView({ block: "start", behavior: "smooth" });
+}
+function requireMe() { if (!state.me) { state.intro = true; renderDialog(); return false; } return true; }
+
+document.addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-act]");
+  if (!b) return;
+  const act = b.dataset.act, val = b.dataset.val;
+  const cs = CASES[state.caseIdx];
+  switch (act) {
+    case "view": state.view = val; renderTop(); renderMain(); return;
+    case "open-intro": state.intro = true; state.pickSlot = state.me; renderDialog(); return;
+    case "close-intro": state.intro = false; renderDialog(); return;
+    case "pick-slot": state.pickSlot = val; { const n = $("member-name"); if (n) n.value = state.members[val]?.name || ""; } renderDialog(); return;
+    case "confirm-me": {
+      const slot = state.pickSlot || state.me || "a1";
+      const name = ($("member-name")?.value || "").trim();
+      if (!name) { toast("성함을 적어 주세요."); $("member-name")?.focus(); return; }
+      state.me = slot; state.intro = false; state.pickSlot = null;
+      if (state.members[slot]?.name !== name) await saveMember(slot, name);
+      saveLocal(); renderAll(); return;
+    }
+    case "goto-case": openCase(+val); renderRail(); renderCase(); return;
+    case "goto-claim": state.final = false; state.claimIdx = +val; state.step = "claim"; renderCase(); return;
+    case "goto-final": state.final = true; renderCase(); return;
+    case "goto-step": state.step = val; renderCase(); return;
+    case "next": move(1); return;
+    case "prev": move(-1); return;
+    case "export": exportFile(); return;
+  }
+  if (!requireMe()) return;
+  const doc = myDoc(cs, true);
+  const d = doc.claims[state.claimIdx];
+  const c = cs.claims[state.claimIdx];
+  const toggle = (obj, key, v) => { obj[key] = obj[key] === v ? null : v; };
+  if (act === "set-extraction") toggle(d, "extraction", val);
+  else if (act === "set-mfds") { toggle(d, "mfds", val); if (d.mfds !== "BAD") d.mfdsFix = null; }
+  else if (act === "set-mfdsfix") toggle(d, "mfdsFix", val);
+  else if (act === "set-papersfit") toggle(d, "papersFit", val);
+  else if (act === "set-stance") { const i = b.dataset.idx; if (d.stances[i] === val) delete d.stances[i]; else d.stances[i] = val; }
+  else if (act === "accept-stances") c.papers.forEach((p, i) => { if (!d.stances[i]) d.stances[i] = p.svc; });
+  else if (act === "set-label") { toggle(d, "label", val); if (d.label !== "BAD") d.labelFix = null; }
+  else if (act === "set-labelfix") toggle(d, "labelFix", val);
+  else if (act === "set-final") { toggle(doc, "final", val); if (doc.final !== "BAD") doc.finalFix = null; }
+  else if (act === "set-finalfix") toggle(doc, "finalFix", val);
+  else if (act === "set-missing") toggle(doc, "missingClaim", val);
+  else return;
+  persist(cs);
+  renderTop(); renderRail(); renderCase();
+});
+
+document.addEventListener("input", ev => {
+  const f = ev.target.dataset?.field;
+  if (!f || !requireMe()) return;
+  const cs = CASES[state.caseIdx];
+  const doc = myDoc(cs, true);
+  const d = doc.claims[state.claimIdx];
+  if (f.startsWith("paperNote:")) d.paperNotes[f.split(":")[1]] = ev.target.value;
+  else if (["questionNote", "missingNote", "otherNote"].includes(f)) doc[f] = ev.target.value;
+  else d[f] = ev.target.value;
+  persist(cs);
+});
+document.addEventListener("change", ev => {
+  if (ev.target.id === "case-select") { openCase(+ev.target.value); renderRail(); renderCase(); $("case")?.scrollIntoView({ block: "start" }); }
+});
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Enter" && ev.target.id === "member-name") $("dialog-root").querySelector('[data-act="confirm-me"]')?.click();
+});
+
+function exportFile() {
+  const docs = Object.values(state.labels).filter(d => d && SLOTS.includes(d.slot));
+  const body = JSON.stringify({ exportedAt: new Date().toISOString(), rulesVersion: DATA.rulesVersion, members: state.members, advisory: docs }, null, 1);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([body], { type: "application/json" }));
+  a.download = `advisory-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+loadLocal();
+if (!state.me) state.intro = true;
+state.final = noClaim(CASES[state.caseIdx].claims[0]);
+renderAll();
+connect();
+})();
+</script>
