@@ -44,6 +44,7 @@ from healthcheck.pipeline.step6_response import (
     guide_image_names,
     verdict_image_url,
 )
+from healthcheck.api import share
 from healthcheck.api.worker import start_workers
 from healthcheck.pipeline.orchestrator import Orchestrator
 from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
@@ -374,6 +375,9 @@ def create_app(
     app.state.queue = queue
     app.state.callback_sender = callback_sender
     app.include_router(skill.build_router(skill_path))
+    # 공유된 결과 카드의 사진을 누르면 여기로 들어온다(열린 수를 세고 채널로 보낸다).
+    app.state.channel_url = settings.channel_url
+    app.include_router(share.router)
 
     # 결과 카드 머리 이미지. 카카오가 내려받으므로 인증 없이 연다.
     # 정해진 파일 네 개만 내보낸다. 경로 조작으로 다른 파일을 읽지 못하게 한다.

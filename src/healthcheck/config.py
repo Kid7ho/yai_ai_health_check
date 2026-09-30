@@ -84,6 +84,8 @@ class Settings:
     # 카카오가 결과 카드 이미지를 내려받을 공개 주소. 예: https://이름.ngrok-free.dev
     # 비워 두면 이미지 없는 카드로 답한다. scripts/server_start.sh가 채워 준다.
     public_base_url: str | None = None
+    # 카카오톡 채널 주소(pf.kakao.com/_아이디/chat). 공유된 결과 카드의 사진을 누른 사람을 보낸다.
+    channel_url: str | None = None
 
     # 식약처 개별인정형(I-0040) 로컬 사본. API가 09시~19시에 막혀 조회는 사본에서 한다.
     mfds_snapshot_path: Path = PROJECT_ROOT / "data" / "mfds_i0040.json"
@@ -216,6 +218,7 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
             if part.strip()
         ),
         public_base_url=_public_url(os.environ.get("PUBLIC_BASE_URL")),
+        channel_url=_channel_url(os.environ.get("CHANNEL_URL")),
         callback_probe_enabled=_flag(os.environ.get("CALLBACK_PROBE_ENABLED"), False),
         link_claim_extractor=(os.environ.get("LINK_CLAIM_EXTRACTOR") or "rule").strip().lower(),
         liner_reasoning_effort=(os.environ.get("LINER_REASONING_EFFORT") or "low").strip().lower(),
@@ -254,6 +257,16 @@ def _public_url(value: str | None) -> str | None:
     if not value.startswith("https://"):
         raise ValueError(f"PUBLIC_BASE_URL은 https://로 시작해야 합니다: {value!r}")
     return value.rstrip("/")
+
+
+def _channel_url(value: str | None) -> str | None:
+    """카카오톡 채널 주소만 받는다. 공유된 카드를 누른 사람을 다른 곳으로 보내지 않게 한다."""
+    value = _clean(value)
+    if value is None:
+        return None
+    if not value.startswith("https://pf.kakao.com/"):
+        raise ValueError(f"CHANNEL_URL은 https://pf.kakao.com/으로 시작해야 합니다: {value!r}")
+    return value
 
 
 def _flag(value: str | None, default: bool) -> bool:

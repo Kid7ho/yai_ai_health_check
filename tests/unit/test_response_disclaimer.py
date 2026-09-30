@@ -168,11 +168,10 @@ def test_버튼은_세로_배치로_라벨_14자를_지킨다():
         assert len(button["label"]) <= 14
 
 
-def test_결과_카드의_공유_버튼은_서버로_메시지를_보낸다():
-    """share 버튼은 누른 사실이 서버로 오지 않는다. 공유 클릭 수를 세려고 메시지 버튼으로 받는다(2026-09-30)."""
+def test_결과_공유_버튼은_share_액션을_쓴다():
+    """한 번 눌러 바로 공유 화면을 연다. 서버를 거치는 방식(2026-09-30 시험)은 한 번 더 눌러야 해서 되돌렸다."""
     buttons = render(result(Label.CAUTION))["template"]["outputs"][0]["textCard"]["buttons"]
-    share = [button for button in buttons if button["label"] == "친구에게 보내기"]
-    assert share and share[0]["action"] == "message" and share[0]["messageText"] == "친구에게 보내기"
+    assert {"action": "share", "label": "친구에게 보내기"} in buttons
 
 
 @pytest.mark.parametrize("label", list(Label))

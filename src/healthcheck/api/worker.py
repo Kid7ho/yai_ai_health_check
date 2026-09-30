@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import uuid
 
 from healthcheck.domain.labels import Label
 from healthcheck.domain.types import CheckResult, Verdict
@@ -21,6 +22,7 @@ from healthcheck.ports.callback import CallbackSender
 from healthcheck.ports.events import EventLog
 from healthcheck.ports.queue import CheckJob, JobQueue
 from healthcheck.ports.repository import CheckRepository
+from healthcheck.api.share import with_share_link
 from healthcheck.storage.events import new_event, outcome_of
 from healthcheck.storage.record import build_record
 
@@ -84,27 +86,28 @@ class Worker:
 
         import time
 
+        # 응답 기록의 id를 먼저 정해 결과 카드 사진 링크에 건다. 공유된 카드가 열리면 이 id로 이어진다.
+        event_id = uuid.uuid4().hex
         elapsed = time.monotonic() - job.created_at
         if elapsed > CALLBACK_DEADLINE_SECONDS:
             logger.warning(
                 "콜백 유효 시간이 지나 보내지 않는다 job=%s 경과=%.0f초", job.job_id, elapsed
             )
-            await self._log_event(job, result, delivered=False)
+            await self._log_event(job, result, delivered=False, event_id=event_id)
             return
 
         delivered = True
         try:
-            await self._callback.send(
-                job.callback_url, render(result, image_base_url=self._image_base_url, intro=job.intro)
-            )
+            payload = render(result, image_base_url=self._image_base_url, intro=job.intro)
+            await self._callback.send(job.callback_url, with_share_link(payload, self._image_base_url, event_id))
         except Exception:
             # 콜백은 1회만 쓸 수 있어서 여기서 재시도해도 성공하지 않는 경우가 많다.
             # 판정 자체는 캐시에 남았으므로 어르신이 다시 보내면 즉시 답할 수 있다.
             logger.exception("콜백 전송 실패: job=%s", job.job_id)
             delivered = False
-        await self._log_event(job, result, delivered=delivered)
+        await self._log_event(job, result, delivered=delivered, event_id=event_id)
 
-    async def _log_event(self, job: CheckJob, result: CheckResult, *, delivered: bool) -> None:
+    async def _log_event(self, job: CheckJob, result: CheckResult, *, delivered: bool, event_id: str) -> None:
         """응답 기록. 요청을 받은 때부터 결과를 보낸 때까지 걸린 시간을 함께 남긴다."""
         if self._events is None:
             return
@@ -120,6 +123,7 @@ class Worker:
                     via=job.via,
                     latency_ms=int((time.monotonic() - job.created_at) * 1000),
                     delivered=delivered,
+                    event_id=event_id,
                 )
             )
         except Exception:

@@ -36,11 +36,14 @@ CREATE TABLE IF NOT EXISTS events (
     site        TEXT,
     via         TEXT,
     latency_ms  INTEGER,
-    delivered   INTEGER
+    delivered   INTEGER,
+    ref         TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_events_created ON events (created_at);
 CREATE INDEX IF NOT EXISTS idx_events_user ON events (user_hash, created_at);
 """
+# 2026-09-30 배포한 첫 표에는 ref가 없다. 있는 표에 칸만 더한다.
+_MIGRATIONS = {"ref": "ALTER TABLE events ADD COLUMN ref TEXT"}
 
 
 def user_hash(user_key: str | None) -> str | None:
@@ -114,11 +117,13 @@ def new_event(
     via: str | None = None,
     latency_ms: int | None = None,
     delivered: bool | None = None,
+    ref: str | None = None,
+    event_id: str | None = None,
     now: datetime | None = None,
 ) -> Event:
     form, site = describe_input(share_input) if share_input is not None else (None, None)
     return Event(
-        event_id=uuid.uuid4().hex,
+        event_id=event_id or uuid.uuid4().hex,
         created_at=now or datetime.now(timezone.utc),
         user_hash=user_hash(user_key),
         kind=kind,
@@ -129,6 +134,7 @@ def new_event(
         via=via,
         latency_ms=latency_ms,
         delivered=delivered,
+        ref=ref,
     )
 
 
@@ -143,6 +149,10 @@ class SqliteEventLog:
         connection = self._connect()
         try:
             connection.executescript(_SCHEMA)
+            columns = {row[1] for row in connection.execute("PRAGMA table_info(events)")}
+            for column, statement in _MIGRATIONS.items():
+                if column not in columns:
+                    connection.execute(statement)
             connection.commit()
         finally:
             self._close(connection)
@@ -175,7 +185,7 @@ class SqliteEventLog:
         try:
             connection.execute(
                 "INSERT INTO events (event_id, created_at, user_hash, kind, outcome, input_kind, input_form,"
-                " site, via, latency_ms, delivered) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                " site, via, latency_ms, delivered, ref) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     event.event_id,
                     event.created_at.isoformat(),
@@ -188,6 +198,7 @@ class SqliteEventLog:
                     event.via,
                     event.latency_ms,
                     None if event.delivered is None else int(event.delivered),
+                    event.ref,
                 ),
             )
             connection.commit()
@@ -210,7 +221,7 @@ def read_events(connect, close=lambda connection: connection.close()) -> list[Ev
     try:
         rows = connection.execute(
             "SELECT event_id, created_at, user_hash, kind, outcome, input_kind, input_form, site, via,"
-            " latency_ms, delivered FROM events ORDER BY created_at"
+            " latency_ms, delivered, ref FROM events ORDER BY created_at"
         ).fetchall()
     finally:
         close(connection)
@@ -227,6 +238,7 @@ def read_events(connect, close=lambda connection: connection.close()) -> list[Ev
             via=row[8],
             latency_ms=row[9],
             delivered=None if row[10] is None else bool(row[10]),
+            ref=row[11],
         )
         for row in rows
     ]

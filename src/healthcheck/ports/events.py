@@ -19,8 +19,11 @@ from typing import Literal, Protocol
 #   welcome     처음 인사(채널 진입 또는 "처음")
 #   small_talk  인사·감사 같은 짧은 말
 #   media       사진·파일
-#   reason      "왜 그런지 보기"   share "친구에게 보내기"
-EventKind = Literal["check", "guide", "caution", "try", "welcome", "small_talk", "media", "reason", "share"]
+#   reason      "왜 그런지 보기"   share "친구에게 보내기"(시험 기간의 메시지 버튼)
+#   share_open  공유된 결과 카드의 사진을 누르고 들어온 것. 누른 사람은 모르므로 user_hash가 없다
+EventKind = Literal[
+    "check", "guide", "caution", "try", "welcome", "small_talk", "media", "reason", "share", "share_open"
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,6 +46,8 @@ class Event:
     latency_ms: int | None = None
     # 답을 실제로 보냈는가. 콜백 전송 실패나 유효 시간 초과면 False다.
     delivered: bool | None = None
+    # share_open: 어느 결과 카드(check 기록의 event_id)가 공유되어 열렸는가
+    ref: str | None = None
 
 
 class EventLog(Protocol):

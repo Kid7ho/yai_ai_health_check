@@ -48,6 +48,7 @@ from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
 from healthcheck.ports.events import EventLog
 from healthcheck.ports.queue import CheckJob, JobQueue
 from healthcheck.ports.repository import CheckRepository
+from healthcheck.api.share import with_share_link
 from healthcheck.storage.events import new_event, outcome_of
 from healthcheck.storage.record import build_record
 
@@ -255,11 +256,13 @@ async def skill(request: Request) -> dict:
                 )
             except Exception:
                 logger.exception("판정 기록 저장 실패(캐시 응답)")
+        event_id = uuid.uuid4().hex
         await _log(
             services, "check", user_key, outcome=outcome_of(cached), share_input=share_input, via=via,
-            latency_ms=int((time.monotonic() - started) * 1000), delivered=True,
+            latency_ms=int((time.monotonic() - started) * 1000), delivered=True, event_id=event_id,
         )
-        return render(cached, image_base_url=services.image_base_url, intro=intro)
+        payload = render(cached, image_base_url=services.image_base_url, intro=intro)
+        return with_share_link(payload, services.image_base_url, event_id)
 
     # 기본 경로: 콜백이 없으면 비동기 처리를 할 수 없다.
     # TODO(확인필요): 오픈빌더에서 콜백 사용 설정을 켜야 callbackUrl이 온다.

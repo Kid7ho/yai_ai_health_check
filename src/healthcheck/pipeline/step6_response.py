@@ -503,14 +503,17 @@ def _buttons() -> list[dict]:
             "label": _clip(_REASON_BUTTON, _MAX_BUTTON_LABEL),
             "messageText": _REASON_BUTTON,
         },
-        # 공유 화면을 바로 여는 share 버튼은 누른 사실이 서버로 오지 않는다. 공유 클릭 수를 세려고
-        # 메시지 버튼으로 받고, render_share()가 공유 버튼 달린 카드를 다시 보낸다(2026-09-30 방식 A).
-        _message_button(_SHARE_BUTTON),
+        # 공유 화면을 바로 여는 share 버튼. 누른 사실은 서버로 오지 않는다. 2026-09-30 서버를 거치는
+        # 방식(한 번 더 누름)을 시험했지만 원래 방식이 더 직관적이어서 되돌렸다. 공유는 공유된 카드의
+        # 사진을 눌러 들어온 수(api/share.py)와 설문으로 잰다.
+        {"action": "share", "label": _clip(_SHARE_BUTTON, _MAX_BUTTON_LABEL)},
     ]
 
 
 def render_share(result: CheckResult, *, image_base_url: str | None = None) -> dict:
-    """"친구에게 보내기"를 눌렀을 때. 같은 결과 카드를 공유 버튼 하나만 달아 다시 보낸다.
+    """"친구에게 보내기"가 메시지로 왔을 때. 같은 결과 카드를 공유 버튼 하나만 달아 다시 보낸다.
+
+    지금 결과 카드는 share 버튼을 쓴다. 2026-09-30 시험 기간에 받은 카드(메시지 버튼)를 누른 경우에만 온다.
 
     render()를 그대로 지나가므로 면책 문구와 금지 표현 검사는 같다. 공유된 카드에도 면책 문구가 붙는다.
     안내·재요청처럼 카드가 없는 결과는 공유할 것이 없으므로 원래 답을 다시 보낸다.

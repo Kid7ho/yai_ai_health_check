@@ -255,9 +255,26 @@ def test_이용량과_하루_평균():
     assert usage["daily_actions"][0] == pytest.approx(3.5)
 
 
+def test_공유된_카드가_열린_수는_참여자의_카드로_이어_센다():
+    events = sample()
+    card = next(e for e in events if e.user_hash == "b" and e.kind == "check")
+    events += [
+        Event(event_id="o1", created_at=DAY0 + timedelta(hours=1), user_hash=None, kind="share_open", ref=card.event_id),
+        Event(event_id="o2", created_at=DAY0 + timedelta(hours=2), user_hash=None, kind="share_open", ref=card.event_id),
+        Event(event_id="o3", created_at=DAY0 + timedelta(hours=2), user_hash=None, kind="share_open", ref="team-card"),
+    ]
+    report = compute(
+        events,
+        cohort=parse_cohort("2026-10-05T09:00~2026-10-05T18:00"),
+        prior_first_seen={"team": DAY0 - timedelta(days=20)},
+        now=DAY0 + timedelta(days=20),
+    )
+    assert report["share_open"] == {"opens": 2, "cards_opened": 1, "cards": 6, "senders": 1}
+
+
 def test_보고서를_한국어로_찍는다():
     text = format_report(report_for())
-    for phrase in ("참여자 수 3명", "혼자 확인 성공률 67%", "재사용률", "걸러 낸 과장·위험 정보 2건", "친구 공유", "하루 평균"):
+    for phrase in ("참여자 수 3명", "혼자 확인 성공률 67%", "재사용률", "걸러 낸 과장·위험 정보 2건", "공유된 결과 카드가 열린 수", "친구 공유", "하루 평균"):
         assert phrase in text
 
 
@@ -265,3 +282,64 @@ def test_교육_기간은_날짜만_줘도_끝날_하루를_포함한다():
     cohort = parse_cohort("2026-10-05~2026-10-06")
     assert cohort.contains(datetime(2026, 10, 6, 23, 0, tzinfo=KST))
     assert not cohort.contains(datetime(2026, 10, 7, 0, 1, tzinfo=KST))
+
+
+# ─────────────────────────────────────────────────────────────
+# 공유된 카드 사진 링크
+
+
+def test_결과_카드_사진에_공유_추적_주소를_건다():
+    from healthcheck.api.share import with_share_link
+    from healthcheck.pipeline.step6_response import render
+
+    payload = render(result(Label.CAUTION), image_base_url="https://example.com")
+    linked = with_share_link(payload, "https://example.com", "a" * 32)
+    card = linked["template"]["outputs"][0]["basicCard"]
+    assert card["thumbnail"]["link"] == {"web": "https://example.com/s/" + "a" * 32}
+    assert {"action": "share", "label": "친구에게 보내기"} in card["buttons"]
+
+
+def test_공유된_카드를_누르면_기록하고_채널로_보낸다():
+    app, events = app_with_events()
+    app.state.channel_url = "https://pf.kakao.com/_abc/chat"
+    with TestClient(app) as client:
+        moved = client.get("/s/" + "b" * 32, follow_redirects=False)
+        bad = client.get("/s/../../etc", follow_redirects=False)
+    assert moved.status_code == 302 and moved.headers["location"] == "https://pf.kakao.com/_abc/chat"
+    assert bad.status_code == 404
+    assert [(e.kind, e.ref, e.user_hash) for e in events.events] == [("share_open", "b" * 32, None)]
+
+
+def test_채널_주소가_없으면_안내_화면을_보여_준다():
+    app, _ = app_with_events()
+    app.state.channel_url = None
+    with TestClient(app) as client:
+        page = client.get("/s/" + "c" * 32)
+    assert page.status_code == 200 and "AI 건강지킴이" in page.text
+
+
+async def test_워커는_확인_기록의_id를_카드_사진_링크에_건다():
+    sender = RecordingCallbackSender()
+    events = InMemoryEventLog()
+    worker = Worker(InProcessJobQueue(), build_fake_orchestrator(), sender, image_base_url="https://example.com", events=events)
+    await worker.process(CheckJob(job_id="j", share_input=step1_input.classify("홍삼이 면역력에 좋다"),
+                                  callback_url="https://callback.kakao.example/abc", user_key=USER))
+    (sent,) = sender.sent
+    (card,) = [o["basicCard"] for o in sent.payload["template"]["outputs"] if "basicCard" in o]
+    assert card["thumbnail"]["link"]["web"] == "https://example.com/s/" + events.events[0].event_id
+
+
+def test_처음_배포한_응답_기록_표에_ref_칸을_더한다(tmp_path):
+    import sqlite3
+
+    path = tmp_path / "old.db"
+    connection = sqlite3.connect(path)
+    connection.execute(
+        "CREATE TABLE events (event_id TEXT PRIMARY KEY, created_at TEXT NOT NULL, user_hash TEXT, kind TEXT NOT NULL,"
+        " outcome TEXT, input_kind TEXT, input_form TEXT, site TEXT, via TEXT, latency_ms INTEGER, delivered INTEGER)"
+    )
+    connection.commit()
+    connection.close()
+    SqliteEventLog(path)
+    columns = {row[1] for row in sqlite3.connect(path).execute("PRAGMA table_info(events)")}
+    assert "ref" in columns
