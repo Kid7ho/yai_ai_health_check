@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from healthcheck.adapters.fake.callback import RecordingCallbackSender
 from healthcheck.api.app import build_fake_orchestrator, create_app
 from healthcheck.domain.labels import Label
-from healthcheck.pipeline.step6_response import DISCLAIMER, guide_command, load_guide, render, render_guide
+from healthcheck.pipeline.step6_response import DISCLAIMER, GUIDE_IMAGE_VERSION, guide_command, load_guide, render, render_guide
 
 from .test_response_disclaimer import result
 from .test_skill_server import kakao_request
@@ -200,7 +200,7 @@ def test_공개_주소가_있으면_사용법을_사진_카드로_보낸다():
     carousel = payload["template"]["outputs"][0]["carousel"]
     assert carousel["type"] == "basicCard"
     for item in carousel["items"]:
-        assert item["thumbnail"]["imageUrl"].startswith("https://example.org/static/guide/v3/")
+        assert item["thumbnail"]["imageUrl"].startswith(f"https://example.org/static/guide/{GUIDE_IMAGE_VERSION}/")
         assert len(item["description"]) <= 230
 
 
