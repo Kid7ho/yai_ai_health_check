@@ -306,6 +306,9 @@ video_id → 본문을 볼륨 SQLite(`/data/transcripts.db`, 60일)에 담아 �
   전송 알림이 오면 `kakaotalk://inappbrowser/close`로 스스로 닫는다. `CHANNEL_URL=https://pf.kakao.com/_FZXrX`(fly.toml)
   TODO(확인필요): 전송 알림 뒤 창이 실제로 닫히는지
 
+- **포스터 QR은 `/q/{장소 태그}`를 거친다(`api/poster.py`).** 스캔을 `poster_scan`(outcome=태그)으로 기록하고 채널 홈으로 보낸다.
+  기본 태그는 `poster`. 장소별로 태그를 달리 뽑으면 장소별 스캔 수가 KPI에 나온다. 스캔한 사람은 알 수 없다
+
 ## 자막 IP 차단 — 배포 전 반드시 정해야 한다
 
 YouTube는 클라우드 제공자 IP를 대부분 차단한다. 개발 중 10여 건을 연달아

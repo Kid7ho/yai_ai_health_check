@@ -21,8 +21,10 @@ from typing import Literal, Protocol
 #   media       사진·파일
 #   reason      "왜 그런지 보기"   share "친구에게 보내기"(시험 기간의 메시지 버튼)
 #   share_open  공유된 결과 카드의 사진을 누르고 들어온 것. 누른 사람은 모르므로 user_hash가 없다
+#   poster_scan 포스터 QR을 찍고 들어온 것. outcome에 장소 태그가 담긴다
 EventKind = Literal[
-    "check", "guide", "caution", "try", "welcome", "small_talk", "media", "reason", "share", "share_open"
+    "check", "guide", "caution", "try", "welcome", "small_talk", "media", "reason", "share", "share_open",
+    "share_sent", "poster_scan",
 ]
 
 

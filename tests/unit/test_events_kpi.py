@@ -484,3 +484,26 @@ def test_공유_페이지는_보낸_뒤에_스스로_닫힌다():
         assert client.get(f"/share/{TOKEN}/sent?after={later}").json() == {"sent": False}
         page = client.get("/share/" + TOKEN).text
     assert "kakaotalk://inappbrowser/close" in page and "/sent" in page
+
+
+def test_포스터_QR은_스캔을_세고_채널_홈으로_보낸다():
+    app, events = app_with_events()
+    app.state.channel_url = "https://pf.kakao.com/_abc"
+    with TestClient(app) as client:
+        moved = client.get("/q/poster", follow_redirects=False)
+        bad = client.get("/q/Poster!!", follow_redirects=False)
+    assert moved.status_code == 302 and moved.headers["location"] == "https://pf.kakao.com/_abc"
+    assert bad.status_code == 404
+    assert [(e.kind, e.outcome, e.user_hash) for e in events.events] == [("poster_scan", "poster", None)]
+
+
+def test_KPI에_포스터_스캔이_장소별로_나온다():
+    events = sample() + [
+        Event(event_id="p1", created_at=DAY0 + timedelta(minutes=1), user_hash=None, kind="poster_scan", outcome="poster-a"),
+        Event(event_id="p2", created_at=DAY0 + timedelta(minutes=2), user_hash=None, kind="poster_scan", outcome="poster-a"),
+        Event(event_id="p3", created_at=DAY0 + timedelta(days=3), user_hash=None, kind="poster_scan", outcome="poster-b"),
+    ]
+    report = compute(events, cohort=parse_cohort("2026-10-05T09:00~2026-10-05T18:00"),
+                     prior_first_seen={"team": DAY0 - timedelta(days=20)}, now=DAY0 + timedelta(days=20))
+    assert report["poster"]["scans"] == 2 and report["poster"]["by_tag"] == Counter({"poster-a": 2})
+    assert "포스터 QR 스캔 2회" in format_report(report)

@@ -107,6 +107,13 @@ def compute(
     participants = sorted(user for user in by_user if cohort.contains(first_seen[user]))
 
     report: dict = {"participants": len(participants), "cohort": cohort}
+    # 포스터 스캔은 누가 찍었는지 모른다. 교육 기간 안의 스캔을 장소 태그별로 센다.
+    scans = [e for e in events if e.kind == "poster_scan" and cohort.contains(e.created_at)]
+    report["poster"] = {
+        "scans": len(scans),
+        "by_tag": Counter(e.outcome for e in scans),
+        "by_day": Counter(kst_date(e.created_at).isoformat() for e in scans),
+    }
     if not participants:
         return report
 
@@ -314,6 +321,11 @@ def format_report(report: dict) -> str:
         span = f"{fmt(cohort.start)} ~ {fmt(cohort.end)} (한국 시간)"
     n = report["participants"]
     lines = [f"■ 참여자 수 {n}명 · {span}", "  (이 기간에 처음 쓴 사람. 그 전부터 쓰던 팀원은 빠진다)"]
+    poster = report.get("poster") or {}
+    lines += ["", f"■ 포스터 QR 스캔 {poster.get('scans', 0)}회"]
+    if poster.get("by_tag"):
+        lines.append("  " + " · ".join(f"{tag} {count}" for tag, count in poster["by_tag"].most_common()))
+        lines.append("  " + " · ".join(f"{day} {count}" for day, count in sorted(poster["by_day"].items())))
     if not n:
         return "\n".join(lines)
 

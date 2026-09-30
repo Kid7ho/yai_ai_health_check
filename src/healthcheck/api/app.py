@@ -44,7 +44,7 @@ from healthcheck.pipeline.step6_response import (
     guide_image_names,
     verdict_image_url,
 )
-from healthcheck.api import share
+from healthcheck.api import poster, share
 from healthcheck.api.worker import start_workers
 from healthcheck.pipeline.orchestrator import Orchestrator
 from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
@@ -384,6 +384,8 @@ def create_app(
     if settings.kakao_js_key and not settings.kakao_admin_key:
         logger.warning("KAKAO_ADMIN_KEY가 없어 공유 전송 알림이 카카오에서 온 것인지 확인하지 못한다")
     app.include_router(share.router)
+    # 포스터 QR. 스캔을 세고 채널 홈으로 보낸다.
+    app.include_router(poster.router)
 
     # 결과 카드 머리 이미지. 카카오가 내려받으므로 인증 없이 연다.
     # 정해진 파일 네 개만 내보낸다. 경로 조작으로 다른 파일을 읽지 못하게 한다.
