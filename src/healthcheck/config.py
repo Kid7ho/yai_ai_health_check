@@ -86,6 +86,10 @@ class Settings:
     public_base_url: str | None = None
     # 카카오톡 채널 주소(pf.kakao.com/_아이디/chat). 공유된 결과 카드의 사진을 누른 사람을 보낸다.
     channel_url: str | None = None
+    # 카카오 개발자 앱 JavaScript 키. 있으면 [친구에게 보내기]가 공식 공유 기능으로 누른 수·보낸 수를 센다.
+    kakao_js_key: str | None = None
+    # 카카오 개발자 앱 Primary Admin 키. 공유 전송 알림(웹훅)이 카카오에서 온 것인지 확인한다. fly secrets에만 둔다.
+    kakao_admin_key: str | None = None
 
     # 식약처 개별인정형(I-0040) 로컬 사본. API가 09시~19시에 막혀 조회는 사본에서 한다.
     mfds_snapshot_path: Path = PROJECT_ROOT / "data" / "mfds_i0040.json"
@@ -219,6 +223,8 @@ def load_settings(env_file: Path | str | None = DEFAULT_ENV_FILE) -> Settings:
         ),
         public_base_url=_public_url(os.environ.get("PUBLIC_BASE_URL")),
         channel_url=_channel_url(os.environ.get("CHANNEL_URL")),
+        kakao_js_key=_clean(os.environ.get("KAKAO_JS_KEY")),
+        kakao_admin_key=_clean(os.environ.get("KAKAO_ADMIN_KEY")),
         callback_probe_enabled=_flag(os.environ.get("CALLBACK_PROBE_ENABLED"), False),
         link_claim_extractor=(os.environ.get("LINK_CLAIM_EXTRACTOR") or "rule").strip().lower(),
         liner_reasoning_effort=(os.environ.get("LINER_REASONING_EFFORT") or "low").strip().lower(),

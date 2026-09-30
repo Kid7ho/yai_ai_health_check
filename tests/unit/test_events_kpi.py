@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import fields
 from datetime import datetime, timedelta, timezone
 
@@ -18,6 +19,7 @@ from healthcheck.api.app import build_fake_orchestrator, create_app
 from healthcheck.api.worker import Worker
 from healthcheck.domain.labels import Label
 from healthcheck.pipeline import step1_input
+from healthcheck.pipeline.step6_response import DISCLAIMER
 from healthcheck.ports.events import Event
 from healthcheck.ports.queue import CheckJob
 from healthcheck.storage.events import InMemoryEventLog, SqliteEventLog, describe_input, new_event, user_hash
@@ -343,3 +345,84 @@ def test_처음_배포한_응답_기록_표에_ref_칸을_더한다(tmp_path):
     SqliteEventLog(path)
     columns = {row[1] for row in sqlite3.connect(path).execute("PRAGMA table_info(events)")}
     assert "ref" in columns
+
+
+# ─────────────────────────────────────────────────────────────
+# 카카오 공식 공유 기능: 누른 수(공유 페이지)와 보낸 수(전송 알림)
+
+TOKEN = "d" * 32
+
+
+def web_share_app(admin_key: str | None = "admin-secret"):
+    from healthcheck.api.share import SHARE_CARDS
+
+    SHARE_CARDS.clear()
+    app, events = app_with_events()
+    app.state.kakao_js_key = "js-key-123"
+    app.state.kakao_admin_key = admin_key
+    app.state.image_base_url = "https://example.com"
+    return app, events
+
+
+def test_공식_공유를_쓰면_친구에게_보내기가_공유_페이지를_연다():
+    from healthcheck.api.share import SHARE_CARDS, with_share_link
+    from healthcheck.pipeline.step6_response import render
+
+    SHARE_CARDS.clear()
+    payload = render(result(Label.WARNING), image_base_url="https://example.com")
+    card = with_share_link(payload, "https://example.com", TOKEN, web_share=True, user_key=USER)["template"]["outputs"][0]["basicCard"]
+    button = next(b for b in card["buttons"] if b["label"] == "친구에게 보내기")
+    assert button == {"action": "webLink", "label": "친구에게 보내기", "webLinkUrl": "https://example.com/share/" + TOKEN}
+    stored = SHARE_CARDS.get(TOKEN)
+    assert stored["owner"] == USER and stored["label"] == "주의하세요" and stored["description"].endswith(DISCLAIMER)
+
+
+def test_공유_페이지는_누른_것으로_기록하고_공유_화면을_띄운다():
+    from healthcheck.api.share import SDK_INTEGRITY, SDK_URL, SHARE_CARDS
+
+    app, events = web_share_app()
+    SHARE_CARDS.put(TOKEN, {"title": "마늘이 암을 없앤다</script><script>alert(1)", "description": "설명",
+                            "imageUrl": "https://example.com/static/verdict/v1/warning.png", "label": "주의하세요", "owner": USER})
+    with TestClient(app) as client:
+        page = client.get("/share/" + TOKEN)
+    assert page.status_code == 200
+    assert SDK_URL in page.text and SDK_INTEGRITY in page.text
+    assert "Kakao.Share.sendDefault" in page.text and '"share_token": "' + TOKEN in page.text
+    assert "</script><script>alert" not in page.text  # 카드 문구가 스크립트를 끊지 못한다
+    assert [(e.kind, e.outcome, e.ref, e.user_hash) for e in events.events] == [("share", "WARNING", TOKEN, user_hash(USER))]
+
+
+def test_JS_키가_없으면_공유_페이지를_열지_않는다():
+    app, events = web_share_app()
+    app.state.kakao_js_key = None
+    with TestClient(app) as client:
+        assert client.get("/share/" + TOKEN).status_code == 404
+    assert events.events == []
+
+
+def test_카카오_전송_알림을_보낸_것으로_기록한다():
+    app, events = web_share_app()
+    with TestClient(app) as client:
+        ok = client.post("/kakao/share-callback", headers={"Authorization": "KakaoAK admin-secret"},
+                         data={"CHAT_TYPE": "DirectChat", "HASH_CHAT_ID": "room-1", "share_token": TOKEN})
+        forged = client.post("/kakao/share-callback", headers={"Authorization": "KakaoAK wrong"},
+                             data={"CHAT_TYPE": "DirectChat", "share_token": TOKEN})
+    assert ok.status_code == 200 and forged.status_code == 401
+    (event,) = events.events
+    assert (event.kind, event.outcome, event.ref) == ("share_sent", "DirectChat", TOKEN)
+    assert event.site and "room-1" not in event.site  # 채팅방 해시를 한 번 더 해시한다
+
+
+def test_KPI에_누른_수와_보낸_수가_나온다():
+    events = sample()
+    card = next(e for e in events if e.user_hash == "b" and e.kind == "check")
+    events += [
+        Event(event_id="s1", created_at=DAY0 + timedelta(minutes=3), user_hash="b", kind="share", outcome="WARNING", ref=card.event_id),
+        Event(event_id="s2", created_at=DAY0 + timedelta(minutes=4), user_hash=None, kind="share_sent", outcome="MultiChat",
+              ref=card.event_id, site="room"),
+    ]
+    report = compute(events, cohort=parse_cohort("2026-10-05T09:00~2026-10-05T18:00"),
+                     prior_first_seen={"team": DAY0 - timedelta(days=20)}, now=DAY0 + timedelta(days=20))
+    assert report["share"]["clicks"] == 2  # a의 시험 기간 버튼 + b의 공유 페이지
+    assert report["share_sent"] == {"sent": 1, "cards": 1, "senders": 1, "rooms": 1, "by_chat": Counter({"MultiChat": 1})}
+    assert "실제로 보냄 1회" in format_report(report) and "단체 채팅 1" in format_report(report)

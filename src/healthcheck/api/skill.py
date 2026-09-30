@@ -123,6 +123,8 @@ class SkillServices:
     image_base_url: str | None = None
     # 응답 기록(교육 성과 KPI). 없으면 기록하지 않는다.
     events: EventLog | None = None
+    # 카카오 공식 공유 기능을 쓰는가(KAKAO_JS_KEY). 쓰면 [친구에게 보내기]가 공유 페이지를 연다.
+    web_share: bool = False
 
 
 async def _log(services: SkillServices, kind: str, user_key: str | None, **fields) -> None:
@@ -262,7 +264,9 @@ async def skill(request: Request) -> dict:
             latency_ms=int((time.monotonic() - started) * 1000), delivered=True, event_id=event_id,
         )
         payload = render(cached, image_base_url=services.image_base_url, intro=intro)
-        return with_share_link(payload, services.image_base_url, event_id)
+        return with_share_link(
+            payload, services.image_base_url, event_id, web_share=services.web_share, user_key=user_key
+        )
 
     # 기본 경로: 콜백이 없으면 비동기 처리를 할 수 없다.
     # TODO(확인필요): 오픈빌더에서 콜백 사용 설정을 켜야 callbackUrl이 온다.

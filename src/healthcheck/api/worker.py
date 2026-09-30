@@ -49,9 +49,11 @@ class Worker:
         last_results=None,
         image_base_url: str | None = None,
         events: EventLog | None = None,
+        web_share: bool = False,
     ) -> None:
         self._image_base_url = image_base_url
         self._events = events
+        self._web_share = web_share
         self._queue = queue
         self._orchestrator = orchestrator
         self._callback = callback_sender
@@ -99,7 +101,10 @@ class Worker:
         delivered = True
         try:
             payload = render(result, image_base_url=self._image_base_url, intro=job.intro)
-            await self._callback.send(job.callback_url, with_share_link(payload, self._image_base_url, event_id))
+            payload = with_share_link(
+                payload, self._image_base_url, event_id, web_share=self._web_share, user_key=job.user_key
+            )
+            await self._callback.send(job.callback_url, payload)
         except Exception:
             # 콜백은 1회만 쓸 수 있어서 여기서 재시도해도 성공하지 않는 경우가 많다.
             # 판정 자체는 캐시에 남았으므로 어르신이 다시 보내면 즉시 답할 수 있다.
@@ -165,6 +170,7 @@ async def start_workers(
     last_results=None,
     image_base_url: str | None = None,
     events: EventLog | None = None,
+    web_share: bool = False,
 ) -> list[asyncio.Task]:
     """워커 여러 개를 띄운다.
 
@@ -172,6 +178,6 @@ async def start_workers(
     Liner 토큰 비용을 지원받는 구조이므로 기본값은 작게 둔다.
     """
     worker = Worker(
-        queue, orchestrator, callback_sender, repository, last_results, image_base_url, events
+        queue, orchestrator, callback_sender, repository, last_results, image_base_url, events, web_share
     )
     return [asyncio.create_task(worker.run_forever()) for _ in range(count)]

@@ -307,6 +307,7 @@ def create_app(
             last_results=last_results,
             image_base_url=image_base_url,
             events=events,
+            web_share=bool(settings.kakao_js_key),
         )
         logger.info("워커 %d개 기동. 규칙표 %s", worker_count, orchestrator.ruleset.version)
 
@@ -357,6 +358,7 @@ def create_app(
         last_results=last_results,
         image_base_url=image_base_url,
         events=events,
+        web_share=bool(settings.kakao_js_key),
     )
     app.state.events = events
     app.state.image_base_url = image_base_url
@@ -375,8 +377,12 @@ def create_app(
     app.state.queue = queue
     app.state.callback_sender = callback_sender
     app.include_router(skill.build_router(skill_path))
-    # 공유된 결과 카드의 사진을 누르면 여기로 들어온다(열린 수를 세고 채널로 보낸다).
+    # 친구에게 보내기: 공유 페이지(누른 수), 카카오 전송 알림(보낸 수), 공유된 메시지 열림(받은 사람이 누른 수)
     app.state.channel_url = settings.channel_url
+    app.state.kakao_js_key = settings.kakao_js_key
+    app.state.kakao_admin_key = settings.kakao_admin_key
+    if settings.kakao_js_key and not settings.kakao_admin_key:
+        logger.warning("KAKAO_ADMIN_KEY가 없어 공유 전송 알림이 카카오에서 온 것인지 확인하지 못한다")
     app.include_router(share.router)
 
     # 결과 카드 머리 이미지. 카카오가 내려받으므로 인증 없이 연다.

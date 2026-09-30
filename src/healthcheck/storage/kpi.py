@@ -210,6 +210,14 @@ def compute(
     # 공유된 카드가 열린 수. 사진을 누른 사람은 모르므로 카드(ref)로 이어 본다.
     owners = {e.event_id: e.user_hash for e in cards}
     opens = [e for e in events if e.kind == "share_open" and e.ref in owners]
+    sent = [e for e in events if e.kind == "share_sent" and e.ref in owners]
+    report["share_sent"] = {
+        "sent": len(sent),
+        "cards": len({e.ref for e in sent}),
+        "senders": len({owners[e.ref] for e in sent}),
+        "rooms": len({e.site for e in sent if e.site}),
+        "by_chat": Counter(e.outcome for e in sent if e.outcome),
+    }
     report["share_open"] = {
         "opens": len(opens),
         "cards_opened": len({e.ref for e in opens}),
@@ -262,6 +270,13 @@ OUTCOME_NAMES = {
     "busy": "요청 많음",
     "no_callback": "콜백 없음",
     "media": "사진",
+}
+CHAT_NAMES = {
+    "MemoChat": "나와의 채팅",
+    "DirectChat": "1:1 채팅",
+    "MultiChat": "단체 채팅",
+    "OpenDirectChat": "오픈 1:1",
+    "OpenMultiChat": "오픈 단체",
 }
 FORM_NAMES = {
     "video": "유튜브 영상",
@@ -374,10 +389,8 @@ def format_report(report: dict) -> str:
         "  카드 사진을 눌러 들어온 수다. 결과를 받은 본인이 누른 것도 섞일 수 있다. 공유 여부는 설문으로 함께 본다",
     ]
 
-    for kind, title in (("reason", "근거 보기('왜 그런지 보기')"), ("share", "친구 공유 버튼(시험 기간 메시지 버튼)")):
+    for kind, title in (("reason", "근거 보기('왜 그런지 보기')"), ("share", "친구 공유 버튼('친구에게 보내기') 누름")):
         r = report[kind]
-        if kind == "share" and not r["clicks"]:
-            continue
         lines += [
             "",
             f"■ {title} {r['clicks']}회 · 결과 카드 대비 {_pct(r['clicks'], r['cards'])}",
@@ -385,6 +398,15 @@ def format_report(report: dict) -> str:
         ]
         if r["by_label"]:
             lines.append("  " + " · ".join(f"{OUTCOME_NAMES.get(k, k)} {v}" for k, v in r["by_label"].most_common()))
+        if kind == "share":
+            ss = report["share_sent"]
+            lines.append(
+                f"  실제로 보냄 {ss['sent']}회 · 카드 {ss['cards']}장 · 보낸 사람 {ss['senders']}명 · 서로 다른 채팅방 {ss['rooms']}곳"
+            )
+            if ss["by_chat"]:
+                lines.append("  " + " · ".join(f"{CHAT_NAMES.get(k, k)} {v}" for k, v in ss["by_chat"].most_common()))
+            if not r["clicks"] and not ss["sent"]:
+                lines.append("  (KAKAO_JS_KEY를 설정하기 전에는 누른 수와 보낸 수를 셀 수 없다)")
 
     g = report["guide"]
     lines += [
