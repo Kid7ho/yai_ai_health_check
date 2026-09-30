@@ -220,6 +220,7 @@ def compute(
     }
     report["share_open"] = {
         "opens": len(opens),
+        "by_target": Counter(e.outcome or "chat" for e in opens),
         "cards_opened": len({e.ref for e in opens}),
         "cards": len(cards),
         "senders": len({owners[e.ref] for e in opens}),
@@ -386,8 +387,11 @@ def format_report(report: dict) -> str:
         "",
         f"■ 공유된 결과 카드가 열린 수 {so['opens']}회 · 결과 카드 {so['cards']}장 중 {so['cards_opened']}장"
         f" ({_pct(so['cards_opened'], so['cards'])}, 결과를 받은 사람 {so['senders']}명)",
-        "  카드 사진을 눌러 들어온 수다. 결과를 받은 본인이 누른 것도 섞일 수 있다. 공유 여부는 설문으로 함께 본다",
+        "  공유받은 메시지(또는 카드 사진)를 눌러 들어온 수다. 결과를 받은 본인이 누른 것도 섞일 수 있다",
     ]
+    if so["by_target"]:
+        names = {"chat": "나도 확인해 보기", "home": "채널 홈", "source": "원본 보기"}
+        lines.append("  " + " · ".join(f"{names.get(k, k)} {v}" for k, v in so["by_target"].most_common()))
 
     for kind, title in (("reason", "근거 보기('왜 그런지 보기')"), ("share", "친구 공유 버튼('친구에게 보내기') 누름")):
         r = report[kind]

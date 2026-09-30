@@ -84,7 +84,7 @@ class Settings:
     # 카카오가 결과 카드 이미지를 내려받을 공개 주소. 예: https://이름.ngrok-free.dev
     # 비워 두면 이미지 없는 카드로 답한다. scripts/server_start.sh가 채워 준다.
     public_base_url: str | None = None
-    # 카카오톡 채널 주소(pf.kakao.com/_아이디/chat). 공유된 결과 카드의 사진을 누른 사람을 보낸다.
+    # 카카오톡 채널 홈 주소(pf.kakao.com/_아이디). 공유받은 사람을 채널 홈이나 채팅방(/chat)으로 보낸다.
     channel_url: str | None = None
     # 카카오 개발자 앱 JavaScript 키. 있으면 [친구에게 보내기]가 공식 공유 기능으로 누른 수·보낸 수를 센다.
     kakao_js_key: str | None = None

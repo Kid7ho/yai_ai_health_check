@@ -102,7 +102,8 @@ class Worker:
         try:
             payload = render(result, image_base_url=self._image_base_url, intro=job.intro)
             payload = with_share_link(
-                payload, self._image_base_url, event_id, web_share=self._web_share, user_key=job.user_key
+                payload, self._image_base_url, event_id, web_share=self._web_share, user_key=job.user_key,
+                source_url=job.share_input.url,
             )
             await self._callback.send(job.callback_url, payload)
         except Exception:

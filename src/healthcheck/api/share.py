@@ -6,7 +6,8 @@
   1. 결과 카드의 [친구에게 보내기]를 우리 주소(/share/{토큰})로 여는 버튼으로 바꾼다
   2. 그 페이지가 열리면 누른 것으로 기록하고, 바로 카카오톡 공유 화면을 띄운다
   3. 실제로 보내면 카카오가 전송 알림(웹훅)을 보내 준다 → 보낸 것으로 기록한다
-  4. 공유된 메시지를 받은 사람이 누르면 /s/{토큰}으로 들어와 열린 것으로 기록하고 채널로 보낸다
+  4. 공유된 메시지를 받은 사람이 누르면 /s/{토큰}(채팅방·채널 홈) 또는 /o/{토큰}(원본)으로 들어와 열린 것으로 기록한다
+  5. 공유 페이지는 전송 알림을 받았는지 물어 보고, 보냈으면 스스로 닫는다
 
 토큰은 그 결과의 확인 기록 id(event_id)다. KAKAO_JS_KEY가 없으면 1~3은 꺼지고 원래 share 버튼을 쓴다.
 공유할 카드 내용(제목·설명·이미지)은 메모리에 하루만 둔다. 응답 기록에는 글 내용을 담지 않기 때문이다.
@@ -17,11 +18,13 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import html
 import json
 import logging
 import re
 import time
-from urllib.parse import parse_qs
+from dataclasses import replace
+from urllib.parse import parse_qs, urlencode
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
@@ -33,6 +36,7 @@ logger = logging.getLogger(__name__)
 OPEN_PATH = "/s"
 SHARE_PATH = "/share"
 CALLBACK_PATH = "/kakao/share-callback"
+SOURCE_PATH = "/o"
 _TOKEN = re.compile(r"^[0-9a-f]{32}$")
 # 카카오 개발자 문서 다운로드 페이지의 2.8.3(2026-09-03). 무결성 값은 받은 파일의 sha384로 계산했다.
 SDK_URL = "https://t1.kakaocdn.net/kakao_js_sdk/2.8.3/kakao.min.js"
@@ -89,11 +93,13 @@ def with_share_link(
     *,
     web_share: bool = False,
     user_key: str | None = None,
+    source_url: str | None = None,
 ) -> dict:
     """공유 버튼이 달린 결과 카드에 추적 주소를 건다. 카드 문구는 바꾸지 않는다.
 
     web_share면 [친구에게 보내기]를 공유 페이지를 여는 버튼으로 바꾸고, 공유할 내용을 SHARE_CARDS에 둔다.
     아니면 원래 share 버튼을 두고, 카드 사진에만 열림 추적 주소를 건다.
+    source_url은 확인한 원본(영상·기사) 주소다. 공유 메시지의 [원본 보기]에 쓴다.
     """
     if not base_url:
         return payload
@@ -117,46 +123,120 @@ def with_share_link(
                     "imageUrl": card["thumbnail"].get("imageUrl"),
                     "label": card["thumbnail"].get("altText"),
                     "owner": user_key,
+                    "source": source_url if _is_web_url(source_url) else None,
                 },
             )
     return payload
 
 
-# 채널 주소를 모를 때 보여 주는 안내. 판정 결과가 아니라서 면책 문구를 붙이지 않는다.
-_FALLBACK_HTML = """<!doctype html><html lang="ko"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>AI 건강지킴이</title></head>
-<body style="font-family:sans-serif;padding:32px;font-size:22px;line-height:1.6">
-<p><b>AI 건강지킴이</b></p>
-<p>받은 건강정보가 믿을 만한지 확인해 드려요.</p>
-<p>카카오톡에서 <b>AI 건강지킴이</b> 채널을 검색해 추가하고, 링크나 문장을 보내 주세요.</p>
-</body></html>"""
+def _is_web_url(value: str | None) -> bool:
+    return bool(value) and value.startswith(("https://", "http://")) and len(value) <= 2000
 
-# 공유 페이지. 열리자마자 공유 화면을 띄우고, 돌아오면 창을 닫는다. 자동으로 안 뜨면 큰 버튼을 누르게 한다.
+
+# 전송 알림을 받은 시각. 공유 페이지가 이 값을 물어 보고, 보낸 것이 확인되면 스스로 닫는다.
+_SENT_AT: dict[str, float] = {}
+
+_FONT = '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif'
+_STYLE = """
+:root {{ --bg:#F4F2EE; --card:#FFFFFF; --ink:#191919; --muted:#6B6B6B; --line:#E6E3DD; --kakao:#FEE500; }}
+* {{ box-sizing:border-box; }}
+html, body {{ margin:0; background:var(--bg); color:var(--ink); font-family:{font}; -webkit-text-size-adjust:100%; }}
+main {{ max-width:480px; margin:0 auto; padding:28px 20px 32px; }}
+.brand {{ font-size:17px; font-weight:700; color:var(--muted); letter-spacing:-0.2px; }}
+h1 {{ font-size:34px; line-height:1.3; margin:10px 0 6px; letter-spacing:-0.8px; }}
+.lead {{ font-size:19px; line-height:1.55; color:var(--muted); margin:0 0 22px; }}
+.preview {{ background:var(--card); border:1px solid var(--line); border-radius:20px; overflow:hidden; }}
+.preview img {{ display:block; width:100%; aspect-ratio:2/1; object-fit:cover; background:#EEE; }}
+.preview .body {{ padding:16px 18px 18px; }}
+.chip {{ display:inline-block; font-size:16px; font-weight:700; padding:4px 12px; border-radius:999px; background:var(--bg); }}
+.claim {{ font-size:21px; line-height:1.45; font-weight:700; margin:0; word-break:keep-all; }}
+.chip + .claim {{ margin-top:10px; }}
+.primary {{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:64px; margin-top:22px;
+  border:0; border-radius:16px; background:var(--kakao); color:#191919; font-size:22px; font-weight:800; font-family:inherit; }}
+.secondary {{ width:100%; min-height:56px; margin-top:12px; border:1px solid var(--line); border-radius:16px;
+  background:transparent; color:var(--ink); font-size:19px; font-weight:600; font-family:inherit; }}
+.status {{ text-align:center; font-size:18px; color:var(--muted); margin-top:16px; min-height:26px; }}
+.status.done {{ color:#1E7B3C; font-weight:700; }}
+"""
+
+# 공유 페이지. 열리자마자 공유 화면을 띄운다. 보낸 것이 확인되면(전송 알림) 스스로 닫는다.
+# 자동으로 안 뜨면 노란 버튼을 누르게 한다. 판정 카드 문구는 카드 그대로 보여 준다.
 _SHARE_HTML = """<!doctype html><html lang="ko"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>친구에게 보내기</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>친구에게 보내기</title><style>{style}</style>
 <script src="{sdk}" integrity="{integrity}" crossorigin="anonymous"></script></head>
-<body style="font-family:sans-serif;padding:28px;font-size:22px;line-height:1.6;text-align:center">
-<p style="margin-top:40px"><b>카카오톡 공유 화면을 여는 중이에요</b></p>
-<button id="send" style="font-size:24px;padding:18px 28px;margin-top:24px;border:0;border-radius:14px;background:#FEE500;width:100%">카카오톡으로 보내기</button>
-<button id="close" style="font-size:20px;padding:14px 24px;margin-top:16px;border:1px solid #ccc;border-radius:14px;background:#fff;width:100%">닫기</button>
+<body><main>
+<div class="brand">AI 건강지킴이</div>
+<h1>친구에게 보내기</h1>
+<p class="lead">카카오톡에서 받을 사람을 고르면<br>아래 결과가 그대로 전달돼요.</p>
+{preview}
+<button id="send" class="primary" type="button"><span aria-hidden="true">💬</span>카카오톡으로 보내기</button>
+<button id="close" class="secondary" type="button">닫기</button>
+<p id="status" class="status" role="status">보내고 나면 이 창은 저절로 닫혀요.</p>
+</main>
 <script>
 var MESSAGE = {message};
-function share() {{ try {{ if (!Kakao.isInitialized()) Kakao.init({js_key}); Kakao.Share.sendDefault(MESSAGE); }} catch (e) {{}} }}
-function closeView() {{ location.href = "kakaotalk://inappbrowser/close"; }}
+var SENT_URL = {sent_url};
+var OPENED_AT = {opened_at};
+var statusEl = document.getElementById("status");
+function closeView() {{
+  location.href = "kakaotalk://inappbrowser/close";
+  setTimeout(function () {{ try {{ window.close(); }} catch (e) {{}} }}, 300);
+}}
+function share() {{
+  try {{ if (!Kakao.isInitialized()) Kakao.init({js_key}); Kakao.Share.sendDefault(MESSAGE); }}
+  catch (e) {{ statusEl.textContent = "노란 버튼을 눌러 주세요."; }}
+}}
+var closing = false;
+function checkSent() {{
+  if (closing) return;
+  fetch(SENT_URL + "?after=" + OPENED_AT, {{ cache: "no-store" }})
+    .then(function (r) {{ return r.json(); }})
+    .then(function (data) {{
+      if (data.sent && !closing) {{
+        closing = true;
+        statusEl.textContent = "보냈어요! 창을 닫을게요.";
+        statusEl.className = "status done";
+        setTimeout(closeView, 800);
+      }}
+    }})
+    .catch(function () {{}});
+}}
 document.getElementById("send").onclick = share;
 document.getElementById("close").onclick = closeView;
-var opened = false;
-document.addEventListener("visibilitychange", function () {{
-  if (document.visibilityState === "hidden") opened = true;
-  else if (opened) closeView();
-}});
+// 공유 화면에서 돌아오면 바로 확인한다. 그 사이에도 1.5초마다 확인한다.
+document.addEventListener("visibilitychange", function () {{ if (document.visibilityState === "visible") checkSent(); }});
+window.addEventListener("focus", checkSent);
+window.addEventListener("pageshow", checkSent);
+setInterval(checkSent, 1500);
 share();
 </script></body></html>"""
 
+_CHIP_COLORS = {"믿을 만해요": "#E3F4E8", "조심하세요": "#FFF1D6", "주의하세요": "#FDE3E1", "알 수 없어요": "#ECEBF0"}
 
-def _share_message(card: dict | None, base_url: str, token: str) -> dict:
-    """카카오 공유 메시지(feed). 받는 사람이 누르면 열림 추적 주소로 들어온다."""
-    link = {"mobileWebUrl": open_link(base_url, token), "webUrl": open_link(base_url, token)}
+
+def _preview_html(card: dict | None) -> str:
+    if not card:
+        return ""
+    label = html.escape(str(card.get("label") or ""))
+    image = card.get("imageUrl")
+    # 신호등 이미지에 판정이 이미 크게 적혀 있으므로 이미지가 없을 때만 판정 표시를 따로 단다.
+    chip = (
+        f'<span class="chip" style="background:{_CHIP_COLORS.get(card.get("label"), "#F4F2EE")}">{label}</span>'
+        if label and not image
+        else ""
+    )
+    img = f'<img src="{html.escape(image)}" alt="{label}">' if image else ""
+    return (
+        f'<div class="preview">{img}<div class="body">{chip}'
+        f'<p class="claim">{html.escape(str(card.get("title") or ""))}</p></div></div>'
+    )
+
+
+def _share_message(card: dict | None, base_url: str, token: str, *, secret: str | None) -> dict:
+    """카카오 공유 메시지(feed). 링크는 모두 우리 주소를 거쳐 열린 수를 센다(웹 도메인에 등록된 주소만 쓸 수 있다)."""
+    chat = _web_link(open_link(base_url, token))
+    home = _web_link(open_link(base_url, token) + "?to=home")
     if card:
         label = card.get("label") or ""
         content = {
@@ -165,25 +245,43 @@ def _share_message(card: dict | None, base_url: str, token: str) -> dict:
             "imageUrl": card.get("imageUrl"),
             "imageWidth": 800,
             "imageHeight": 400,
-            "link": link,
+            "link": chat,
         }
     else:
         content = {
             "title": "AI 건강지킴이",
             "description": "받은 건강정보가 믿을 만한지 카카오톡으로 확인해 보세요.",
             "imageUrl": None,
-            "link": link,
+            "link": chat,
         }
     if not content["imageUrl"]:
         content.pop("imageUrl")
         content.pop("imageWidth", None)
         content.pop("imageHeight", None)
+    source = (card or {}).get("source")
+    if source and secret:
+        # 원본 주소는 서명해서 우리 주소에 담는다. 서버를 재시작해도 받은 메시지의 [원본 보기]가 동작한다.
+        first = {"title": "원본 보기", "link": _web_link(source_link(base_url, token, source, secret))}
+    else:
+        first = {"title": "나도 확인해 보기", "link": chat}
     return {
         "objectType": "feed",
         "content": content,
-        "buttons": [{"title": "나도 확인해 보기", "link": link}],
+        "buttons": [first, {"title": "채널 홈", "link": home}],
         "serverCallbackArgs": {CALLBACK_KEY: token},
     }
+
+
+def _web_link(url: str) -> dict:
+    return {"mobileWebUrl": url, "webUrl": url}
+
+
+def _signature(token: str, url: str, secret: str) -> str:
+    return hmac.new(secret.encode("utf-8"), f"{token}\n{url}".encode("utf-8"), hashlib.sha256).hexdigest()[:32]
+
+
+def source_link(base_url: str, token: str, url: str, secret: str) -> str:
+    return f"{base_url.rstrip('/')}{SOURCE_PATH}/{token}?{urlencode({'u': url, 's': _signature(token, url, secret)})}"
 
 
 def _script_json(value) -> str:
@@ -199,15 +297,35 @@ async def share_page(token: str, request: Request) -> Response:
     if not _TOKEN.match(token) or not js_key or not base_url:
         return HTMLResponse(_FALLBACK_HTML, status_code=404)
     card = SHARE_CARDS.get(token)
-    await _record(request, "share", ref=token, user_key=(card or {}).get("owner"),
-                  outcome=_label_code(card))
+    await _record(request, "share", ref=token, user_key=(card or {}).get("owner"), outcome=_label_code(card))
+    message = _share_message(card, base_url, token, secret=getattr(request.app.state, "kakao_admin_key", None))
     page = _SHARE_HTML.format(
+        style=_STYLE.format(font=_FONT),
         sdk=SDK_URL,
         integrity=SDK_INTEGRITY,
-        message=_script_json(_share_message(card, base_url, token)),
+        preview=_preview_html(card),
+        message=_script_json(message),
+        sent_url=_script_json(f"{SHARE_PATH}/{token}/sent"),
+        opened_at=int(time.time() * 1000),
         js_key=_script_json(js_key),
     )
     return HTMLResponse(page, headers={"Cache-Control": "no-store"})
+
+
+@router.get(SHARE_PATH + "/{token}/sent", include_in_schema=False)
+async def share_sent(token: str, after: int = 0) -> Response:
+    """공유 페이지가 묻는다. 페이지를 연 뒤에 전송 알림을 받았으면 sent=true."""
+    sent_at = _SENT_AT.get(token) if _TOKEN.match(token) else None
+    return JSONResponse({"sent": bool(sent_at and sent_at * 1000 >= after)}, headers={"Cache-Control": "no-store"})
+
+
+_FALLBACK_HTML = """<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>AI 건강지킴이</title></head>
+<body style="font-family:sans-serif;padding:32px;font-size:22px;line-height:1.6">
+<p><b>AI 건강지킴이</b></p>
+<p>받은 건강정보가 믿을 만한지 확인해 드려요.</p>
+<p>카카오톡에서 <b>AI 건강지킴이</b> 채널을 검색해 추가하고, 링크나 문장을 보내 주세요.</p>
+</body></html>"""
 
 
 @router.post(CALLBACK_PATH, include_in_schema=False)
@@ -242,11 +360,16 @@ async def share_callback(request: Request) -> Response:
             token = json.loads(token).get(CALLBACK_KEY, token)
         except Exception:
             pass
+    valid = token if isinstance(token, str) and _TOKEN.match(token) else None
+    if valid:
+        _SENT_AT[valid] = time.time()
+        if len(_SENT_AT) > ShareCards.MAX_ITEMS:
+            _SENT_AT.pop(next(iter(_SENT_AT)))
     chat = params.get("HASH_CHAT_ID")
     await _record(
         request,
         "share_sent",
-        ref=token if isinstance(token, str) and _TOKEN.match(token) else None,
+        ref=valid,
         outcome=str(params.get("CHAT_TYPE") or "") or None,
         # 채팅방 해시는 한 번 더 해시해 서로 다른 방 수만 셀 수 있게 한다.
         site=hashlib.sha256(str(chat).encode("utf-8")).hexdigest()[:16] if chat else None,
@@ -255,15 +378,29 @@ async def share_callback(request: Request) -> Response:
 
 
 @router.get(OPEN_PATH + "/{token}", include_in_schema=False)
-async def share_open(token: str, request: Request) -> Response:
-    """공유된 메시지(또는 결과 카드 사진)를 누르면 들어온다. 열린 것으로 기록하고 채널로 보낸다."""
+async def share_open(token: str, request: Request, to: str = "chat") -> Response:
+    """공유된 메시지(또는 결과 카드 사진)를 누르면 들어온다. 열린 것으로 기록하고 채널로 보낸다.
+
+    to=home이면 채널 홈, 아니면 채널 채팅방으로 보낸다.
+    """
     if not _TOKEN.match(token):
         return HTMLResponse(_FALLBACK_HTML, status_code=404)
-    await _record(request, "share_open", ref=token)
+    target = "home" if to == "home" else "chat"
+    await _record(request, "share_open", ref=token, outcome=target)
     channel_url = getattr(request.app.state, "channel_url", None)
     if channel_url:
-        return RedirectResponse(channel_url, status_code=302)
+        return RedirectResponse(channel_url if target == "home" else f"{channel_url}/chat", status_code=302)
     return HTMLResponse(_FALLBACK_HTML)
+
+
+@router.get(SOURCE_PATH + "/{token}", include_in_schema=False)
+async def share_source(token: str, request: Request, u: str = "", s: str = "") -> Response:
+    """공유된 메시지의 [원본 보기]. 서명이 맞는 원본 주소로만 보낸다(아무 주소로나 보내는 통로가 되지 않게)."""
+    secret = getattr(request.app.state, "kakao_admin_key", None)
+    if not _TOKEN.match(token) or not secret or not _is_web_url(u) or not hmac.compare_digest(s, _signature(token, u, secret)):
+        return HTMLResponse(_FALLBACK_HTML, status_code=404)
+    await _record(request, "share_open", ref=token, outcome="source")
+    return RedirectResponse(u, status_code=302)
 
 
 _LABEL_CODES = {"믿을 만해요": "TRUSTWORTHY", "조심하세요": "CAUTION", "주의하세요": "WARNING", "알 수 없어요": "UNKNOWN"}
@@ -283,12 +420,10 @@ async def _record(request: Request, kind: str, *, ref: str | None, user_key: str
     try:
         event = new_event(kind, user_key=user_key, outcome=outcome, ref=ref)
         if site:
-            from dataclasses import replace
-
             event = replace(event, site=site)
         await events.record(event)
     except Exception:
         logger.exception("공유 기록 실패 kind=%s", kind)
 
 
-__all__ = ["SHARE_CARDS", "ShareCards", "router", "with_share_link"]
+__all__ = ["SHARE_CARDS", "ShareCards", "router", "source_link", "with_share_link"]

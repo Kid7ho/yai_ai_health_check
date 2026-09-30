@@ -271,7 +271,9 @@ def test_공유된_카드가_열린_수는_참여자의_카드로_이어_센다(
         prior_first_seen={"team": DAY0 - timedelta(days=20)},
         now=DAY0 + timedelta(days=20),
     )
-    assert report["share_open"] == {"opens": 2, "cards_opened": 1, "cards": 6, "senders": 1}
+    assert report["share_open"] == {
+        "opens": 2, "by_target": Counter({"chat": 2}), "cards_opened": 1, "cards": 6, "senders": 1
+    }
 
 
 def test_보고서를_한국어로_찍는다():
@@ -303,13 +305,15 @@ def test_결과_카드_사진에_공유_추적_주소를_건다():
 
 def test_공유된_카드를_누르면_기록하고_채널로_보낸다():
     app, events = app_with_events()
-    app.state.channel_url = "https://pf.kakao.com/_abc/chat"
+    app.state.channel_url = "https://pf.kakao.com/_abc"
     with TestClient(app) as client:
         moved = client.get("/s/" + "b" * 32, follow_redirects=False)
+        home = client.get("/s/" + "b" * 32 + "?to=home", follow_redirects=False)
         bad = client.get("/s/../../etc", follow_redirects=False)
     assert moved.status_code == 302 and moved.headers["location"] == "https://pf.kakao.com/_abc/chat"
+    assert home.headers["location"] == "https://pf.kakao.com/_abc"
     assert bad.status_code == 404
-    assert [(e.kind, e.ref, e.user_hash) for e in events.events] == [("share_open", "b" * 32, None)]
+    assert [(e.kind, e.ref, e.outcome) for e in events.events] == [("share_open", "b" * 32, "chat"), ("share_open", "b" * 32, "home")]
 
 
 def test_채널_주소가_없으면_안내_화면을_보여_준다():
@@ -426,3 +430,57 @@ def test_KPI에_누른_수와_보낸_수가_나온다():
     assert report["share"]["clicks"] == 2  # a의 시험 기간 버튼 + b의 공유 페이지
     assert report["share_sent"] == {"sent": 1, "cards": 1, "senders": 1, "rooms": 1, "by_chat": Counter({"MultiChat": 1})}
     assert "실제로 보냄 1회" in format_report(report) and "단체 채팅 1" in format_report(report)
+
+
+def test_공유_메시지에_원본_보기와_채널_홈_버튼을_단다():
+    from healthcheck.api.share import SHARE_CARDS
+
+    app, _ = web_share_app()
+    SHARE_CARDS.put(TOKEN, {"title": "홍삼", "description": "설명", "imageUrl": None, "label": "믿을 만해요",
+                            "owner": USER, "source": "https://www.youtube.com/shorts/hxG2eLxzlU4"})
+    with TestClient(app) as client:
+        page = client.get("/share/" + TOKEN).text
+    assert '"title": "원본 보기"' in page and '"title": "채널 홈"' in page
+    assert "https://example.com/o/" + TOKEN in page and "https://example.com/s/" + TOKEN + "?to=home" in page
+
+
+def test_원본_보기는_서명이_맞는_주소로만_보낸다():
+    from healthcheck.api.share import source_link
+
+    app, events = web_share_app()
+    url = "https://www.youtube.com/shorts/hxG2eLxzlU4"
+    good = source_link("https://example.com", TOKEN, url, "admin-secret").replace("https://example.com", "")
+    with TestClient(app) as client:
+        moved = client.get(good, follow_redirects=False)
+        forged = client.get(f"/o/{TOKEN}?u=https://evil.example&s=" + "0" * 32, follow_redirects=False)
+    assert moved.status_code == 302 and moved.headers["location"] == url
+    assert forged.status_code == 404
+    assert [(e.kind, e.outcome) for e in events.events] == [("share_open", "source")]
+
+
+def test_원본이_없으면_나도_확인해_보기를_단다():
+    from healthcheck.api.share import SHARE_CARDS
+
+    app, _ = web_share_app()
+    SHARE_CARDS.put(TOKEN, {"title": "홍삼이 면역력에 좋다", "description": "설명", "imageUrl": None, "label": "믿을 만해요",
+                            "owner": USER, "source": None})
+    with TestClient(app) as client:
+        page = client.get("/share/" + TOKEN).text
+    assert '"title": "나도 확인해 보기"' in page and '"title": "채널 홈"' in page
+
+
+def test_공유_페이지는_보낸_뒤에_스스로_닫힌다():
+    import time as _time
+
+    app, _ = web_share_app()
+    with TestClient(app) as client:
+        before = int(_time.time() * 1000)
+        assert client.get(f"/share/{TOKEN}/sent?after={before}").json() == {"sent": False}
+        client.post("/kakao/share-callback", headers={"Authorization": "KakaoAK admin-secret"},
+                    data={"CHAT_TYPE": "MemoChat", "share_token": TOKEN})
+        assert client.get(f"/share/{TOKEN}/sent?after={before}").json() == {"sent": True}
+        # 이전에 보낸 기록으로 새로 연 페이지를 닫지 않는다
+        later = int(_time.time() * 1000) + 5000
+        assert client.get(f"/share/{TOKEN}/sent?after={later}").json() == {"sent": False}
+        page = client.get("/share/" + TOKEN).text
+    assert "kakaotalk://inappbrowser/close" in page and "/sent" in page

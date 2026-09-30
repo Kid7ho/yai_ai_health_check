@@ -31,6 +31,8 @@ primary_region = "nrt"
   TRANSCRIPT_CACHE_PATH = "/data/transcripts.db"
   # 결과 카드 이미지를 카카오가 내려받을 주소. 앱 이름을 바꾸면 함께 바꾼다.
   PUBLIC_BASE_URL = "https://yai-health-check.fly.dev"
+  # 공유받은 사람이 [채널 홈]·[나도 확인해 보기]를 누르면 가는 곳. /chat을 붙이면 채팅방이다.
+  CHANNEL_URL = "https://pf.kakao.com/_FZXrX"
 
 [[mounts]]
   source = "healthcheck_data"

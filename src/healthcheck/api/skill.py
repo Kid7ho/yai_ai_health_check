@@ -265,7 +265,8 @@ async def skill(request: Request) -> dict:
         )
         payload = render(cached, image_base_url=services.image_base_url, intro=intro)
         return with_share_link(
-            payload, services.image_base_url, event_id, web_share=services.web_share, user_key=user_key
+            payload, services.image_base_url, event_id, web_share=services.web_share, user_key=user_key,
+            source_url=share_input.url,
         )
 
     # 기본 경로: 콜백이 없으면 비동기 처리를 할 수 없다.
