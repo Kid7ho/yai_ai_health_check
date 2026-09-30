@@ -302,7 +302,7 @@ video_id → 본문을 볼륨 SQLite(`/data/transcripts.db`, 60일)에 담아 �
   `KAKAO_JS_KEY`가 없으면 원래 share 버튼을 쓴다. 전송 알림 인증은 `KAKAO_ADMIN_KEY`(fly secrets). 공유할 카드 내용은
   메모리에 하루만 둔다. SDK 2.8.3, 무결성 값은 받은 파일의 sha384. 2026-09-30 휴대폰 확인: 공유 화면 자동으로 뜸,
   전송 알림(나와의 채팅) 옴. 받은 메시지 버튼은 [원본 보기](`/o/{id}?u=원본&s=서명`, 서명 키는 어드민 키)와
-  [채널 홈](`/s/{id}?to=home`), 원본이 없으면(문장 입력) [나도 확인해 보기]. 공유 페이지는 `/share/{id}/sent`를 1.5초마다 물어
+  [채널 홈](`/s/{id}?to=home`), 원본이 없으면(문장 입력) [나도 확인해 보기]. 공유 페이지는 `/share/{id}/sent`를 0.5초마다(10분까지) 물어
   전송 알림이 오면 `kakaotalk://inappbrowser/close`로 스스로 닫는다. `CHANNEL_URL=https://pf.kakao.com/_FZXrX`(fly.toml)
   TODO(확인필요): 전송 알림 뒤 창이 실제로 닫히는지
 

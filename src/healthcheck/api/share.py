@@ -197,18 +197,19 @@ function checkSent() {{
         closing = true;
         statusEl.textContent = "보냈어요! 창을 닫을게요.";
         statusEl.className = "status done";
-        setTimeout(closeView, 800);
+        setTimeout(closeView, 500);
       }}
     }})
     .catch(function () {{}});
 }}
 document.getElementById("send").onclick = share;
 document.getElementById("close").onclick = closeView;
-// 공유 화면에서 돌아오면 바로 확인한다. 그 사이에도 1.5초마다 확인한다.
+// 공유 화면에서 돌아오면 바로 확인한다. 그 사이에도 0.5초마다 확인하고, 10분이 지나면 멈춘다.
 document.addEventListener("visibilitychange", function () {{ if (document.visibilityState === "visible") checkSent(); }});
 window.addEventListener("focus", checkSent);
 window.addEventListener("pageshow", checkSent);
-setInterval(checkSent, 1500);
+var poll = setInterval(checkSent, 500);
+setTimeout(function () {{ clearInterval(poll); }}, 600000);
 share();
 </script></body></html>"""
 
