@@ -503,8 +503,26 @@ def _buttons() -> list[dict]:
             "label": _clip(_REASON_BUTTON, _MAX_BUTTON_LABEL),
             "messageText": _REASON_BUTTON,
         },
-        {"action": "share", "label": _clip(_SHARE_BUTTON, _MAX_BUTTON_LABEL)},
+        # 공유 화면을 바로 여는 share 버튼은 누른 사실이 서버로 오지 않는다. 공유 클릭 수를 세려고
+        # 메시지 버튼으로 받고, render_share()가 공유 버튼 달린 카드를 다시 보낸다(2026-09-30 방식 A).
+        _message_button(_SHARE_BUTTON),
     ]
+
+
+def render_share(result: CheckResult, *, image_base_url: str | None = None) -> dict:
+    """"친구에게 보내기"를 눌렀을 때. 같은 결과 카드를 공유 버튼 하나만 달아 다시 보낸다.
+
+    render()를 그대로 지나가므로 면책 문구와 금지 표현 검사는 같다. 공유된 카드에도 면책 문구가 붙는다.
+    안내·재요청처럼 카드가 없는 결과는 공유할 것이 없으므로 원래 답을 다시 보낸다.
+    """
+    if result.retryable_failure or result.notice or not _is_in_scope(result):
+        return render(result, image_base_url=image_base_url)
+    response = render(result, image_base_url=image_base_url, intro=str(load_guide().get("공유_안내", "")) or None)
+    for output in response["template"]["outputs"]:
+        for kind in ("basicCard", "textCard"):
+            if kind in output:
+                output[kind]["buttons"] = [{"action": "share", "label": _clip(_SHARE_BUTTON, _MAX_BUTTON_LABEL)}]
+    return response
 
 
 def _is_in_scope(result: CheckResult) -> bool:
@@ -696,6 +714,7 @@ __all__ = [
     "ack_response",
     "render",
     "render_reason",
+    "render_share",
     "render_guide",
     "guide_image_names",
     "GUIDE_IMAGE_VERSION",

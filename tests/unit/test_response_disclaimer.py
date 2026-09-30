@@ -109,6 +109,8 @@ def test_응답을_만드는_공개_함수를_늘리지_않는다():
         "ack_response",
         "render",
         "render_reason",
+        # 친구에게 보내기. render()를 그대로 지나가고 버튼만 공유 버튼으로 바꾼다.
+        "render_share",
         "find_forbidden",
         "DISCLAIMER",
         "Label",
@@ -166,10 +168,23 @@ def test_버튼은_세로_배치로_라벨_14자를_지킨다():
         assert len(button["label"]) <= 14
 
 
-def test_결과_공유_버튼은_share_액션을_쓴다():
-    """결과를 친구에게 보내는 동선이다(발표 자료의 '가족에게 보내기'에서 2026-09-19 이름을 바꿨다)."""
+def test_결과_카드의_공유_버튼은_서버로_메시지를_보낸다():
+    """share 버튼은 누른 사실이 서버로 오지 않는다. 공유 클릭 수를 세려고 메시지 버튼으로 받는다(2026-09-30)."""
     buttons = render(result(Label.CAUTION))["template"]["outputs"][0]["textCard"]["buttons"]
-    assert any(button["action"] == "share" for button in buttons)
+    share = [button for button in buttons if button["label"] == "친구에게 보내기"]
+    assert share and share[0]["action"] == "message" and share[0]["messageText"] == "친구에게 보내기"
+
+
+@pytest.mark.parametrize("label", list(Label))
+def test_친구에게_보내기를_누르면_공유_버튼_달린_같은_카드가_온다(label):
+    payload = step6_response.render_share(result(label), image_base_url="https://example.com")
+    outputs = payload["template"]["outputs"]
+    assert "simpleText" in outputs[0]  # 공유 안내
+    card = outputs[-1]["basicCard"]
+    assert card["buttons"] == [{"action": "share", "label": "친구에게 보내기"}]
+    # 공유된 카드에도 면책 문구가 붙는다.
+    assert card["description"].endswith(DISCLAIMER)
+    assert card["title"] == render(result(label), image_base_url="https://example.com")["template"]["outputs"][0]["basicCard"]["title"]
 
 
 def test_말풍선_길이가_1000자를_넘지_않는다():
