@@ -6,6 +6,9 @@
 캡처 원본은 저장소에 두지 않는다. 사진을 바꾸면 step6_response.GUIDE_IMAGE_VERSION을 올린다.
 
     python3 scripts/make_guide_images.py <캡처 폴더>   # 2.webp(유튜브 공유), 3.webp(붙여넣기·결과), 4.webp(카톡 말풍선)
+    python3 scripts/make_guide_images.py --drawn-only  # 캡처 없이 그림 카드(0·5)만 다시 그린다
+
+그림 카드 색은 어르신용 색 테마(api/theme.py)를 따른다.
 
 Pillow가 필요하다(시스템 python3).
 """
@@ -19,7 +22,11 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 OUT = Path(__file__).resolve().parents[1] / "src" / "healthcheck" / "api" / "static" / "guide"
 SIZE = 800
-RED = (255, 59, 48)
+RED = (224, 69, 58)  # theme.SIGNAL WARNING
+GREEN = (46, 158, 91)  # theme.SIGNAL TRUSTWORTHY
+BG = (255, 248, 236)  # theme.BG
+INK = (43, 33, 24)  # theme.INK
+MUTED = (107, 91, 75)  # theme.MUTED
 FONT = "/System/Library/Fonts/AppleSDGothicNeo.ttc"
 
 
@@ -86,11 +93,16 @@ def make(src: Path) -> None:
     # 4. 결과 카드
     fit(chat.crop((110, 340, 775, 1100))).save(OUT / "4_result.png", optimize=True)
 
+    make_drawn()
+
+
+def make_drawn() -> None:
+    """캡처가 필요 없는 그림 카드."""
+    OUT.mkdir(parents=True, exist_ok=True)
     # 0. 이런 걸 확인해요 (그림)
-    bg = (244, 243, 250)
-    img = Image.new("RGB", (SIZE, SIZE), bg)
+    img = Image.new("RGB", (SIZE, SIZE), BG)
     draw = ImageDraw.Draw(img)
-    green = (31, 157, 85)
+    green = GREEN
     rows = [
         (True, "홍삼이 면역력에", "좋대요", 170),
         (True, "이 제품 먹고", "당뇨 나았대요", 370),
@@ -103,25 +115,27 @@ def make(src: Path) -> None:
         else:
             draw.line((78, y - 32, 136, y + 32), fill=color, width=13)
             draw.line((136, y - 32, 78, y + 32), fill=color, width=13)
-        draw.text((180, y - 34), line1, font=font(52), fill=(23, 26, 36), anchor="lm")
-        draw.text((180, y + 30), line2, font=font(52), fill=(23, 26, 36), anchor="lm")
+        draw.text((180, y - 34), line1, font=font(52), fill=INK, anchor="lm")
+        draw.text((180, y + 30), line2, font=font(52), fill=INK, anchor="lm")
     img.save(OUT / "0_what.png", optimize=True)
 
     # 5. 이건 못 봐요 (그림)
-    bg = (244, 243, 250)
-    img = Image.new("RGB", (SIZE, SIZE), bg)
+    img = Image.new("RGB", (SIZE, SIZE), BG)
     draw = ImageDraw.Draw(img)
     rows = [("사진", 250), ("약 · 병원 이야기", 430)]
     for text, y in rows:
         draw.ellipse((110, y - 55, 220, y + 55), fill=RED)
         draw.line((140, y - 25, 190, y + 25), fill="white", width=12)
         draw.line((190, y - 25, 140, y + 25), fill="white", width=12)
-        draw.text((260, y), text, font=font(68), fill=(23, 26, 36), anchor="lm")
-    draw.text((SIZE // 2, 620), "이 결과는 참고용이며", font=font(38, bold=False), fill=(95, 99, 117), anchor="mm")
-    draw.text((SIZE // 2, 672), "진단이 아닙니다.", font=font(38, bold=False), fill=(95, 99, 117), anchor="mm")
+        draw.text((260, y), text, font=font(68), fill=INK, anchor="lm")
+    draw.text((SIZE // 2, 620), "이 결과는 참고용이며", font=font(38, bold=False), fill=MUTED, anchor="mm")
+    draw.text((SIZE // 2, 672), "진단이 아닙니다.", font=font(38, bold=False), fill=MUTED, anchor="mm")
     img.save(OUT / "5_limits.png", optimize=True)
 
 
 if __name__ == "__main__":
-    make(Path(sys.argv[1]))
+    if sys.argv[1:] == ["--drawn-only"]:
+        make_drawn()
+    else:
+        make(Path(sys.argv[1]))
     print("만듦:", sorted(p.name for p in OUT.glob("*.png")))

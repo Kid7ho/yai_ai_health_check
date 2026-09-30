@@ -14,6 +14,7 @@ import re
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
+from healthcheck.api import theme
 from healthcheck.storage.events import new_event
 
 logger = logging.getLogger(__name__)
@@ -23,12 +24,10 @@ _TAG = re.compile(r"^[a-z0-9-]{1,40}$")
 
 router = APIRouter()
 
-_FALLBACK_HTML = """<!doctype html><html lang="ko"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>AI 건강지킴이</title></head>
-<body style="font-family:sans-serif;padding:32px;font-size:22px;line-height:1.6">
-<p><b>AI 건강지킴이</b></p>
-<p>카카오톡에서 <b>AI 건강지킴이</b> 채널을 검색해 추가하고, 링크나 문장을 보내 주세요.</p>
-</body></html>"""
+_FALLBACK_HTML = theme.simple_page(
+    "받은 건강정보, 믿어도 될까요?",
+    ["카카오톡에서 AI 건강지킴이 채널을 검색해 추가하고, 받은 링크나 문장을 보내 주세요."],
+)
 
 
 def poster_link(base_url: str, tag: str) -> str:

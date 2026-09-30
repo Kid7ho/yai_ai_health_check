@@ -29,6 +29,7 @@ from urllib.parse import parse_qs, urlencode
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 
+from healthcheck.api import theme
 from healthcheck.storage.events import new_event
 
 logger = logging.getLogger(__name__)
@@ -136,13 +137,12 @@ def _is_web_url(value: str | None) -> bool:
 # 전송 알림을 받은 시각. 공유 페이지가 이 값을 물어 보고, 보낸 것이 확인되면 스스로 닫는다.
 _SENT_AT: dict[str, float] = {}
 
-_FONT = '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif'
 _STYLE = """
-:root {{ --bg:#F4F2EE; --card:#FFFFFF; --ink:#191919; --muted:#6B6B6B; --line:#E6E3DD; --kakao:#FEE500; }}
+:root {{ --bg:{bg}; --card:#FFFFFF; --ink:{ink}; --muted:{muted}; --line:{line}; --kakao:{yellow}; }}
 * {{ box-sizing:border-box; }}
 html, body {{ margin:0; background:var(--bg); color:var(--ink); font-family:{font}; -webkit-text-size-adjust:100%; }}
 main {{ max-width:480px; margin:0 auto; padding:28px 20px 32px; }}
-.brand {{ font-size:17px; font-weight:700; color:var(--muted); letter-spacing:-0.2px; }}
+.brand {{ display:inline-block; font-size:17px; font-weight:800; background:var(--kakao); color:var(--ink); padding:5px 14px; border-radius:999px; }}
 h1 {{ font-size:34px; line-height:1.3; margin:10px 0 6px; letter-spacing:-0.8px; }}
 .lead {{ font-size:19px; line-height:1.55; color:var(--muted); margin:0 0 22px; }}
 .preview {{ background:var(--card); border:1px solid var(--line); border-radius:20px; overflow:hidden; }}
@@ -152,7 +152,7 @@ h1 {{ font-size:34px; line-height:1.3; margin:10px 0 6px; letter-spacing:-0.8px;
 .claim {{ font-size:21px; line-height:1.45; font-weight:700; margin:0; word-break:keep-all; }}
 .chip + .claim {{ margin-top:10px; }}
 .primary {{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:64px; margin-top:22px;
-  border:0; border-radius:16px; background:var(--kakao); color:#191919; font-size:22px; font-weight:800; font-family:inherit; }}
+  border:0; border-radius:16px; background:var(--kakao); color:var(--ink); font-size:22px; font-weight:800; font-family:inherit; }}
 .secondary {{ width:100%; min-height:56px; margin-top:12px; border:1px solid var(--line); border-radius:16px;
   background:transparent; color:var(--ink); font-size:19px; font-weight:600; font-family:inherit; }}
 .status {{ text-align:center; font-size:18px; color:var(--muted); margin-top:16px; min-height:26px; }}
@@ -223,7 +223,7 @@ def _preview_html(card: dict | None) -> str:
     image = card.get("imageUrl")
     # 신호등 이미지에 판정이 이미 크게 적혀 있으므로 이미지가 없을 때만 판정 표시를 따로 단다.
     chip = (
-        f'<span class="chip" style="background:{_CHIP_COLORS.get(card.get("label"), "#F4F2EE")}">{label}</span>'
+        f'<span class="chip" style="background:{_CHIP_COLORS.get(card.get("label"), theme.BG)}">{label}</span>'
         if label and not image
         else ""
     )
@@ -301,7 +301,7 @@ async def share_page(token: str, request: Request) -> Response:
     await _record(request, "share", ref=token, user_key=(card or {}).get("owner"), outcome=_label_code(card))
     message = _share_message(card, base_url, token, secret=getattr(request.app.state, "kakao_admin_key", None))
     page = _SHARE_HTML.format(
-        style=_STYLE.format(font=_FONT),
+        style=_STYLE.format(font=theme.FONT, bg=theme.BG, ink=theme.INK, muted=theme.MUTED, line=theme.LINE, yellow=theme.YELLOW),
         sdk=SDK_URL,
         integrity=SDK_INTEGRITY,
         preview=_preview_html(card),
@@ -320,13 +320,10 @@ async def share_sent(token: str, after: int = 0) -> Response:
     return JSONResponse({"sent": bool(sent_at and sent_at * 1000 >= after)}, headers={"Cache-Control": "no-store"})
 
 
-_FALLBACK_HTML = """<!doctype html><html lang="ko"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>AI 건강지킴이</title></head>
-<body style="font-family:sans-serif;padding:32px;font-size:22px;line-height:1.6">
-<p><b>AI 건강지킴이</b></p>
-<p>받은 건강정보가 믿을 만한지 확인해 드려요.</p>
-<p>카카오톡에서 <b>AI 건강지킴이</b> 채널을 검색해 추가하고, 링크나 문장을 보내 주세요.</p>
-</body></html>"""
+_FALLBACK_HTML = theme.simple_page(
+    "받은 건강정보, 믿어도 될까요?",
+    ["카카오톡에서 AI 건강지킴이 채널을 검색해 추가하고, 받은 링크나 문장을 보내 주세요.", "신호등으로 알려 드려요."],
+)
 
 
 @router.post(CALLBACK_PATH, include_in_schema=False)
