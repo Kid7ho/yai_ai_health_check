@@ -35,6 +35,7 @@ from healthcheck.adapters.fake.transcript import FakeTranscriptExtractor
 from healthcheck.adapters.inprocess_queue import InProcessJobQueue
 from healthcheck.api import debug, skill
 from healthcheck.api.auth import SkillAuth, warn_if_unprotected
+from healthcheck.api.card_trial import ListCardTrial
 from healthcheck.config import Settings, load_settings, setup_logging
 from healthcheck.domain.labels import Label
 from healthcheck.pipeline.step6_response import (
@@ -295,6 +296,8 @@ def create_app(
     events = events if events is not None else InMemoryEventLog()
     queue = InProcessJobQueue()
     last_results = skill.LastResults()
+    # 큰 버튼 시험판을 켠 사용자. 동기 응답(캐시)과 워커(콜백)가 같은 객체를 본다.
+    card_trial = ListCardTrial()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -309,6 +312,7 @@ def create_app(
             events=events,
             web_share=bool(settings.kakao_js_key),
             source_secret=settings.kakao_admin_key,
+            card_trial=card_trial,
         )
         logger.info("워커 %d개 기동. 규칙표 %s", worker_count, orchestrator.ruleset.version)
 
@@ -361,6 +365,7 @@ def create_app(
         events=events,
         web_share=bool(settings.kakao_js_key),
         source_secret=settings.kakao_admin_key,
+        card_trial=card_trial,
     )
     app.state.events = events
     app.state.image_base_url = image_base_url

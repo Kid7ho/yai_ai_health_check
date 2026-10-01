@@ -48,6 +48,8 @@ from healthcheck.pipeline.step3_claims import RuleBasedClaimExtractor
 from healthcheck.ports.events import EventLog
 from healthcheck.ports.queue import CheckJob, JobQueue
 from healthcheck.ports.repository import CheckRepository
+from healthcheck.api import card_trial
+from healthcheck.api.card_trial import ListCardTrial
 from healthcheck.api.share import with_share_link
 from healthcheck.storage.events import new_event, outcome_of
 from healthcheck.storage.record import build_record
@@ -127,6 +129,8 @@ class SkillServices:
     web_share: bool = False
     # 결과 카드의 [원본 정보 확인하기] 주소를 서명하는 키(KAKAO_ADMIN_KEY). 없으면 원본으로 바로 간다.
     source_secret: str | None = None
+    # 큰 버튼 시험판(리스트 카드)을 켠 사용자. 워커와 같은 객체를 쓴다.
+    card_trial: ListCardTrial = field(default_factory=ListCardTrial)
 
 
 async def _log(services: SkillServices, kind: str, user_key: str | None, **fields) -> None:
@@ -184,6 +188,24 @@ async def skill(request: Request) -> dict:
         logger.info("사진·파일 입력이라 확인하지 않는다")
         await _log(services, "media", user_key, outcome="media")
         return render_media_notice()
+
+    # 큰 버튼 시험판 켜기·끄기. 직전 결과가 있으면 바뀐 모양으로 다시 보여 줘서 바로 비교하게 한다.
+    trial = card_trial.command_of(utterance)
+    if trial is not None:
+        services.card_trial.set(user_key, trial)
+        logger.info("큰 버튼 시험판 %s", "켬" if trial else "끔")
+        notice = "큰 버튼 시험을 켰어요." if trial else "큰 버튼 시험을 껐어요."
+        previous = services.last_results.get(user_key)
+        if previous is None:
+            return _simple(f"{notice} 이제 영상이나 글을 보내 보세요.")
+        payload = render(
+            previous, image_base_url=services.image_base_url, intro=f"{notice} 직전 결과를 다시 보여 드려요.",
+            layout=services.card_trial.layout_for(user_key),
+        )
+        return with_share_link(
+            payload, services.image_base_url, uuid.uuid4().hex, web_share=services.web_share, user_key=user_key,
+            source_url=_first_source(previous), source_secret=services.source_secret,
+        )
 
     # 사용법·처음 인사. 외부 호출 없이 바로 답한다.
     # 오픈빌더 웰컴 블록을 이 스킬에 연결하면 채널에 처음 들어온 어르신에게 처음 인사가 나간다.
@@ -265,7 +287,9 @@ async def skill(request: Request) -> dict:
             services, "check", user_key, outcome=outcome_of(cached), share_input=share_input, via=via,
             latency_ms=int((time.monotonic() - started) * 1000), delivered=True, event_id=event_id,
         )
-        payload = render(cached, image_base_url=services.image_base_url, intro=intro)
+        payload = render(
+            cached, image_base_url=services.image_base_url, intro=intro, layout=services.card_trial.layout_for(user_key)
+        )
         return with_share_link(
             payload, services.image_base_url, event_id, web_share=services.web_share, user_key=user_key,
             source_url=share_input.url, source_secret=services.source_secret,
@@ -297,6 +321,10 @@ async def skill(request: Request) -> dict:
 
     logger.info("작업 접수 job=%s kind=%s", job.job_id, share_input.kind)
     return ack_response()
+
+
+def _first_source(result) -> str | None:
+    return result.source_urls[0] if result.source_urls else None
 
 
 def _simple(text: str) -> dict:

@@ -103,7 +103,7 @@ def test_행정_용어_대신_쉬운_말을_쓴다():
 def test_근거_카드에_연구_원문_링크_버튼이_있다():
     card = render_reason(reason_result(), image_base_url="https://example.com")["template"]["outputs"][0]["basicCard"]
     assert card["buttons"] == [
-        {"action": "webLink", "label": "연구 자세히 보기", "webLinkUrl": "https://paper.example/1"}
+        {"action": "webLink", "label": "📄 연구 자세히 보기", "webLinkUrl": "https://paper.example/1"}
     ]
 
 
