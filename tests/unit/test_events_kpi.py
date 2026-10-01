@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from dataclasses import fields
+from dataclasses import fields, replace
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -507,3 +507,79 @@ def test_KPI에_포스터_스캔이_장소별로_나온다():
                      prior_first_seen={"team": DAY0 - timedelta(days=20)}, now=DAY0 + timedelta(days=20))
     assert report["poster"]["scans"] == 2 and report["poster"]["by_tag"] == Counter({"poster-a": 2})
     assert "포스터 QR 스캔 2회" in format_report(report)
+
+
+# ─────────────────────────────────────────────────────────────
+# 결과 카드의 [원본 정보 확인하기]
+
+SOURCE = "https://www.youtube.com/watch?v=RfxAz6RwfpI"
+
+
+def _card_buttons(payload: dict) -> list[dict]:
+    output = payload["template"]["outputs"][-1]
+    return (output.get("basicCard") or output.get("textCard"))["buttons"]
+
+
+@pytest.mark.parametrize("image_base_url", ["https://example.com", None])
+def test_링크로_들어온_결과에는_원본_정보_확인하기를_가운데에_단다(image_base_url):
+    from healthcheck.pipeline.step6_response import render
+
+    buttons = _card_buttons(render(result(Label.CAUTION, source_urls=(SOURCE,)), image_base_url=image_base_url))
+    assert [b["label"] for b in buttons] == ["왜 그런지 보기", "원본 정보 확인하기", "친구에게 보내기"]
+    assert buttons[1] == {"action": "webLink", "label": "원본 정보 확인하기", "webLinkUrl": SOURCE}
+    assert all(len(b["label"]) <= 14 for b in buttons)
+
+
+def test_붙여_넣은_글에는_원본_버튼이_없다():
+    from healthcheck.pipeline.step6_response import render
+
+    labels = [b["label"] for b in _card_buttons(render(result(Label.CAUTION), image_base_url="https://example.com"))]
+    assert labels == ["왜 그런지 보기", "친구에게 보내기"]
+
+
+def test_원본_버튼은_누른_수를_세는_서명_주소로_바꾼다():
+    from healthcheck.api.share import with_share_link
+    from healthcheck.pipeline.step6_response import render
+
+    payload = render(result(Label.CAUTION, source_urls=(SOURCE,)), image_base_url="https://example.com")
+    linked = with_share_link(payload, "https://example.com", TOKEN, source_url=SOURCE, source_secret="admin-secret")
+    url = _card_buttons(linked)[1]["webLinkUrl"]
+    assert url.startswith(f"https://example.com/o/{TOKEN}?") and "by=me" in url
+
+    # 키가 없으면 원본으로 바로 간다
+    plain = with_share_link(
+        render(result(Label.CAUTION, source_urls=(SOURCE,)), image_base_url="https://example.com"),
+        "https://example.com", TOKEN, source_url=SOURCE,
+    )
+    assert _card_buttons(plain)[1]["webLinkUrl"] == SOURCE
+
+
+def test_원본_정보_확인하기를_누르면_source로_세고_원본으로_보낸다():
+    from healthcheck.api.share import source_link
+
+    app, events = web_share_app()
+    path = source_link("https://example.com", TOKEN, SOURCE, "admin-secret", by_owner=True).replace("https://example.com", "")
+    with TestClient(app) as client:
+        moved = client.get(path, follow_redirects=False)
+    assert moved.status_code == 302 and moved.headers["location"] == SOURCE
+    assert [(e.kind, e.ref) for e in events.events] == [("source", TOKEN)]
+
+
+def test_원본_정보_확인하기_클릭률은_링크_결과_카드로_센다():
+    events = sample()
+    card = next(e for e in events if e.user_hash == "b" and e.kind == "check")
+    events = [replace(e, input_form="video") if e is card else e for e in events]
+    events += [
+        Event(event_id="s1", created_at=DAY0 + timedelta(hours=1), user_hash=None, kind="source", ref=card.event_id),
+        Event(event_id="s2", created_at=DAY0 + timedelta(hours=2), user_hash=None, kind="source", ref=card.event_id),
+    ]
+    report = compute(
+        events,
+        cohort=parse_cohort("2026-10-05T09:00~2026-10-05T18:00"),
+        prior_first_seen={"team": DAY0 - timedelta(days=20)},
+        now=DAY0 + timedelta(days=20),
+    )
+    assert report["source"] == {
+        "clicks": 2, "cards": 1, "cards_opened": 1, "users": 1, "card_users": 1, "by_label": Counter({"WARNING": 2})
+    }
+    assert "원본 정보 확인하기 2회" in format_report(report)

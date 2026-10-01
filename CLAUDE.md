@@ -312,6 +312,10 @@ video_id → 본문을 볼륨 SQLite(`/data/transcripts.db`, 60일)에 담아 �
   [채널 홈](`/s/{id}?to=home`), 원본이 없으면(문장 입력) [나도 확인해 보기]. 공유 페이지는 `/share/{id}/sent`를 0.5초마다(10분까지) 물어
   전송 알림이 오면 `kakaotalk://inappbrowser/close`로 스스로 닫는다. `CHANNEL_URL=https://pf.kakao.com/_FZXrX`(fly.toml)
   TODO(확인필요): 전송 알림 뒤 창이 실제로 닫히는지
+- **결과 카드 [원본 정보 확인하기](2026-10-01 사용자 요청).** 링크로 들어온 결과(`CheckResult.source_urls`)에만 가운데 버튼으로 단다.
+  버튼은 [왜 그런지 보기] · [원본 정보 확인하기] · [친구에게 보내기] 세 개(카카오 카드 최대 3개). 붙여 넣은 글에는 원본이 없어 달지 않는다.
+  `KAKAO_ADMIN_KEY`가 있으면 `/o/{확인 기록 id}?u=원본&s=서명&by=me`를 거쳐 누른 수를 `source`로 세고(KPI '원본 정보 확인하기'),
+  없으면 원본으로 바로 간다. 공유받은 사람의 [원본 보기]는 그대로 `share_open`(outcome=source)이다
 
 - **포스터 QR은 `/q/{장소 태그}`를 거친다(`api/poster.py`).** 스캔을 `poster_scan`(outcome=태그)으로 기록하고 채널 홈으로 보낸다.
   기본 태그는 `poster`. 장소별로 태그를 달리 뽑으면 장소별 스캔 수가 KPI에 나온다. 스캔한 사람은 알 수 없다

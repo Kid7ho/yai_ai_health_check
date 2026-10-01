@@ -233,6 +233,19 @@ def compute(
         "senders": len({owners[e.ref] for e in opens}),
     }
 
+    # 결과 카드의 [원본 정보 확인하기]. 링크로 들어온 카드에만 버튼이 있다. 누른 사람은 카드(ref)로 이어 본다.
+    link_cards = [e for e in cards if e.input_form in ("video", "shorts", "link", "short_link")]
+    labels = {e.event_id: e.outcome for e in cards}
+    source_clicks = [e for e in events if e.kind == "source" and e.ref in owners]
+    report["source"] = {
+        "clicks": len(source_clicks),
+        "cards": len(link_cards),
+        "cards_opened": len({e.ref for e in source_clicks}),
+        "users": len({owners[e.ref] for e in source_clicks}),
+        "card_users": len({e.user_hash for e in link_cards}),
+        "by_label": Counter(labels[e.ref] for e in source_clicks),
+    }
+
     # ⑧ 안내 버튼 · 이용량
     report["guide"] = {
         kind: len({user for user in participants if any(e.kind == kind for e in by_user[user])})
@@ -404,6 +417,16 @@ def format_report(report: dict) -> str:
     if so["by_target"]:
         names = {"chat": "나도 확인해 보기", "home": "채널 홈", "source": "원본 보기"}
         lines.append("  " + " · ".join(f"{names.get(k, k)} {v}" for k, v in so["by_target"].most_common()))
+
+    src = report["source"]
+    lines += [
+        "",
+        f"■ 원본 정보 확인하기 {src['clicks']}회 · 링크 결과 카드 {src['cards']}장 중 {src['cards_opened']}장"
+        f" ({_pct(src['cards_opened'], src['cards'])})",
+        f"  누른 사람 {src['users']}/{src['card_users']}명 ({_pct(src['users'], src['card_users'])})",
+    ]
+    if src["by_label"]:
+        lines.append("  " + " · ".join(f"{OUTCOME_NAMES.get(k, k)} {v}" for k, v in src["by_label"].most_common()))
 
     for kind, title in (("reason", "근거 보기('왜 그런지 보기')"), ("share", "친구 공유 버튼('친구에게 보내기') 누름")):
         r = report[kind]

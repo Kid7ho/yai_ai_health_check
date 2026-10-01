@@ -94,6 +94,8 @@ _OUT_OF_SCOPE_TEXT = (
 
 _REASON_BUTTON = "왜 그런지 보기"
 _SHARE_BUTTON = "친구에게 보내기"
+# 확인한 영상·글을 직접 열어 보는 버튼(2026-10-01 사용자 요청). 링크로 들어온 결과에만 붙는다.
+_SOURCE_BUTTON = "원본 정보 확인하기"
 _CHECKED_TITLE = "확인한 내용"
 _REASON_TITLE = "왜 그런가요"
 
@@ -183,7 +185,7 @@ def render(result: CheckResult, *, image_base_url: str | None = None, intro: str
                 # 먼저 읽어야 할 판정 대상 문장을 제목에 둔다. 제목은 50자 제한이다.
                 "title": _clip(checked, _MAX_TITLE) if checked else _NO_CLAIM_TEXT,
                 "description": _checked_caption(result) if checked else "",
-                "buttons": _buttons(),
+                "buttons": _buttons(result),
             }
         }
         return _wrap(_intro(intro) + [card], quick_replies=_unknown_quick_replies(label))
@@ -193,7 +195,7 @@ def render(result: CheckResult, *, image_base_url: str | None = None, intro: str
             "title": _clip(LABEL_TEXT[label], _MAX_TITLE),
             "description": _clip(_describe(result), _MAX_DESCRIPTION),
             "buttonLayout": "vertical",
-            "buttons": _buttons(),
+            "buttons": _buttons(result),
         }
     }
     return _wrap(_intro(intro) + [card], quick_replies=_unknown_quick_replies(label))
@@ -495,19 +497,37 @@ def _simple_text(text: str) -> dict:
     return {"simpleText": {"text": _clip(text, _MAX_SIMPLE_TEXT)}}
 
 
-def _buttons() -> list[dict]:
-    """세로 배치 버튼 두 개. 라벨 14자 제한을 지킨다."""
-    return [
+def _buttons(result: CheckResult | None = None) -> list[dict]:
+    """세로 배치 버튼. 카카오 카드 버튼은 최대 3개이고 라벨은 14자까지다.
+
+    링크로 들어온 결과면 [원본 정보 확인하기]를 가운데에 둔다. 어르신이 확인한 영상·글을
+    결과와 나란히 다시 볼 수 있게 한다. 직접 붙여 넣은 글에는 열어 볼 원본이 없어 붙이지 않는다.
+    """
+    buttons = [
         {
             "action": "message",
             "label": _clip(_REASON_BUTTON, _MAX_BUTTON_LABEL),
             "messageText": _REASON_BUTTON,
         },
+    ]
+    source = _source_url(result) if result is not None else None
+    if source:
+        # 서버가 누른 수를 세는 주소로 바꿔 끼운다(api/share.py with_share_link). 못 바꾸면 원본으로 바로 간다.
+        buttons.append({"action": "webLink", "label": _clip(_SOURCE_BUTTON, _MAX_BUTTON_LABEL), "webLinkUrl": source})
+    return buttons + [
         # 공유 화면을 바로 여는 share 버튼. 누른 사실은 서버로 오지 않는다. 2026-09-30 서버를 거치는
         # 방식(한 번 더 누름)을 시험했지만 원래 방식이 더 직관적이어서 되돌렸다. 공유는 공유된 카드의
         # 사진을 눌러 들어온 수(api/share.py)와 설문으로 잰다.
         {"action": "share", "label": _clip(_SHARE_BUTTON, _MAX_BUTTON_LABEL)},
     ]
+
+
+def _source_url(result: CheckResult) -> str | None:
+    """결과 카드에서 열어 줄 원본 주소. 웹 주소만 쓴다."""
+    for url in result.source_urls:
+        if url and url.startswith(("https://", "http://")) and len(url) <= 2000:
+            return url
+    return None
 
 
 def render_share(result: CheckResult, *, image_base_url: str | None = None) -> dict:

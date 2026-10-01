@@ -308,6 +308,7 @@ def create_app(
             image_base_url=image_base_url,
             events=events,
             web_share=bool(settings.kakao_js_key),
+            source_secret=settings.kakao_admin_key,
         )
         logger.info("워커 %d개 기동. 규칙표 %s", worker_count, orchestrator.ruleset.version)
 
@@ -359,6 +360,7 @@ def create_app(
         image_base_url=image_base_url,
         events=events,
         web_share=bool(settings.kakao_js_key),
+        source_secret=settings.kakao_admin_key,
     )
     app.state.events = events
     app.state.image_base_url = image_base_url

@@ -50,10 +50,12 @@ class Worker:
         image_base_url: str | None = None,
         events: EventLog | None = None,
         web_share: bool = False,
+        source_secret: str | None = None,
     ) -> None:
         self._image_base_url = image_base_url
         self._events = events
         self._web_share = web_share
+        self._source_secret = source_secret
         self._queue = queue
         self._orchestrator = orchestrator
         self._callback = callback_sender
@@ -103,7 +105,7 @@ class Worker:
             payload = render(result, image_base_url=self._image_base_url, intro=job.intro)
             payload = with_share_link(
                 payload, self._image_base_url, event_id, web_share=self._web_share, user_key=job.user_key,
-                source_url=job.share_input.url,
+                source_url=job.share_input.url, source_secret=self._source_secret,
             )
             await self._callback.send(job.callback_url, payload)
         except Exception:
@@ -172,6 +174,7 @@ async def start_workers(
     image_base_url: str | None = None,
     events: EventLog | None = None,
     web_share: bool = False,
+    source_secret: str | None = None,
 ) -> list[asyncio.Task]:
     """워커 여러 개를 띄운다.
 
@@ -179,6 +182,7 @@ async def start_workers(
     Liner 토큰 비용을 지원받는 구조이므로 기본값은 작게 둔다.
     """
     worker = Worker(
-        queue, orchestrator, callback_sender, repository, last_results, image_base_url, events, web_share
+        queue, orchestrator, callback_sender, repository, last_results, image_base_url, events, web_share,
+        source_secret,
     )
     return [asyncio.create_task(worker.run_forever()) for _ in range(count)]
