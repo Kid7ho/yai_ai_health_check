@@ -22,7 +22,7 @@ from healthcheck.ports.callback import CallbackSender
 from healthcheck.ports.events import EventLog
 from healthcheck.ports.queue import CheckJob, JobQueue
 from healthcheck.ports.repository import CheckRepository
-from healthcheck.api.card_trial import ListCardTrial
+from healthcheck.api.card_trial import CardLayouts
 from healthcheck.api.share import with_share_link
 from healthcheck.storage.events import new_event, outcome_of
 from healthcheck.storage.record import build_record
@@ -52,9 +52,9 @@ class Worker:
         events: EventLog | None = None,
         web_share: bool = False,
         source_secret: str | None = None,
-        card_trial: ListCardTrial | None = None,
+        card_trial: CardLayouts | None = None,
     ) -> None:
-        self._card_trial = card_trial or ListCardTrial()
+        self._card_trial = card_trial or CardLayouts()
         self._image_base_url = image_base_url
         self._events = events
         self._web_share = web_share
@@ -181,7 +181,7 @@ async def start_workers(
     events: EventLog | None = None,
     web_share: bool = False,
     source_secret: str | None = None,
-    card_trial: ListCardTrial | None = None,
+    card_trial: CardLayouts | None = None,
 ) -> list[asyncio.Task]:
     """워커 여러 개를 띄운다.
 
