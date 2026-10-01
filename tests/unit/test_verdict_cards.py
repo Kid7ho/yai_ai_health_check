@@ -43,7 +43,7 @@ async def test_이미지_주소가_있으면_라벨_이미지_카드로_답한�
     # 회색 설명에 판정 이유 한 줄(규칙표 안내)을 바로 보여 준다
     assert card["description"].startswith(result.verdict.guidance)
     assert len(card["description"]) <= 230
-    assert [b["label"] for b in card["buttons"]] == ["왜 그런지 보기", "친구에게 보내기"]
+    assert [b["label"] for b in card["buttons"]] == ["🔍 왜 그런지 보기", "📤 친구에게 보내기"]
 
 
 async def test_결과_카드에_판정_이유_한_줄을_바로_보여_준다():

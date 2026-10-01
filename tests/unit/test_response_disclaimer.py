@@ -84,7 +84,8 @@ def test_면책_문구를_끄는_인자가_없다():
     """개발자가 빠뜨릴 수 있는 선택 항목으로 두지 않는다."""
     # 카드 머리 이미지 주소만 받는다. 면책 문구나 금지 표현 검사를 끄는 인자는 두지 않는다.
     # render의 intro는 결과 앞에 안내 말풍선을 하나 더 붙일 뿐이다([한번 해 보기]). 면책 문구는 그대로 붙는다.
-    expected = {render: ["result", "image_base_url", "intro"], render_reason: ["result", "image_base_url"]}
+    # layout은 버튼 모양(기본 · 리스트 카드 시험판)만 고른다. 어느 모양이든 면책 문구가 붙는다.
+    expected = {render: ["result", "image_base_url", "intro", "layout"], render_reason: ["result", "image_base_url"]}
     for fn, names in expected.items():
         params = inspect.signature(fn).parameters
         assert list(params) == names, f"{fn.__name__}에 추가 인자가 생겼습니다."
@@ -171,7 +172,7 @@ def test_버튼은_세로_배치로_라벨_14자를_지킨다():
 def test_결과_공유_버튼은_share_액션을_쓴다():
     """한 번 눌러 바로 공유 화면을 연다. 서버를 거치는 방식(2026-09-30 시험)은 한 번 더 눌러야 해서 되돌렸다."""
     buttons = render(result(Label.CAUTION))["template"]["outputs"][0]["textCard"]["buttons"]
-    assert {"action": "share", "label": "친구에게 보내기"} in buttons
+    assert {"action": "share", "label": "📤 친구에게 보내기"} in buttons
 
 
 @pytest.mark.parametrize("label", list(Label))
@@ -180,7 +181,7 @@ def test_친구에게_보내기를_누르면_공유_버튼_달린_같은_카드�
     outputs = payload["template"]["outputs"]
     assert "simpleText" in outputs[0]  # 공유 안내
     card = outputs[-1]["basicCard"]
-    assert card["buttons"] == [{"action": "share", "label": "친구에게 보내기"}]
+    assert card["buttons"] == [{"action": "share", "label": "📤 친구에게 보내기"}]
     # 공유된 카드에도 면책 문구가 붙는다.
     assert card["description"].endswith(DISCLAIMER)
     assert card["title"] == render(result(label), image_base_url="https://example.com")["template"]["outputs"][0]["basicCard"]["title"]

@@ -22,6 +22,7 @@ from healthcheck.ports.callback import CallbackSender
 from healthcheck.ports.events import EventLog
 from healthcheck.ports.queue import CheckJob, JobQueue
 from healthcheck.ports.repository import CheckRepository
+from healthcheck.api.card_trial import ListCardTrial
 from healthcheck.api.share import with_share_link
 from healthcheck.storage.events import new_event, outcome_of
 from healthcheck.storage.record import build_record
@@ -51,7 +52,9 @@ class Worker:
         events: EventLog | None = None,
         web_share: bool = False,
         source_secret: str | None = None,
+        card_trial: ListCardTrial | None = None,
     ) -> None:
+        self._card_trial = card_trial or ListCardTrial()
         self._image_base_url = image_base_url
         self._events = events
         self._web_share = web_share
@@ -102,7 +105,10 @@ class Worker:
 
         delivered = True
         try:
-            payload = render(result, image_base_url=self._image_base_url, intro=job.intro)
+            payload = render(
+                result, image_base_url=self._image_base_url, intro=job.intro,
+                layout=self._card_trial.layout_for(job.user_key),
+            )
             payload = with_share_link(
                 payload, self._image_base_url, event_id, web_share=self._web_share, user_key=job.user_key,
                 source_url=job.share_input.url, source_secret=self._source_secret,
@@ -175,6 +181,7 @@ async def start_workers(
     events: EventLog | None = None,
     web_share: bool = False,
     source_secret: str | None = None,
+    card_trial: ListCardTrial | None = None,
 ) -> list[asyncio.Task]:
     """워커 여러 개를 띄운다.
 
@@ -183,6 +190,6 @@ async def start_workers(
     """
     worker = Worker(
         queue, orchestrator, callback_sender, repository, last_results, image_base_url, events, web_share,
-        source_secret,
+        source_secret, card_trial,
     )
     return [asyncio.create_task(worker.run_forever()) for _ in range(count)]

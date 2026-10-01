@@ -20,6 +20,13 @@
 버튼 라벨 "왜 그런지 보기"가 9자라서 가로 배치의 8자 제한을 넘는다.
 그래서 buttonLayout을 vertical로 둔다. 세로 배치는 14자까지 허용한다.
 
+카카오 응답은 버튼의 크기·글자 크기도 지정할 수 없다(카카오톡 앱이 그린다). 버튼 라벨 앞에 그림 문자를
+붙여 구분을 돕는다(2026-10-01). 그림 문자는 라벨에만 붙이고, 누르면 보내는 말(messageText)은 그대로 둔다.
+skill.py가 그 말로 버튼을 알아본다.
+
+결과 카드는 두 모양이 있다. 기본은 사진 카드 하나에 버튼 세 개다. "list" 모양은 사진 카드 아래에
+리스트 카드를 붙여 버튼 대신 높은 줄로 보여 준다(어르신이 누르기 쉬운지 휴대폰으로 비교하는 시험판).
+
 카카오 응답은 글자색·배경색·버튼색을 지정할 수 없다. 발표 자료 목업의 신호등 색
 머리 부분은 라벨별 이미지(basicCard thumbnail)로 대신한다. 이미지는 공개 주소에서
 내려받아야 하므로 image_base_url이 없으면 이미지 없는 textCard로 답한다.
@@ -92,10 +99,20 @@ _OUT_OF_SCOPE_TEXT = (
     "약이나 치료에 관한 것은 꼭 의사 선생님께 물어보세요."
 )
 
+# 누르면 보내는 말. skill.py가 이 말로 버튼을 알아보므로 그림 문자를 붙이지 않는다.
 _REASON_BUTTON = "왜 그런지 보기"
 _SHARE_BUTTON = "친구에게 보내기"
 # 확인한 영상·글을 직접 열어 보는 버튼(2026-10-01 사용자 요청). 링크로 들어온 결과에만 붙는다.
 _SOURCE_BUTTON = "원본 정보 확인하기"
+# 화면에 보이는 라벨. 버튼 크기를 키울 수 없어 그림 문자로 구분을 돕는다(라벨 14자 제한 안).
+_REASON_LABEL = "🔍 " + _REASON_BUTTON
+_SHARE_LABEL = "📤 " + _SHARE_BUTTON
+_SOURCE_LABEL = "🔗 " + _SOURCE_BUTTON
+# 리스트 카드 시험판의 줄 설명.
+_LIST_HEADER = "더 알아보기"
+_REASON_DESCRIPTION = "판정한 이유와 근거를 알려 드려요"
+_SOURCE_DESCRIPTION = "확인한 영상이나 글을 열어요"
+_SHARE_DESCRIPTION = "이 결과를 가족·친구에게 보내요"
 _CHECKED_TITLE = "확인한 내용"
 _REASON_TITLE = "왜 그런가요"
 
@@ -150,7 +167,13 @@ def ack_response() -> dict:
     return {"version": "2.0", "useCallback": True, "data": {"text": _ACK_TEXT}}
 
 
-def render(result: CheckResult, *, image_base_url: str | None = None, intro: str | None = None) -> dict:
+def render(
+    result: CheckResult,
+    *,
+    image_base_url: str | None = None,
+    intro: str | None = None,
+    layout: str = "buttons",
+) -> dict:
     """판정 결과를 카카오 응답으로 만든다.
 
     카카오 카드를 만드는 유일한 경로다. 면책 문구는 항상 붙는다.
@@ -188,6 +211,10 @@ def render(result: CheckResult, *, image_base_url: str | None = None, intro: str
                 "buttons": _buttons(result),
             }
         }
+        if layout == "list":
+            # 시험판: 버튼을 사진 카드에서 떼어 리스트 카드의 줄로 보여 준다. 말풍선이 하나 늘어난다.
+            del card["basicCard"]["buttons"]
+            return _wrap(_intro(intro) + [card, _list_card(result)], quick_replies=_unknown_quick_replies(label))
         return _wrap(_intro(intro) + [card], quick_replies=_unknown_quick_replies(label))
 
     card = {
@@ -442,11 +469,21 @@ def _wrap(outputs: list[dict], *, quick_replies: list[dict] | None = None) -> di
     # 면책 문구를 따로 말풍선으로 두지 않고 마지막 말풍선 안에 붙인다. 어르신 화면에
     # 확인 한 번마다 말풍선이 여러 개 쌓여 가독성이 떨어졌다. 붙이는 곳만 바뀌었고
     # 모든 응답에 무조건 붙는다는 점은 그대로다.
-    guarded[-1] = _with_disclaimer(guarded[-1])
+    # 리스트 카드처럼 설명 칸이 없는 말풍선이 마지막이면 그 앞의 말풍선에 붙이고,
+    # 붙일 곳이 하나도 없으면 문구만 담은 말풍선을 더한다.
+    target = next((i for i in range(len(guarded) - 1, -1, -1) if _holds_text(guarded[i])), None)
+    if target is None:
+        guarded.append(_simple_text(DISCLAIMER))
+    else:
+        guarded[target] = _with_disclaimer(guarded[target])
     template: dict = {"outputs": guarded}
     if quick_replies:
         template["quickReplies"] = quick_replies
     return {"version": "2.0", "template": template}
+
+
+def _holds_text(output: dict) -> bool:
+    return any(kind in output for kind in ("basicCard", "textCard", "simpleText"))
 
 
 def _with_disclaimer(output: dict) -> dict:
@@ -474,6 +511,17 @@ def _guard(output: dict) -> dict:
         violations = find_forbidden(output["simpleText"]["text"])
         if violations:
             logger.error("응답 문구에 금지 표현이 있다: %s", violations)
+            return _simple_text(_GUARD_FALLBACK)
+        return output
+
+    if "listCard" in output:
+        card = output["listCard"]
+        parts = [card.get("header", {}).get("title", "")]
+        parts += [f"{item.get('title', '')} {item.get('description', '')}" for item in card.get("items", [])]
+        violations = find_forbidden(" ".join(parts))
+        if violations:
+            # 리스트 카드는 고정 문구만 담는다. 여기에 걸리면 코드의 문구를 고쳐야 한다.
+            logger.error("리스트 카드 문구에 금지 표현이 있다: %s", violations)
             return _simple_text(_GUARD_FALLBACK)
         return output
 
@@ -506,20 +554,41 @@ def _buttons(result: CheckResult | None = None) -> list[dict]:
     buttons = [
         {
             "action": "message",
-            "label": _clip(_REASON_BUTTON, _MAX_BUTTON_LABEL),
+            "label": _clip(_REASON_LABEL, _MAX_BUTTON_LABEL),
             "messageText": _REASON_BUTTON,
         },
     ]
     source = _source_url(result) if result is not None else None
     if source:
         # 서버가 누른 수를 세는 주소로 바꿔 끼운다(api/share.py with_share_link). 못 바꾸면 원본으로 바로 간다.
-        buttons.append({"action": "webLink", "label": _clip(_SOURCE_BUTTON, _MAX_BUTTON_LABEL), "webLinkUrl": source})
+        buttons.append({"action": "webLink", "label": _clip(_SOURCE_LABEL, _MAX_BUTTON_LABEL), "webLinkUrl": source})
     return buttons + [
         # 공유 화면을 바로 여는 share 버튼. 누른 사실은 서버로 오지 않는다. 2026-09-30 서버를 거치는
         # 방식(한 번 더 누름)을 시험했지만 원래 방식이 더 직관적이어서 되돌렸다. 공유는 공유된 카드의
         # 사진을 눌러 들어온 수(api/share.py)와 설문으로 잰다.
-        {"action": "share", "label": _clip(_SHARE_BUTTON, _MAX_BUTTON_LABEL)},
+        {"action": "share", "label": _clip(_SHARE_LABEL, _MAX_BUTTON_LABEL)},
     ]
+
+
+def _list_card(result: CheckResult) -> dict:
+    """리스트 카드 시험판. 버튼 대신 제목·설명이 있는 높은 줄로 보여 준다.
+
+    리스트 줄은 공유(share) 동작을 지원하지 않아 [친구에게 보내기]는 카드 아래 버튼으로 둔다.
+    공식 공유 기능을 쓰면 api/share.py가 이 버튼을 공유 페이지를 여는 줄로 바꾼다.
+    """
+    items = [
+        {"title": _REASON_LABEL, "description": _REASON_DESCRIPTION, "action": "message", "messageText": _REASON_BUTTON},
+    ]
+    source = _source_url(result)
+    if source:
+        items.append({"title": _SOURCE_LABEL, "description": _SOURCE_DESCRIPTION, "link": {"web": source}})
+    return {
+        "listCard": {
+            "header": {"title": _LIST_HEADER},
+            "items": items,
+            "buttons": [{"action": "share", "label": _clip(_SHARE_LABEL, _MAX_BUTTON_LABEL)}],
+        }
+    }
 
 
 def _source_url(result: CheckResult) -> str | None:
@@ -544,7 +613,7 @@ def render_share(result: CheckResult, *, image_base_url: str | None = None) -> d
     for output in response["template"]["outputs"]:
         for kind in ("basicCard", "textCard"):
             if kind in output:
-                output[kind]["buttons"] = [{"action": "share", "label": _clip(_SHARE_BUTTON, _MAX_BUTTON_LABEL)}]
+                output[kind]["buttons"] = [{"action": "share", "label": _clip(_SHARE_LABEL, _MAX_BUTTON_LABEL)}]
     return response
 
 
@@ -684,7 +753,7 @@ def _sources(result: CheckResult) -> list[str]:
     return sources
 
 
-_PAPER_BUTTON = "연구 자세히 보기"
+_PAPER_BUTTON = "📄 연구 자세히 보기"
 
 
 def _compact_sources(result: CheckResult) -> str:

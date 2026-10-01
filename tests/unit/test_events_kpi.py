@@ -74,7 +74,7 @@ def test_친구에게_보내기를_누르면_클릭을_세고_공유_카드를_�
         app.state.last_results.put(USER, result(Label.CAUTION))
         payload = client.post("/skill", json=kakao_request("친구에게 보내기")).json()
     card = payload["template"]["outputs"][-1]["textCard"]
-    assert card["buttons"] == [{"action": "share", "label": "친구에게 보내기"}]
+    assert card["buttons"] == [{"action": "share", "label": "📤 친구에게 보내기"}]
     assert [(e.kind, e.outcome) for e in events.events] == [("share", "CAUTION")]
 
 
@@ -300,7 +300,7 @@ def test_결과_카드_사진에_공유_추적_주소를_건다():
     linked = with_share_link(payload, "https://example.com", "a" * 32)
     card = linked["template"]["outputs"][0]["basicCard"]
     assert card["thumbnail"]["link"] == {"web": "https://example.com/s/" + "a" * 32}
-    assert {"action": "share", "label": "친구에게 보내기"} in card["buttons"]
+    assert {"action": "share", "label": "📤 친구에게 보내기"} in card["buttons"]
 
 
 def test_공유된_카드를_누르면_기록하고_채널로_보낸다():
@@ -375,8 +375,8 @@ def test_공식_공유를_쓰면_친구에게_보내기가_공유_페이지를_�
     SHARE_CARDS.clear()
     payload = render(result(Label.WARNING), image_base_url="https://example.com")
     card = with_share_link(payload, "https://example.com", TOKEN, web_share=True, user_key=USER)["template"]["outputs"][0]["basicCard"]
-    button = next(b for b in card["buttons"] if b["label"] == "친구에게 보내기")
-    assert button == {"action": "webLink", "label": "친구에게 보내기", "webLinkUrl": "https://example.com/share/" + TOKEN}
+    button = next(b for b in card["buttons"] if b["label"] == "📤 친구에게 보내기")
+    assert button == {"action": "webLink", "label": "📤 친구에게 보내기", "webLinkUrl": "https://example.com/share/" + TOKEN}
     stored = SHARE_CARDS.get(TOKEN)
     assert stored["owner"] == USER and stored["label"] == "주의하세요" and stored["description"].endswith(DISCLAIMER)
 
@@ -525,8 +525,8 @@ def test_링크로_들어온_결과에는_원본_정보_확인하기를_가운�
     from healthcheck.pipeline.step6_response import render
 
     buttons = _card_buttons(render(result(Label.CAUTION, source_urls=(SOURCE,)), image_base_url=image_base_url))
-    assert [b["label"] for b in buttons] == ["왜 그런지 보기", "원본 정보 확인하기", "친구에게 보내기"]
-    assert buttons[1] == {"action": "webLink", "label": "원본 정보 확인하기", "webLinkUrl": SOURCE}
+    assert [b["label"] for b in buttons] == ["🔍 왜 그런지 보기", "🔗 원본 정보 확인하기", "📤 친구에게 보내기"]
+    assert buttons[1] == {"action": "webLink", "label": "🔗 원본 정보 확인하기", "webLinkUrl": SOURCE}
     assert all(len(b["label"]) <= 14 for b in buttons)
 
 
@@ -534,7 +534,7 @@ def test_붙여_넣은_글에는_원본_버튼이_없다():
     from healthcheck.pipeline.step6_response import render
 
     labels = [b["label"] for b in _card_buttons(render(result(Label.CAUTION), image_base_url="https://example.com"))]
-    assert labels == ["왜 그런지 보기", "친구에게 보내기"]
+    assert labels == ["🔍 왜 그런지 보기", "📤 친구에게 보내기"]
 
 
 def test_원본_버튼은_누른_수를_세는_서명_주소로_바꾼다():
