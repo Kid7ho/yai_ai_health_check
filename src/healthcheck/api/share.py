@@ -9,6 +9,8 @@
   4. 공유된 메시지를 받은 사람이 누르면 /s/{토큰}(채팅방·채널 홈) 또는 /o/{토큰}(원본)으로 들어와 열린 것으로 기록한다
   5. 공유 페이지는 전송 알림을 받았는지 물어 보고, 보냈으면 스스로 닫는다
 
+결과 카드의 [원본 정보 확인하기]도 /o/{토큰}?by=me 를 거쳐 원본으로 보낸다. 누른 수를 source로 센다.
+
 토큰은 그 결과의 확인 기록 id(event_id)다. KAKAO_JS_KEY가 없으면 1~3은 꺼지고 원래 share 버튼을 쓴다.
 공유할 카드 내용(제목·설명·이미지)은 메모리에 하루만 둔다. 응답 기록에는 글 내용을 담지 않기 때문이다.
 TODO(확인필요): 카카오톡 안 브라우저에서 페이지가 열리자마자 공유 화면이 자동으로 뜨는지 휴대폰으로 확인한다.
@@ -30,6 +32,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 
 from healthcheck.api import theme
+from healthcheck.pipeline.step6_response import _SOURCE_BUTTON
 from healthcheck.storage.events import new_event
 
 logger = logging.getLogger(__name__)
@@ -95,12 +98,14 @@ def with_share_link(
     web_share: bool = False,
     user_key: str | None = None,
     source_url: str | None = None,
+    source_secret: str | None = None,
 ) -> dict:
     """공유 버튼이 달린 결과 카드에 추적 주소를 건다. 카드 문구는 바꾸지 않는다.
 
     web_share면 [친구에게 보내기]를 공유 페이지를 여는 버튼으로 바꾸고, 공유할 내용을 SHARE_CARDS에 둔다.
     아니면 원래 share 버튼을 두고, 카드 사진에만 열림 추적 주소를 건다.
     source_url은 확인한 원본(영상·기사) 주소다. 공유 메시지의 [원본 보기]에 쓴다.
+    source_secret이 있으면 카드의 [원본 정보 확인하기]를 누른 수를 세는 서명 주소로 바꾼다.
     """
     if not base_url:
         return payload
@@ -109,6 +114,11 @@ def with_share_link(
         if not card or "thumbnail" not in card:
             continue
         buttons = card.get("buttons", [])
+        if source_secret:
+            for button in buttons:
+                url = button.get("webLinkUrl")
+                if button.get("label") == _SOURCE_BUTTON and _is_web_url(url):
+                    button["webLinkUrl"] = source_link(base_url, token, url, source_secret, by_owner=True)
         share_index = next((i for i, b in enumerate(buttons) if b.get("action") == "share"), None)
         if share_index is None:
             continue
@@ -281,8 +291,12 @@ def _signature(token: str, url: str, secret: str) -> str:
     return hmac.new(secret.encode("utf-8"), f"{token}\n{url}".encode("utf-8"), hashlib.sha256).hexdigest()[:32]
 
 
-def source_link(base_url: str, token: str, url: str, secret: str) -> str:
-    return f"{base_url.rstrip('/')}{SOURCE_PATH}/{token}?{urlencode({'u': url, 's': _signature(token, url, secret)})}"
+def source_link(base_url: str, token: str, url: str, secret: str, *, by_owner: bool = False) -> str:
+    """서명한 원본 주소. by_owner면 결과를 받은 본인이 카드에서 누른 것으로 센다."""
+    query = {"u": url, "s": _signature(token, url, secret)}
+    if by_owner:
+        query["by"] = "me"
+    return f"{base_url.rstrip('/')}{SOURCE_PATH}/{token}?{urlencode(query)}"
 
 
 def _script_json(value) -> str:
@@ -392,12 +406,18 @@ async def share_open(token: str, request: Request, to: str = "chat") -> Response
 
 
 @router.get(SOURCE_PATH + "/{token}", include_in_schema=False)
-async def share_source(token: str, request: Request, u: str = "", s: str = "") -> Response:
-    """공유된 메시지의 [원본 보기]. 서명이 맞는 원본 주소로만 보낸다(아무 주소로나 보내는 통로가 되지 않게)."""
+async def share_source(token: str, request: Request, u: str = "", s: str = "", by: str = "") -> Response:
+    """원본으로 보낸다. 서명이 맞는 원본 주소로만 보낸다(아무 주소로나 보내는 통로가 되지 않게).
+
+    by=me는 결과 카드의 [원본 정보 확인하기], 없으면 공유된 메시지의 [원본 보기]다.
+    """
     secret = getattr(request.app.state, "kakao_admin_key", None)
     if not _TOKEN.match(token) or not secret or not _is_web_url(u) or not hmac.compare_digest(s, _signature(token, u, secret)):
         return HTMLResponse(_FALLBACK_HTML, status_code=404)
-    await _record(request, "share_open", ref=token, outcome="source")
+    if by == "me":
+        await _record(request, "source", ref=token)
+    else:
+        await _record(request, "share_open", ref=token, outcome="source")
     return RedirectResponse(u, status_code=302)
 
 

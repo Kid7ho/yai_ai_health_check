@@ -125,6 +125,8 @@ class SkillServices:
     events: EventLog | None = None
     # 카카오 공식 공유 기능을 쓰는가(KAKAO_JS_KEY). 쓰면 [친구에게 보내기]가 공유 페이지를 연다.
     web_share: bool = False
+    # 결과 카드의 [원본 정보 확인하기] 주소를 서명하는 키(KAKAO_ADMIN_KEY). 없으면 원본으로 바로 간다.
+    source_secret: str | None = None
 
 
 async def _log(services: SkillServices, kind: str, user_key: str | None, **fields) -> None:
@@ -266,7 +268,7 @@ async def skill(request: Request) -> dict:
         payload = render(cached, image_base_url=services.image_base_url, intro=intro)
         return with_share_link(
             payload, services.image_base_url, event_id, web_share=services.web_share, user_key=user_key,
-            source_url=share_input.url,
+            source_url=share_input.url, source_secret=services.source_secret,
         )
 
     # 기본 경로: 콜백이 없으면 비동기 처리를 할 수 없다.
