@@ -49,7 +49,7 @@ from healthcheck.ports.events import EventLog
 from healthcheck.ports.queue import CheckJob, JobQueue
 from healthcheck.ports.repository import CheckRepository
 from healthcheck.api import card_trial
-from healthcheck.api.card_trial import ListCardTrial
+from healthcheck.api.card_trial import CardLayouts
 from healthcheck.api.share import with_share_link
 from healthcheck.storage.events import new_event, outcome_of
 from healthcheck.storage.record import build_record
@@ -129,8 +129,8 @@ class SkillServices:
     web_share: bool = False
     # 결과 카드의 [원본 정보 확인하기] 주소를 서명하는 키(KAKAO_ADMIN_KEY). 없으면 원본으로 바로 간다.
     source_secret: str | None = None
-    # 큰 버튼 시험판(리스트 카드)을 켠 사용자. 워커와 같은 객체를 쓴다.
-    card_trial: ListCardTrial = field(default_factory=ListCardTrial)
+    # 결과 카드 모양(기본 리스트 카드, "큰버튼끄기"를 보낸 사용자는 버튼 카드). 워커와 같은 객체를 쓴다.
+    card_trial: CardLayouts = field(default_factory=CardLayouts)
 
 
 async def _log(services: SkillServices, kind: str, user_key: str | None, **fields) -> None:
@@ -189,12 +189,12 @@ async def skill(request: Request) -> dict:
         await _log(services, "media", user_key, outcome="media")
         return render_media_notice()
 
-    # 큰 버튼 시험판 켜기·끄기. 직전 결과가 있으면 바뀐 모양으로 다시 보여 줘서 바로 비교하게 한다.
+    # 큰 버튼(리스트 카드, 기본) 켜기·끄기. 직전 결과가 있으면 바뀐 모양으로 다시 보여 줘서 바로 비교하게 한다.
     trial = card_trial.command_of(utterance)
     if trial is not None:
         services.card_trial.set(user_key, trial)
-        logger.info("큰 버튼 시험판 %s", "켬" if trial else "끔")
-        notice = "큰 버튼 시험을 켰어요." if trial else "큰 버튼 시험을 껐어요."
+        logger.info("큰 버튼 %s", "켬" if trial else "끔")
+        notice = "큰 버튼으로 보여 드릴게요." if trial else "작은 버튼으로 보여 드릴게요."
         previous = services.last_results.get(user_key)
         if previous is None:
             return _simple(f"{notice} 이제 영상이나 글을 보내 보세요.")

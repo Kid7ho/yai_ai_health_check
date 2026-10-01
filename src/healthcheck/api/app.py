@@ -35,7 +35,7 @@ from healthcheck.adapters.fake.transcript import FakeTranscriptExtractor
 from healthcheck.adapters.inprocess_queue import InProcessJobQueue
 from healthcheck.api import debug, skill
 from healthcheck.api.auth import SkillAuth, warn_if_unprotected
-from healthcheck.api.card_trial import ListCardTrial
+from healthcheck.api.card_trial import CardLayouts
 from healthcheck.config import Settings, load_settings, setup_logging
 from healthcheck.domain.labels import Label
 from healthcheck.pipeline.step6_response import (
@@ -296,8 +296,8 @@ def create_app(
     events = events if events is not None else InMemoryEventLog()
     queue = InProcessJobQueue()
     last_results = skill.LastResults()
-    # 큰 버튼 시험판을 켠 사용자. 동기 응답(캐시)과 워커(콜백)가 같은 객체를 본다.
-    card_trial = ListCardTrial()
+    # 결과 카드 모양. 동기 응답(캐시)과 워커(콜백)가 같은 객체를 본다.
+    card_trial = CardLayouts()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
