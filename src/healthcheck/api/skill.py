@@ -129,7 +129,7 @@ class SkillServices:
     web_share: bool = False
     # 결과 카드의 [원본 정보 확인하기] 주소를 서명하는 키(KAKAO_ADMIN_KEY). 없으면 원본으로 바로 간다.
     source_secret: str | None = None
-    # 결과 카드 모양(기본 리스트 카드, "큰버튼끄기"를 보낸 사용자는 버튼 카드). 워커와 같은 객체를 쓴다.
+    # 결과 카드 모양(기본 버튼 카드, "큰버튼켜기"를 보낸 사용자는 리스트 카드). 워커와 같은 객체를 쓴다.
     card_trial: CardLayouts = field(default_factory=CardLayouts)
 
 
@@ -189,7 +189,7 @@ async def skill(request: Request) -> dict:
         await _log(services, "media", user_key, outcome="media")
         return render_media_notice()
 
-    # 큰 버튼(리스트 카드, 기본) 켜기·끄기. 직전 결과가 있으면 바뀐 모양으로 다시 보여 줘서 바로 비교하게 한다.
+    # 큰 버튼(리스트 카드) 켜기·끄기. 직전 결과가 있으면 바뀐 모양으로 다시 보여 줘서 바로 비교하게 한다.
     trial = card_trial.command_of(utterance)
     if trial is not None:
         services.card_trial.set(user_key, trial)
