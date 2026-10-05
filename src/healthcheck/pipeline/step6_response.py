@@ -24,9 +24,6 @@
 붙여 구분을 돕는다(2026-10-01). 그림 문자는 라벨에만 붙이고, 누르면 보내는 말(messageText)은 그대로 둔다.
 skill.py가 그 말로 버튼을 알아본다.
 
-결과 카드는 두 모양이 있다. 기본은 사진 카드 하나에 버튼 세 개다. "list" 모양은 사진 카드 아래에
-리스트 카드를 붙여 버튼 대신 높은 줄로 보여 준다(어르신이 누르기 쉬운지 휴대폰으로 비교하는 시험판).
-
 카카오 응답은 글자색·배경색·버튼색을 지정할 수 없다. 발표 자료 목업의 신호등 색
 머리 부분은 라벨별 이미지(basicCard thumbnail)로 대신한다. 이미지는 공개 주소에서
 내려받아야 하므로 image_base_url이 없으면 이미지 없는 textCard로 답한다.
@@ -108,11 +105,6 @@ _SOURCE_BUTTON = "원본 정보 확인하기"
 _REASON_LABEL = "🔍 " + _REASON_BUTTON
 _SHARE_LABEL = "📤 " + _SHARE_BUTTON
 _SOURCE_LABEL = "🔗 " + _SOURCE_BUTTON
-# 리스트 카드 시험판의 줄 설명.
-_LIST_HEADER = "더 알아보기"
-_REASON_DESCRIPTION = "판정한 이유와 근거를 알려 드려요"
-_SOURCE_DESCRIPTION = "확인한 영상이나 글을 열어요"
-_SHARE_DESCRIPTION = "이 결과를 가족·친구에게 보내요"
 _CHECKED_TITLE = "확인한 내용"
 _REASON_TITLE = "왜 그런가요"
 
@@ -167,13 +159,7 @@ def ack_response() -> dict:
     return {"version": "2.0", "useCallback": True, "data": {"text": _ACK_TEXT}}
 
 
-def render(
-    result: CheckResult,
-    *,
-    image_base_url: str | None = None,
-    intro: str | None = None,
-    layout: str = "buttons",
-) -> dict:
+def render(result: CheckResult, *, image_base_url: str | None = None, intro: str | None = None) -> dict:
     """판정 결과를 카카오 응답으로 만든다.
 
     카카오 카드를 만드는 유일한 경로다. 면책 문구는 항상 붙는다.
@@ -211,10 +197,6 @@ def render(
                 "buttons": _buttons(result),
             }
         }
-        if layout == "list":
-            # 시험판: 버튼을 사진 카드에서 떼어 리스트 카드의 줄로 보여 준다. 말풍선이 하나 늘어난다.
-            del card["basicCard"]["buttons"]
-            return _wrap(_intro(intro) + [card, _list_card(result)], quick_replies=_unknown_quick_replies(label))
         return _wrap(_intro(intro) + [card], quick_replies=_unknown_quick_replies(label))
 
     card = {
@@ -514,17 +496,6 @@ def _guard(output: dict) -> dict:
             return _simple_text(_GUARD_FALLBACK)
         return output
 
-    if "listCard" in output:
-        card = output["listCard"]
-        parts = [card.get("header", {}).get("title", "")]
-        parts += [f"{item.get('title', '')} {item.get('description', '')}" for item in card.get("items", [])]
-        violations = find_forbidden(" ".join(parts))
-        if violations:
-            # 리스트 카드는 고정 문구만 담는다. 여기에 걸리면 코드의 문구를 고쳐야 한다.
-            logger.error("리스트 카드 문구에 금지 표현이 있다: %s", violations)
-            return _simple_text(_GUARD_FALLBACK)
-        return output
-
     for kind in ("textCard", "basicCard"):
         if kind not in output:
             continue
@@ -568,27 +539,6 @@ def _buttons(result: CheckResult | None = None) -> list[dict]:
         # 사진을 눌러 들어온 수(api/share.py)와 설문으로 잰다.
         {"action": "share", "label": _clip(_SHARE_LABEL, _MAX_BUTTON_LABEL)},
     ]
-
-
-def _list_card(result: CheckResult) -> dict:
-    """리스트 카드 시험판. 버튼 대신 제목·설명이 있는 높은 줄로 보여 준다.
-
-    리스트 줄은 공유(share) 동작을 지원하지 않아 [친구에게 보내기]는 카드 아래 버튼으로 둔다.
-    공식 공유 기능을 쓰면 api/share.py가 이 버튼을 공유 페이지를 여는 줄로 바꾼다.
-    """
-    items = [
-        {"title": _REASON_LABEL, "description": _REASON_DESCRIPTION, "action": "message", "messageText": _REASON_BUTTON},
-    ]
-    source = _source_url(result)
-    if source:
-        items.append({"title": _SOURCE_LABEL, "description": _SOURCE_DESCRIPTION, "link": {"web": source}})
-    return {
-        "listCard": {
-            "header": {"title": _LIST_HEADER},
-            "items": items,
-            "buttons": [{"action": "share", "label": _clip(_SHARE_LABEL, _MAX_BUTTON_LABEL)}],
-        }
-    }
 
 
 def _source_url(result: CheckResult) -> str | None:

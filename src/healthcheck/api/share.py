@@ -32,7 +32,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 
 from healthcheck.api import theme
-from healthcheck.pipeline.step6_response import _SHARE_DESCRIPTION, _SOURCE_LABEL
+from healthcheck.pipeline.step6_response import _SOURCE_LABEL
 from healthcheck.storage.events import new_event
 
 logger = logging.getLogger(__name__)
@@ -109,38 +109,23 @@ def with_share_link(
     """
     if not base_url:
         return payload
-    outputs = payload.get("template", {}).get("outputs", [])
-    # 리스트 카드 시험판(step6 layout="list")은 버튼이 사진 카드 아래 리스트 카드에 있다.
-    lists = [output["listCard"] for output in outputs if "listCard" in output]
-    for output in outputs:
+    for output in payload.get("template", {}).get("outputs", []):
         card = output.get("basicCard")
         if not card or "thumbnail" not in card:
             continue
+        buttons = card.get("buttons", [])
         if source_secret:
-            for button in card.get("buttons", []) + [b for lc in lists for b in lc.get("buttons", [])]:
+            for button in buttons:
                 url = button.get("webLinkUrl")
                 if button.get("label") == _SOURCE_LABEL and _is_web_url(url):
                     button["webLinkUrl"] = source_link(base_url, token, url, source_secret, by_owner=True)
-            for item in (i for lc in lists for i in lc.get("items", [])):
-                url = (item.get("link") or {}).get("web")
-                if item.get("title") == _SOURCE_LABEL and _is_web_url(url):
-                    item["link"] = {"web": source_link(base_url, token, url, source_secret, by_owner=True)}
-        found = _find_share(card, lists)
-        if found is None:
+        share_index = next((i for i, b in enumerate(buttons) if b.get("action") == "share"), None)
+        if share_index is None:
             continue
-        holder, buttons, share_index = found
         card["thumbnail"]["link"] = {"web": open_link(base_url, token)}
         if web_share:
             label = buttons[share_index]["label"]
-            page = share_page_link(base_url, token)
-            if holder is card:
-                buttons[share_index] = {"action": "webLink", "label": label, "webLinkUrl": page}
-            else:
-                # 리스트 카드면 버튼 대신 다른 줄과 같은 높이의 줄로 바꾼다.
-                del buttons[share_index]
-                if not buttons:
-                    holder.pop("buttons", None)
-                holder["items"].append({"title": label, "description": _SHARE_DESCRIPTION, "link": {"web": page}})
+            buttons[share_index] = {"action": "webLink", "label": label, "webLinkUrl": share_page_link(base_url, token)}
             SHARE_CARDS.put(
                 token,
                 {
@@ -153,16 +138,6 @@ def with_share_link(
                 },
             )
     return payload
-
-
-def _find_share(card: dict, lists: list[dict]) -> tuple[dict, list[dict], int] | None:
-    """공유 버튼이 있는 곳(사진 카드 또는 리스트 카드)과 그 버튼 목록, 위치."""
-    for holder in [card, *lists]:
-        buttons = holder.get("buttons", [])
-        index = next((i for i, b in enumerate(buttons) if b.get("action") == "share"), None)
-        if index is not None:
-            return holder, buttons, index
-    return None
 
 
 def _is_web_url(value: str | None) -> bool:
