@@ -1,4 +1,4 @@
-"""큰 버튼 — 결과 카드의 버튼을 리스트 카드 줄로 보여 주는 모양(기본)."""
+"""큰 버튼 — 결과 카드의 버튼을 리스트 카드 줄로 보여 주는 모양(켠 사용자만)."""
 
 from __future__ import annotations
 
@@ -55,17 +55,17 @@ def test_공식_공유를_쓰면_공유_버튼도_같은_높이의_줄이_된다
     assert SHARE_CARDS.get(TOKEN)["source"] == SOURCE
 
 
-def test_기본은_리스트_모양이고_끈_사용자만_버튼_카드다():
+def test_기본은_버튼_카드이고_켠_사용자만_리스트_모양이다():
     assert command_of("큰 버튼 켜기") is True and command_of("큰버튼끄기") is False and command_of("큰 버튼") is None
     layouts = CardLayouts()
-    assert layouts.layout_for("a") == "list" and layouts.layout_for(None) == "list"
-    layouts.set("a", False)
-    assert layouts.layout_for("a") == "buttons" and layouts.layout_for("b") == "list"
+    assert layouts.layout_for("a") == "buttons" and layouts.layout_for(None) == "buttons"
     layouts.set("a", True)
-    assert layouts.layout_for("a") == "list"
+    assert layouts.layout_for("a") == "list" and layouts.layout_for("b") == "buttons"
+    layouts.set("a", False)
+    assert layouts.layout_for("a") == "buttons"
 
 
-async def test_워커가_보내는_결과는_기본으로_리스트_모양이다():
+async def test_워커가_보내는_결과는_기본으로_버튼_카드다():
     sender = RecordingCallbackSender()
     worker = Worker(InProcessJobQueue(), build_fake_orchestrator(), sender, image_base_url=BASE)
     await worker.process(
@@ -78,7 +78,8 @@ async def test_워커가_보내는_결과는_기본으로_리스트_모양이다
     )
     payload = sender.sent[-1].payload
     kinds = [list(o)[0] for o in payload["template"]["outputs"]]
-    assert kinds == ["basicCard", "listCard"]
+    assert kinds == ["basicCard"]
+    assert len(payload["template"]["outputs"][0]["basicCard"]["buttons"]) == 3
 
 
 def test_켜고_끄면_직전_결과를_바뀐_모양으로_다시_보여_준다():
