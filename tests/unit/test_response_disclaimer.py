@@ -84,8 +84,7 @@ def test_면책_문구를_끄는_인자가_없다():
     """개발자가 빠뜨릴 수 있는 선택 항목으로 두지 않는다."""
     # 카드 머리 이미지 주소만 받는다. 면책 문구나 금지 표현 검사를 끄는 인자는 두지 않는다.
     # render의 intro는 결과 앞에 안내 말풍선을 하나 더 붙일 뿐이다([한번 해 보기]). 면책 문구는 그대로 붙는다.
-    # layout은 버튼 모양(기본 · 리스트 카드 시험판)만 고른다. 어느 모양이든 면책 문구가 붙는다.
-    expected = {render: ["result", "image_base_url", "intro", "layout"], render_reason: ["result", "image_base_url"]}
+    expected = {render: ["result", "image_base_url", "intro"], render_reason: ["result", "image_base_url"]}
     for fn, names in expected.items():
         params = inspect.signature(fn).parameters
         assert list(params) == names, f"{fn.__name__}에 추가 인자가 생겼습니다."
